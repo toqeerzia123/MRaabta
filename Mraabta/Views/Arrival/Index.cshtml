@@ -1,0 +1,457 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section styles{
+    <style>
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #formrow {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .rowitem {
+            width: calc(88% / 4) !important;
+            padding: 10px !important;
+        }
+
+        .rowitembtn {
+            display: flex;
+            flex-direction: row;
+            width: 12% !important;
+            padding: 10px !important;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loader">
+    </div>
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">Arrival</h2>
+            </div>
+            <div style="justify-self:end;align-self:center">
+                <a href="@Url.Action("ViewArrival","Arrival")" class="btn btn-sm btn-secondary" target="_blank">Search Arrivals</a>
+            </div>
+        </div>
+        <div class="row mt-4" id="formrow">
+            <div class="rowitem">
+                <label>Rider</label><br>
+                @Html.DropDownList("Rider", ViewBag.Riders as List<SelectListItem>, optionLabel: "Select Rider", new { @class = "form-control" })
+            </div>
+            <div class="rowitem">
+                <label>Service Type</label><br>
+                @Html.DropDownList("ServiceType", ViewBag.ServiceTypes as List<SelectListItem>, optionLabel: "Select Service Type", new { @class = "form-control" })
+            </div>
+            <div class="rowitem">
+                <label>Consignment Type</label><br>
+                @Html.DropDownList("ConsignmentType", ViewBag.CNTypes as List<SelectListItem>, optionLabel: "Select Consignment Type", new { @class = "form-control" })
+            </div>
+            <div class="rowitem">
+                <label>CN</label><br>
+                <input type="text" class="form-control" id="cn" style="height:40px !important" oninput="process(this)" />
+            </div>
+            <div class="rowitembtn">
+                <button type="button" class="btn btn-success" id="btnSave">Save</button>
+                <button type="button" class="btn btn-danger" id="btnReset">Reset</button>
+            </div>
+        </div>
+    </div>
+    <div class="mt-4" style="background:rgba(255,255,255,.5);padding:10px;border-radius:5px;">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-4"></div>
+                    <div class="col-4" style="display:flex;justify-content:center;align-items:center">
+                        <h3 class="text-center">Arrival Details</h3>
+                    </div>
+                    <div class="col-4" style="display:flex;justify-content:flex-end;align-items:center">
+                        <p class="text-center" style="font-weight:900"><b>Scanned Consignments: <span id="cncount">0</span></b></p>
+                    </div>
+                </div>
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Consignment #</th>
+                            <th>Service Type</th>
+                            <th>Consignment Type</th>
+                            <th>Weight</th>
+                            <th>Pieces</th>
+                            <th>COD Amount</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        var cns = [];
+        var cnlength =  @Html.Raw(Json.Encode(ViewBag.CNLengths));
+        var isBlocked = false;
+
+
+        function process(input) {
+            let value = input.value;
+            let numbers = value.replace(/[^0-9-|]/g, "");
+            input.value = numbers;
+        }
+
+
+        var insertArrival = (data) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("InsertArrival", "Arrival")',
+                data: JSON.stringify({ model: data }),
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                beforeSend: () => {
+                    swal({
+                        title: "Saving...",
+                        text: "Please wait",
+                        button: false,
+                        closeOnClickOutside: false,
+                        closeOnEsc: false,
+                        showCancelButton: false,
+                        showConfirmButton: false
+                    });
+                },
+                error: (xhr, textStatus, errorThrown) => {
+                    swal.close();
+                    $('#cn').val('');
+                    if (xhr.readyState == 0) {
+                        alert("Issue in connectivity");
+                    } else {
+                        alert(textStatus);
+                    }
+                },
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        reset();
+                        window.open('@Url.Action("ArrivalSlip", "Arrival")' + '/' + rs.id,'_blank');
+                    }
+                    swal.close();
+                    alert(rs.msg);
+                }
+            });
+        };
+
+        var getAndCheckCN = (data, el, isScale ,scaleWeight) => {
+            if (!isBlocked) {
+                $("#Rider").attr("disabled", true);
+                $("#ServiceType").attr("disabled", true);
+                $("#ConsignmentType").attr("disabled", true);
+                isBlocked = true;
+            }
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("GetAndCheckCN", "Arrival")' + '?cn=' + data.cn,
+                dataType: 'json',
+                error: (xhr) => {
+                    el.removeAttr("readonly");
+                },
+                success: (rs) => {
+                    el.removeAttr("readonly");
+                    if (rs.type == 0) {
+                        cns.push(data.cn);
+                        var weight = rs.Weight.toFixed(2) == 0 ? 0.5 : rs.Weight.toFixed(2);
+                        if (isScale && data.cn[0] == 5 && data.cn.length == 15) {
+                            weight = scaleWeight > 0 ? scaleWeight.toFixed(2) : weight;
+                        }
+                        var row = `<tr>
+                                    <td class="text-center"><input type="hidden" value="${data.cn},${isScale ? 1 : 0}">${data.cn}</td>
+                                    <td class="text-center">${data.serviceType}</td>
+                                    <td class="text-center">${data.consignmentType}</td>
+                                    <td class="text-center"><input type="number" class="form-control" ${scaleWeight > 0 ? 'readonly' : ''} value="${weight}"/></td>
+                                    <td class="text-center"><input type="number" class="form-control" value="${rs.Pcs == 0 ? 1 : rs.Pcs}"/></td>
+                                    <td class="text-center"><input type="hidden" value="${rs.CodAmount}">${rs.CodAmount}</td>
+                                    <td class="text-center"><button type="button" value="${data.cn}" class="btn btn-sm btn-danger btnremove">Remove</button></td>
+                                    </tr>`;
+                        $('#tbody').prepend(row);
+                        el.val('');
+                        $('#cncount').text(cns.length);
+                    } else if (rs.type == 1) {
+                        alert(rs.msg);
+                        el.val('');
+                    } else if (rs.type == 2) {
+                        alert(rs.msg);
+                        el.val('');
+                    }
+                    el.focus();
+                }
+            });
+        };
+
+        var reset = () => {
+            cns = [];
+            $('#Rider').val('');
+            $('#ServiceType').val('overnight');
+            $('#ConsignmentType').val('12');
+            $('#cn').val('');
+            $('#tbody').html('');
+            $("#Rider").removeAttr("disabled");
+            $("#ServiceType").removeAttr("disabled");
+            $("#ConsignmentType").removeAttr("disabled");
+            isBlocked = false;
+            $('#cncount').text(0);
+        };
+
+        $(function () {
+
+            $(document).on("wheel", "input[type=number]", function (e) {
+                $(this).blur();
+            });
+
+            $('body').on('click', '.btnremove', function () {
+                const val = $(this).val();
+                const id = cns.indexOf(val);
+                cns.splice(id, 1);
+                $(this).parent().parent().remove();
+                $('#cncount').text(cns.length);
+            });
+
+            const delay = (delayInms) => {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve(2);
+                    }, delayInms);
+                });
+            };
+
+            $('#cn').change(async function (e) {
+                e.preventDefault();
+                var isScale = false;
+                var scaleweight = 0;
+                $(this).attr('readonly','readonly');
+                var prefixFound = false;
+                var lengthFound = false;
+                var val = $(this).val().trim();
+
+                if (val.includes("|")) {
+                    isScale = true;
+                    scaleweight = (+val.split('|')[0]) / 1000;
+                    val = val.split('|')[1];
+
+                    if (scaleweight > 0) {
+                        if (val == '999999999999999') {
+                            $(this).val('');
+                            await delay(100);
+                            var correctCn = prompt("Please enter consignment", "");
+                            if (correctCn && correctCn.length > 0) {
+                                val = correntCn;
+                            } else {
+                                alert('Please enter correct consignment');
+                                $(this).removeAttr('readonly');
+                                $(this).focus();
+                                return;
+                            }
+                        }
+                    } else {
+                        alert('Weight must be greater than 0, kindly reset scale calibration');
+                        $(this).val('');
+                        $(this).removeAttr('readonly');
+                        $(this).focus();
+                        return;
+                    }
+                }
+
+
+                if (val.length > 0) {
+
+                    if (val[0] == 5 && val.length != 15) {
+                        $(this).removeAttr('readonly');
+                        alert('Invalid Length of COD Consignment');
+                        $(this).val('');
+                        $(this).focus();
+                        return;
+                    }
+
+                    if (cns.includes(val)) {
+                        $(this).removeAttr('readonly');
+                        alert('Consignment already scanned');
+                        $(this).val('');
+                        $(this).focus();
+                        return;
+                    }
+
+                    for (let x of cnlength) {
+                        var prefix = val.substring(0, x.PrefixLength);
+                        if (prefix == x.Prefix) {
+                            prefixFound = true;
+                            if (val.length == x.Length) {
+                                lengthFound = true;
+                                break;
+                            }
+                        }
+                    }
+
+
+                    if (prefixFound) {
+                        if (lengthFound) {
+                            var rider = $('#Rider').val();
+                            var riderName = $("#Rider option:selected").text();
+                            var serviceType = $('#ServiceType').val();
+                            var consignmentTypeId = $('#ConsignmentType').val();
+                            var consignmentType = $('#ConsignmentType option:selected').text();
+
+                            if (!rider) {
+                                $(this).removeAttr('readonly');
+                                alert("Select Rider");
+                                $(this).val('');
+                                $(this).focus();
+                                return;
+                            }
+
+                            if (!serviceType) {
+                                $(this).removeAttr('readonly');
+                                alert("Select Service Type");
+                                $(this).val('');
+                                $(this).focus();
+                                return;
+                            }
+
+                            if (!consignmentTypeId) {
+                                $(this).removeAttr('readonly');
+                                alert("Select Consignment Type");
+                                $(this).val('');
+                                $(this).focus();
+                                return;
+                            }
+
+                            let data = {
+                                cn: val,
+                                rider,
+                                riderName,
+                                serviceType,
+                                consignmentTypeId,
+                                consignmentType
+                            };
+
+                            getAndCheckCN(data, $(this), isScale,scaleweight);
+
+                        } else {
+                            $(this).removeAttr('readonly');
+                            alert('Invalid Length');
+                            $(this).val('');
+                            $(this).focus();
+                        }
+                    } else {
+                        $(this).removeAttr('readonly');
+                        alert('Prefix not found');
+                        $(this).val('');
+                        $(this).focus();
+                    }
+
+                }
+            });
+
+            const save = () => {
+
+                var r = confirm("Are you sure?");
+                if (r == false)
+                    return;
+
+                if (!$('#Rider').val()) {
+                    alert('Select Rider');
+                    $('#cn').val('');
+                    return;
+                }
+
+                if (!$('#ServiceType').val()) {
+                    alert('Select Service Type');
+                    $('#cn').val('');
+                    return;
+                }
+
+                if (!$('#ConsignmentType').val()) {
+                    alert('Select Consignment Type');
+                    $('#cn').val('');
+                    return;
+                }
+
+                let data = {
+                    RiderCode: $('#Rider').val(),
+                    ServiceType: $('#ServiceType').val(),
+                    CNType: $('#ConsignmentType').val(),
+                    ArrivalDetails: []
+                };
+
+
+                const rows = document.querySelectorAll('#tbody tr');
+
+                if (rows.length > 0) {
+                    let i = 1;
+                    for (let row of rows) {
+                        const tds = row.querySelectorAll('td');
+                        const cn = tds[0].querySelector('input[type=hidden]').value;
+                        const weight = tds[3].querySelector('input[type=number]').value;
+                        const pcs = tds[4].querySelector('input[type=number]').value;
+                        const codamount = tds[5].querySelector('input[type=hidden]').value;
+
+                        if (weight <= 0) {
+                            alert('Arrival Contains 0 Weight');
+                            $('#cn').val('');
+                            return;
+                        }
+
+                        if (pcs <= 0) {
+                            alert('Arrival Contains 0 Pieces');
+                            $('#cn').val('');
+                            return;
+                        }
+
+                        data.ArrivalDetails.push({
+                            ConsignmentNumber: cn,
+                            Weight: weight,
+                            Pieces: pcs,
+                            SortOrder: i++
+                        });
+                    }
+
+                    insertArrival(data);
+
+                } else {
+                    alert('Add Arrival Details');
+                    $('#cn').val('');
+                }
+            }
+
+            document.querySelector("#btnSave").onclick = save;
+
+            const resetPage = () => {
+                var rs = confirm("Are you sure?");
+                if (rs) {
+                    location.reload();
+                }
+            }
+
+            document.querySelector('#btnReset').onclick = resetPage;
+
+        });
+    </script>
+}

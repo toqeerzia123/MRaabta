@@ -1,0 +1,258 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Responsive sidebar template with sliding effect and dropdown menu based on bootstrap 3">
+    <title>MRaabta</title>
+    @Styles.Render("~/bundles/css")
+    <style>
+        body {
+            padding-top: 10px !important;
+            padding-bottom: 20px !important;
+        }
+
+        .sidebar-wrapper {
+            background: linear-gradient(45deg, #737373 0%, #737373 50%, #eb622e 50%,#eb622e 100%) !important;
+        }
+
+        .sidebar-footer {
+            background: linear-gradient(to right,#737373 0%, #eb622e 100%) !important;
+        }
+
+        .sidebar-header {
+            border-top: 1px solid #737373 !important;
+        }
+
+        .sidebar-submenu {
+            background: none !important;
+        }
+
+            .sidebar-submenu ul li a:before {
+                content: none !important;
+            }
+    </style>
+    <script>
+
+        window.onload = function () {
+            debugger;
+            noBack();
+        }
+        function noBack() {
+            window.history.forward();
+        }
+    </script>
+    @RenderSection("styles", false)
+</head>
+<body>
+    <div class="page-wrapper chiller-theme toggled">
+        <a id="show-sidebar" class="btn btn-sm btn-dark" href="#" style="z-index:1000">
+            <i class="fas fa-bars"></i>
+        </a>
+        <nav id="sidebar" class="sidebar-wrapper">
+            <div class="sidebar-content">
+                <div class="sidebar-brand text-center">
+                    <a href="@Session["DashboardHomeUrl"].ToString()">MRaabta</a>
+                    <div id="close-sidebar">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+
+                <div class="sidebar-header mt-3">
+                    <div class="user-info w-100">
+
+                        @if (Session["NAME"] != null)
+                        {
+                            <span class="user-name w-100 text-center">
+                                Welcome<br>
+                                <b>@Session["NAME"].ToString()</b>
+                            </span>
+                        }
+                    </div>
+                </div>
+                <!-- sidebar-header  -->
+                <div class="sidebar-menu">
+                    @if (Session["Menus"] != null)
+                    {
+                        string currentURL = Request.Url.AbsoluteUri.ToString();
+                        string[] url = currentURL.Split('/');
+
+                        <ul class="text-center mt-3">
+                            @foreach (var item in Session["Menus"] as List<MRaabta.Models.MenuModel>)
+                            {
+                                string flag = "";
+                                string cl = "";
+                                //    foreach (var item2 in item.SubMenus)
+                                //    {
+                                //        if ("../"+ url[3] + "/" + url[4] + "/Files/" + @item2.sublink == currentURL)
+                                //        {
+                                //            flag = "role = 'menu' style='display:block';";
+                                //            cl = "active";
+                                //            break;
+                                //        }
+                                //        else
+                                //        {
+                                //            cl = "";
+                                //            flag = "";
+                                //        }
+                                //    }
+                                var mmenuname = "";
+                                var cmenuname = "";
+                                foreach (var item2 in item.SubMenus)
+                                {
+                                    try
+                                    {
+                                        if (@item2.sublink == "../" + url[3] + "/" + url[4])
+                                        {
+                                            mmenuname = item.MenuName;
+                                            cmenuname = item2.SubMenuName;
+                                            cl = "active";
+                                            flag = "role = menu; style=display:block;";
+                                            break;
+                                        }
+                                    }
+                                    catch (Exception)
+                                    {
+
+                                    }
+                                }
+
+                                <li class="sidebar-dropdown @cl">
+                                    @if (item.MenuName == mmenuname)
+                                    {
+                                        <a style="padding-top:11px !important; text-transform:uppercase;" class="active"> @item.MenuName</a>
+                                        <div class="sidebar-submenu" @flag>
+                                            <ul>
+                                                @foreach (var item2 in item.SubMenus)
+                                                {
+                                                    if (item2.SubMenuName == cmenuname)
+                                                    {
+                                                        //flag = "role = 'menu' style='display:block';";
+                                                        //cl = "active";
+                                                        <li><a style="color:ActiveBorder; text-decoration:underline" href="~/Files/@item2.Hyperlink">@item2.SubMenuName</a></li>
+                                                    }
+                                                    else
+                                                    {
+                                                        cl = "";
+                                                        flag = "";
+                                                        <li><a href="~/Files/@item2.Hyperlink">@item2.SubMenuName</a></li>
+                                                    }
+
+
+                                                }
+                                            </ul>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <a style="padding-top:11px !important"> @item.MenuName</a>
+                                        <div class="sidebar-submenu" @flag>
+                                            <ul>
+                                                @foreach (var item2 in item.SubMenus)
+                                                {
+                                                    if (item2.SubMenuName == cmenuname)
+                                                    {
+                                                        //flag = "role = 'menu' style='display:block';";
+                                                        //cl = "active";
+                                                        <li><a style="color:ActiveBorder; text-decoration:underline" href="~/Files/@item2.Hyperlink">@item2.SubMenuName</a></li>
+                                                    }
+                                                    else
+                                                    {
+                                                        cl = "";
+                                                        flag = "";
+                                                        <li><a href="~/Files/@item2.Hyperlink">@item2.SubMenuName</a></li>
+                                                    }
+
+
+                                                }
+                                            </ul>
+                                        </div>
+                                    }
+
+
+                                </li>
+
+                            }
+                        </ul>
+                    }
+                </div>
+                <!-- sidebar-menu  -->
+            </div>
+            <!-- sidebar-content  -->
+            <div class="sidebar-footer">
+                <a href="@Url.Action("Logout","Login")">
+                    <i class="fa fa-power-off"></i>
+                </a>
+            </div>
+        </nav>
+        <!-- sidebar-wrapper  -->
+        <main class="page-content" style="overflow:hidden;">
+            <div class="container-fluid" style="padding: 10px !important">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+    @Scripts.Render("~/bundles/js")
+    <script src="~/node_modules/progressbar.js/dist/progressbar.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+    <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    @RenderSection("scripts", false)
+    <script>
+
+        function downloadCSV(csv, filename) {
+            var csvFile;
+            var downloadLink;
+
+            // CSV file
+            csvFile = new Blob([csv], { type: "text/csv" });
+
+            // Download link
+            downloadLink = document.createElement("a");
+
+            // File name
+            downloadLink.download = filename;
+
+            // Create a link to the file
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+
+            // Hide download link
+            downloadLink.style.display = "none";
+
+            // Add the link to DOM
+            document.body.appendChild(downloadLink);
+
+            // Click download link
+            downloadLink.click();
+        }
+
+        function exportTableToCSV(table, filename) {
+            var csv = [];
+            var rows = document.querySelectorAll(`${table} tr`);
+
+            for (var i = 0; i < rows.length; i++) {
+                var row = [], cols = rows[i].querySelectorAll("td, th");
+
+                for (var j = 0; j < cols.length; j++)
+                    row.push(cols[j].innerText);
+
+                csv.push(row.join(","));
+            }
+
+            // Download CSV file
+            downloadCSV(csv.join("\n"), filename);
+        }
+
+        $(function () {
+            $('select').select2();
+        });
+
+
+    </script>
+</body>
+</html>

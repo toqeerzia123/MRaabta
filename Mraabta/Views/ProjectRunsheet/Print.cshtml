@@ -1,0 +1,167 @@
+﻿@{
+    Layout = null;
+    var i = 1;
+    var alldata = (ViewBag.Data as List<dynamic>).Select(x => new
+    {
+        Sno = i++,
+        Date = x.Date.ToString("dd-MM-yyyy"),
+        Branch = x.Branch,
+        RunsheetNumber = x.RunsheetNumber,
+        RouteCode = x.RouteCode,
+        Route = x.Route,
+        RiderCode = x.RiderCode,
+        Rider = x.Rider,
+        CN = x.CN,
+        Address = x.Address
+    }).ToList();
+}
+
+<!doctype html>
+<html>
+<head>
+    <title>Runsheet Print</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            font-family: Calibri;
+            font-size: 11px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            table th, table td {
+                border: 1px solid black;
+                text-align: left;
+                padding: 5px;
+            }
+
+        #header {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header1c {
+            display: flex;
+            flex-direction: row;
+            font-weight: bolder;
+        }
+
+            .header1c > div {
+                width: calc(100% / 3);
+            }
+
+        .footer {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            align-items: flex-end;
+        }
+
+            .footer div {
+                border-top: 2px solid black;
+            }
+
+        @@media print {
+            .footer {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+    @{
+        var take = 20;
+        var skip = 0;
+
+        while (skip < alldata.Count)
+        {
+            var data = alldata.Skip(skip).Take(take);
+            <table>
+                <tr>
+                    <td colspan="8">
+                        <div id="header">
+                            <div class="header1c">
+                                <div>
+                                    <img src="~/images/mnpLogo.png" height="50" />
+                                </div>
+                                <div style="text-align:center">
+                                    <h3>DELIVERY & POD SHEET</h3>
+                                    <h3>(Unilever Activity – Dove Sachet)</h3>
+                                </div>
+                                <div></div>
+                            </div>
+                            <div style="text-align:center">
+                                <p style="font-family:IDAutomationHC39M;font-size:13px">*@data.FirstOrDefault().RunsheetNumber*</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Runsheet Date</th>
+                    <td>@data.FirstOrDefault().Date</td>
+                    <th>Branch</th>
+                    <td colspan="2">@data.FirstOrDefault().Branch</td>
+                    <th>Runsheet Number</th>
+                    <td colspan="2">@data.FirstOrDefault().RunsheetNumber</td>
+                </tr>
+                <tr>
+                    <th>Route Code</th>
+                    <td>@data.FirstOrDefault().RouteCode</td>
+                    <th>Route</th>
+                    <td>@data.FirstOrDefault().Route</td>
+                    <th>Rider Code</th>
+                    <td>@data.FirstOrDefault().RiderCode</td>
+                    <th>Rider</th>
+                    <td>@data.FirstOrDefault().Rider</td>
+                </tr>
+                <tr>
+                    <td colspan="8">
+                        <table>
+                            <tr>
+                                <th>S.No</th>
+                                <th>CN Number</th>
+                                <th>Address</th>
+                                <th>Receiver Name</th>
+                                <th>Receiver Phone No</th>
+                            </tr>
+                            @foreach (var item in data)
+                            {
+                                <tr>
+                                    <td>@item.Sno</td>
+                                    <td style="width:9%;">@item.CN</td>
+                                    <td style="width:50%">@item.Address</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            }
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            <div class="footer">
+                <div>
+                    <h2>Courier/SDO Signature</h2>
+                </div>
+                <div>
+                    <h2>OPS Incharge/Incharge</h2>
+                </div>
+                <div>
+                    <h2>Security Incharge/Supervisor</h2>
+                </div>
+            </div>
+            skip += take;
+        }
+    }
+
+</body>
+</html>

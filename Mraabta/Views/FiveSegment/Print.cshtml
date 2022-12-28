@@ -1,0 +1,122 @@
+﻿@model IEnumerable<MRaabta.Models.FiveSegmentPrintModel>
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Five Segment Slip</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: Arial;
+        }
+
+        body {
+            padding: 20px;
+        }
+
+        #cont {
+            width: 100%;
+            margin: 10px auto;
+        }
+
+            #cont table {
+                width: 100%;
+            }
+
+                #cont table th, #cont table td {
+                    text-align: left;
+                    padding: 5px;
+                    font-size: 14px;
+                }
+
+        #header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            min-width: 100% !important;
+            align-items: center;
+        }
+
+        #detail {
+            border: 2px solid black;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+            #detail th, #detail td {
+                border: 1px solid black;
+            }
+    </style>
+</head>
+<body onload="window.print()">
+    @foreach (var item in Model)
+    {
+        foreach (var item2 in item.CNCount)
+        {
+            <div id="cont">
+                <table>
+                    <tr>
+                        <td colspan="4">
+                            <div id="header">
+                                <div style="text-align:left">
+                                    <img src="@Url.Content("~/images/mnpLogo.png")" alt="Alternate Text" height="50" />
+                                </div>
+                                <div style="text-align:center">
+                                    <h3 style="font-weight:800">FIVE SEGMENT REPORT</h3>
+                                </div>
+                                <div style="text-align:right">@DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt")</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Arrival ID:</th>
+                        <td>@item.CNs.FirstOrDefault().ArrivalID</td>
+                        <th>Date:</th>
+                        <td>@item.CreatedOn</td>
+                    </tr>
+                    <tr>
+                        <th>Rider Code:</th>
+                        <td>@item2.RiderId</td>
+                        <th>Rider Name:</th>
+                        <td>@item2.firstName</td>
+                    </tr>
+                    <tr>
+                        <th>Rider CN Count:</th>
+                        <td>@item2.RiderCount</td>
+                        <th>Total Weight:</th>
+                        <td>@Model.FirstOrDefault().TotalWeight</td>
+                    </tr>
+                </table>
+                <table id="detail">
+                    <thead>
+                        <tr>
+                            <th>Consignment #</th>
+                            <th>Weight</th>
+                            <th>Pieces</th>
+                            <th>Remarks</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item1 in item.CNs.Where(c => c.RiderCode.Equals(item2.RiderId)))
+                        {
+                            <tr>
+                                <td>@item1.CN</td>
+                                <td>@item1.Weight</td>
+                                <td>@item1.Pcs</td>
+                                <td>@item1.Remarks</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p style='page-break-after:always;'></p>
+        }
+    }
+</body>
+</html>

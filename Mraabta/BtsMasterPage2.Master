@@ -1,0 +1,151 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="BtsMasterPage2.master.cs" Inherits="MRaabta.BtsMasterPage2" %>
+
+<%@ Register TagPrefix="telerik" Namespace="Telerik.Web.UI" Assembly="Telerik.Web.UI" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link id="Link1" runat="server" href="~/Bts_Css/CssBts.css" rel="stylesheet" type="text/css" />
+    <link id="Link2" runat="server" href="~/assets/bootstrap-4.3.1-dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link id="Link4" runat="server" href="~/assets/bootstrap-4.3.1-dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link id="Link3" runat="server" href="~/assets/bootstrap-4.3.1-dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script type="text/javascript" src='<%= ResolveUrl("~/Scripts/jquery-3.5.1.min.js") %>'></script>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+
+    <style>
+        .bts-menus ul li ul li a {
+            color: white;
+        }
+
+        .bts-menus ul li a {
+            color: white;
+        }
+        /*.button {
+        border: 1px solid #563d7c;
+        border-radius: 5px;
+        color: white;
+        padding: 5px 10px 5px 25px;
+        background: url(/images/logout.png) no-repeat 1px 1px;
+        background-size: 100%;
+       /*background: url(images/logout.png>);*/
+        }
+
+        */
+        .ec {
+            float: left;
+            padding-right: 40px;
+        }
+
+        .date {
+            float: left;
+            padding-right: 40px;
+        }
+
+        .user {
+            float: right;
+            width: 29%;
+        }
+
+        .button {
+        }
+    </style>
+    <script language="javascript" type="text/javascript">
+        window.onload = function () {
+            noBack();
+        }
+        function noBack() {
+            window.history.forward();
+        }
+    </script>
+</head>
+<body onload="noBack();">
+    <form id="form1" runat="server">
+
+
+        <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
+
+        <div style="height: 100%;">
+            <table style="width: 100%; height: 100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td></td>
+                    <td>
+                        <asp:Label ID="Errorid" runat="server"></asp:Label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="bts-menus" style="height: 38em;">
+                        <div class="">
+
+                            <div class="logo">
+                                <%--<img width="165" height="90" alt="." src="../images/250x155.png">--%>
+                                <img alt="." src="../images/146x90.png">
+                            </div>
+
+
+                            <div class="user-login">
+                                <br />
+                                <br />
+                                <br />
+
+                                <%-- headerdate --%>
+                                <div style="margin: 1em; margin-top: 3em;">
+                                    <span style="text-align: center; margin: 3em; font-size: 14px; font-family: Lato;">WELCOME TO:</span>
+                                    <asp:Label ID="lbl_username" runat="server" CssClass="ec" Style="font-size: 14px; margin-left: 3.1em; font-family: Lato;"></asp:Label>
+                                    <br />
+                                    <br />
+                                    <%--<hr style="color:white; background-color:white;"/>--%>
+                                    <br />
+                                    <br />
+                                    <%--    <asp:Label ID="lbl_expire_date" runat="server" CssClass="ec"></asp:Label>
+                    <br />
+                
+
+                    <asp:Label ID="lbl_working_date" runat="server" CssClass="date"></asp:Label>--%>
+                                </div>
+
+                            </div>
+
+                        </div>
+                        <div id="Menu1">
+                            <asp:Panel ID="Panel1" runat="server" Style="height: 220px;"></asp:Panel>
+
+                        </div>
+
+                        <%--<hr style="color:white; background-color:white; width:13em;"/>--%>
+                        <asp:Button ID="Button1" Style="margin-left: 5em;" runat="server" CssClass="button" Text="Logout" UseSubmitBehavior="false" CausesValidation="false" OnClick="lnk_logout_Click" />
+
+                        <%--    <asp:button id="myButton" style="background-image:url('/images/logout.png'); background-color:red;" Runat="server" Height="25px" BorderStyText="ButtonText" Width="200px" />--%>
+                        <%--<div class="row" style="background-color:white; height:2em; width:5em;">
+                            <div class="col-md-6">
+                                  <asp:ImageButton runat="server" ImageUrl="images/logout.png"  style ="width:2em;">
+                      
+                                </asp:ImageButton>
+                            </div>
+                            <div class="col-md-6"> 
+                            Logout
+                            </div>
+                           
+                        </div>--%>
+
+                        <%--         <asp:ImageButton id="imagebutton1" runat="server" AlternateText="ImageButton 1" ImageAlign="left" ImageUrl="images/logout.png" OnClick="ImageButton_Click"/>--%>
+                        <%--    <asp:ImageButton ID="Button1" style="margin-left:5em;" runat="server" CssClass="button" Text="Logout" UseSubmitBehavior="false" CausesValidation="false" OnClick="lnk_logout_Click" />--%>
+                        <td style="width: 83%; vertical-align: top;">
+                            <asp:UpdatePanel ID="mainPanel" runat="server">
+                                <ContentTemplate>
+                                    <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                                    </asp:ContentPlaceHolder>
+                                </ContentTemplate>
+                            </asp:UpdatePanel>
+
+                            <asp:ContentPlaceHolder ID="ContentPlaceHolder2" runat="server">
+                            </asp:ContentPlaceHolder>
+                        </td>
+                </tr>
+            </table>
+        </div>
+    </form>
+</body>
+</html>

@@ -1,0 +1,179 @@
+﻿@model IEnumerable<MRaabta.Models.ECBookingStaffIncentiveDetailReportModel>
+@{
+    ViewBag.Title = "EC Booking Staff Incentive Detail";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var i = 0;
+}
+
+@section styles{
+    <style>
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #formrow {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .rowitem {
+            width: calc(88% / 4) !important;
+            padding: 10px !important;
+        }
+
+        .rowitembtn {
+            display: flex;
+            flex-direction: row;
+            width: 12% !important;
+            padding: 10px !important;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .page-content {
+            /*          padding-left:10px !important;*/
+        }
+
+        #tbl_pickUp {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            #tbl_pickUp td, #tbl_pickUp th {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+
+            #tbl_pickUp tr:hover {
+                background-color: #ddd;
+            }
+
+            #tbl_pickUp th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: left;
+                background-color: #ddd;
+                color: black;
+            }
+
+        input[type=button] {
+            display: none;
+        }
+
+        input[name="all_selected"]:checked ~ input[type=button] {
+            display: block;
+        }
+
+        .active {
+            background-color: #fd7e14 !important;
+        }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loader">
+    </div>
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">@ViewBag.Title</h2>
+            </div>
+        </div>
+        <div class="panel-body mainTable">
+            @if (Model.Any() && Model != null)
+            {
+                <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+                    <div></div>
+                    <div style="justify-self:center;align-self:center">
+                        <br />
+                        <h4 style="justify-self:center;align-self:center">Records: @Model.Count().ToString("N0")</h4>
+                    </div>
+                </div>
+                <div style=" width:100%;overflow-x:scroll;">
+                    <table id="tbl_pickUp" class="table-bordered mt-4 table table_data" border="1" style="width:100%;overflow:scroll;">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>CN</th>
+                                <th>Booking Date</th>
+                                <th>Service Type Name  </th>
+                                <th>EC Name</th>
+                                <th>EC Code</th>
+                                <th>Weight</th>
+                                <th>Incentive Rate</th>
+                                <th>Total Incentive</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    @{ i = i + 1;}
+                                    <td>@i</td>
+                                    <td>@item.CN</td>
+                                    <td>@item.BookingDate</td>
+                                    <td>@item.ServiceTypeName</td>
+                                    <td>@item.ECName</td>
+                                    <td>@item.EC_Code</td>
+                                    <td>@item.Weight.ToString("N")</td>
+                                    <td>@item.IncentiveRate.ToString("N0")</td>
+                                    <td>@item.TotalIncentive.ToString("N0")</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                    <div>&nbsp;<br /></div>
+                </div>
+            }
+            else
+            {
+                <br />
+                <h5 style="text-align: center;background-color: #EA5B0C;">No Records Found</h5>
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+
+        $('body table.table_data').each(function () {
+            var currentPage = 0;
+            var numPerPage = 100;
+            var $table = $(this);
+            $table.bind('repaginate', function () {
+                $table.find('tbody tr').hide().slice(currentPage * numPerPage, (currentPage + 1) * numPerPage).show();
+            });
+            $table.trigger('repaginate');
+            var numRows = $table.find('tbody tr').length;
+            var numPages = Math.ceil(numRows / numPerPage);
+            var $pager = $('<div class="pager"></div>');
+            for (var page = 0; page < numPages; page++) {
+                $('<span class="btn btn-primary page-number" style="background-color: #EA5B0C;"></span>').text(page + 1).bind('click', {
+                    newPage: page
+                }, function (event) {
+                    currentPage = event.data['newPage'];
+                    $table.trigger('repaginate');
+                    $(this).addClass('active').siblings().removeClass('active');
+                }).appendTo($pager).addClass('clickable');
+            }
+
+            $pager.insertAfter($table).find('span.page-number:first').addClass('active');
+        });
+    </script>
+}

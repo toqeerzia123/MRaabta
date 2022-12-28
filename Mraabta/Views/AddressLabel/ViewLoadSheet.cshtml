@@ -1,0 +1,233 @@
+﻿@model IEnumerable<MRaabta.Models.AddressLabelDetailModel>
+
+@{
+    int i = 0;
+    Layout = null;
+}
+
+<html>
+<head>
+    @section style{
+        <style type="text/css">
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            td {
+                text-align: left;
+                padding-left: 10px;
+                border-color: Black;
+            }
+
+            .alignment {
+                text-align: left;
+            }
+        </style>
+
+        <style type="text/css" media="print">
+            /*@@media print {
+
+                a[href]:after {
+                    content: none !important;
+                }
+
+                @@page {
+                    margin-top: 5px;
+               margin-bottom: 80px;
+                    /*margin: 10px 37px 10px 37px;
+                }
+
+                body {
+                    padding-top: 10px;
+                    padding-bottom: 72px;
+                }
+            }*/
+            @@page {
+                margin-top: 4mm;
+                margin-bottom: 1mm;
+                font-size: 10px;
+            }
+
+            body {
+                padding-top: 10px;
+                padding-bottom: 72px;
+                font-size: 9px;
+            }
+        </style>
+
+    }
+
+</head>
+<body>
+    @if (Model != null && Model.Count() != 0)
+    {
+        foreach (var item in Model)
+        {
+            <table border='1' cellpadding='0' cellspacing='0' width='100%' style='border: 1px solid black; height:228px;'>
+                @{i += 1; }
+                <tr>
+                    <td rowspan='3' style='width: 150px;'>
+                        <img src="~/images/mnpLogo.png" alt='logo' width='130' height='50' />
+                    </td>
+                    <td rowspan='3' style='text-align: center; width: 280px;'>
+                        <p style='font-family:IDAutomationHC39M'>*@item.Consignment*</p>
+                        <h5>
+                            Consignee Copy
+                        </h5>
+                    </td>
+                    <td>
+                        <b>Booking Date</b>
+                    </td>
+                    <td>
+                        <p>@item.bookingDate</p>
+                    </td>
+                    <td>
+                        <b>Print Date & Time</b>
+                    </td>
+                    <td>
+                        <p>@DateTime.UtcNow</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Service</b>
+                    </td>
+                    <td>
+                        <p>@item.Service</p>
+                    </td>
+                    <td>
+                        <b>Location Name</b>
+                    </td>
+                    <td style='font-size:12px'>
+                        <p>@item.locationName</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Origin</b>
+                    </td>
+                    <td>
+                        <p>@item.Origin</p>
+                    </td>
+                    <td>
+                        <b>Destination</b>
+                    </td>
+                    <td>
+                        <p>@item.Destination</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='border-bottom: 2px solid black;'>
+                        <b>Shipper</b>
+                    </td>
+                    <td colspan='2' style='border-bottom: 1px;'>
+                        <p>@item.Shipper</p>
+                    </td>
+                    <td style='border-bottom: 2px solid black;'>
+                        <b>Consignee</b>
+                    </td>
+                    <td colspan='2' style='border-bottom: 0px;'>
+                        <p>@item.consignee</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan='3' style='border-top: 0px;'>
+                        <p>@item.locationAddress</p>
+                    </td>
+                    <td colspan='3' style='border-top: 0px;height:65px;'>
+                        <p>@item.consigneeAddress</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan='3' style='border: 1px black; padding-left: 0px;'>
+                        <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+                            <tr>
+                                <td style='width: 100px; border: 1px solid black;'>
+                                    <b>Pieces</b>
+                                </td>
+                                <td style='width: 100px; border: 1px solid black; text-align: right;'>
+                                    <p>@item.pieces</p>
+                                </td>
+                                <td style='width: 100px; border: 1px solid black;'>
+                                    <b>Weight</b>
+                                </td>
+                                <td style='width: 80px; border: 1px solid black; text-align: right;'>
+                                    <p>@item.weight</p>
+                                </td>
+                                <td style='border: 1px solid black;'>
+                                    <b>Fragile</b>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>
+                        <p>Yes</p>
+                    </td>
+                    <td>
+                        <b style='font-size:12px'>Consignee Contact</b>
+                    </td>
+                    <td>
+                        <p>@item.consigneePhoneNo</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan='2'>
+                        <b>Declared Insurance Value </b>
+                    </td>
+                    <td style='text-align: right;'>
+                        <p>@item.insuranceValue</p>
+                    </td>
+                    <td>
+                        <b style='font-size:12px'>COD AMOUNT</b>
+                    </td>
+                    <td colspan='2' style='text-align: left;'>
+                        <p>@item.codAmount</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Product Detail</b>
+                    </td>
+                    <td colspan='5'>
+                        <p>@item.ProductDetail</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Remarks</b>
+                    </td>
+                    <td colspan='5'>
+                        <b>@item.remarks</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Customer Ref. #</b>
+                    </td>
+                    <td colspan='4'>
+                        <p>@item.CustomerRef</p>
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan='6' style='text-align: center'>
+                        <b>Please don't accept if shipment is not intact. Before paying the COD, shipment can't be opened. M&P is not responsible for Product, in case of any issue please contact shop/shipper.</b>
+                    </td>
+                </tr>
+            </table>
+            <br /><br />
+            if ((@i % 2)==0)
+            {
+                <div style="page-break-after:always;"></div>
+            }
+        }
+    }
+    else
+    {
+        <label>No Data</label>
+    }
+</body>
+
+</html>

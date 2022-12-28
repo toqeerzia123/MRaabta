@@ -1,0 +1,849 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script src="~/Scripts/dexie.js"></script>
+<script>
+    const userBranch =  @Html.Raw(Json.Encode(ViewBag.Userbranch));
+    const cnlength =  @Html.Raw(Json.Encode(ViewBag.CNLengths));
+    const unloadingData =  @Html.Raw(Json.Encode(ViewBag.UnloadingData));
+    const loadingDetailsURL = '@Url.Action("LoadingDetails","Unloading")';
+    const fetchCNUrl = '@Url.Action("GetCNInfo","Unloading")';
+    const fetchBagUrl = '@Url.Action("GetBagInfo","Unloading")';
+    const postUrl = '@Url.Action("SaveUnloading","Unloading")';
+    const searchUnloadingUrl = '@Url.Action("Search","Unloading")';
+    const printUrl = '@Url.Action("Print","Unloading")';
+</script>
+<script type="text/babel">
+
+    var db = new Dexie("UnloadingDB");
+
+    db.version(1).stores({
+        loadings: "LoadingNo,BagsCount,CNsCount,TotalWeight,Route,Origin,Description,Courier,SealNo,TransportType,VehicleRegNo,Sort",
+        loadingDetails: "BagCN,LoadingNo,OriginId,Origin,DestinationId,Destination,Pcs,Weight,ServiceType,CNType,SealNo,IsBag,Status,Remarks,Sort"
+    });
+
+    async function AddLoadings(obj) {
+        if (unloadingData.id == 0) {
+            const { IsOld, ...rest } = obj;
+            await db.loadings.add(rest);
+        }
+    }
+
+    async function DeleteLoading(pk) {
+        if (unloadingData.id == 0) {
+            await db.loadings.where('LoadingNo').equals(pk).delete();
+            await db.loadingDetails.where('LoadingNo').equals(pk).delete();
+        }
+    }
+
+    async function AddLoadingDetails(obj) {
+        if (unloadingData.id == 0) {
+            const { IsOld, ...rest } = obj;
+            await db.loadingDetails.add(rest);
+        }
+    }
+
+    async function UpdateLoadingDetails(obj) {
+        if (unloadingData.id == 0) {
+            const { IsOld, ...rest } = obj;
+            await db.loadingDetails.update(rest.BagCN, rest);
+        }
+    }
+
+    async function DeleteLoadingDetails(pk) {
+        if (unloadingData.id == 0)
+            await db.loadingDetails.where('BagCN').equals(pk).delete();
+    }
+
+    async function ClearLoadings() {
+        if (unloadingData.id == 0)
+            await db.loadings.clear();
+    }
+
+    async function ClearLoadingDetails() {
+        if (unloadingData.id == 0)
+            await db.loadingDetails.clear();
+    }
+
+    async function CountLoadings() {
+        return await db.loadings.count();
+    }
+
+    async function CountLoadingDetails() {
+        return await db.loadingDetails.count();
+    }
+
+    async function GetLoadings() {
+        return await db.loadings.orderBy('Sort').reverse().toArray();
+    }
+
+    async function GetLoadingDetails() {
+        return await db.loadingDetails.orderBy('Sort').reverse().toArray();
+    }
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processDecimal = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9.]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlpha = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlphaWithSpace = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z ]/g, "");
+        e.target.value = numbers;
+    }
+
+    const Context = React.createContext(null);
+
+    const LoadingGrid = () => {
+
+        const {
+            loading,
+            setLoading,
+            loadingGrid,
+            setLoadingGrid,
+            detailGrid,
+            setDetailGrid,
+        } = React.useContext(Context);
+
+        const onRemove = async (index, lno) => {
+            let x = [...loadingGrid];
+            x.splice(index, 1);
+            const z = detailGrid.filter((y) => y.LoadingNo != lno);
+            setLoadingGrid(x);
+            setDetailGrid(z);
+            await DeleteLoading(lno);
+        }
+
+        return (
+            <div className="table-responsive">
+                <table className="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Loading No</th>
+                            <th>Bags Count</th>
+                            <th>CNs Count</th>
+                            <th>Weight</th>
+                            <th>Route</th>
+                            <th>Origin</th>
+                            <th>Description</th>
+                            <th>Courier</th>
+                            <th>SealNo</th>
+                            <th>Transport Type</th>
+                            <th>Vehicle No</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            loadingGrid.map((x, index) =>
+                                <tr key={index}>
+                                    <td>
+                                        <button type="button" className="btn btn-sm btn-danger" disabled={x.IsOld !== undefined && x.IsOld === true} onClick={(e) => onRemove(index, x.LoadingNo)}>X</button>
+                                    </td>
+                                    <td>{x.LoadingNo}</td>
+                                    <td>{x.BagsCount}</td>
+                                    <td>{x.CNsCount}</td>
+                                    <td>{x.TotalWeight}</td>
+                                    <td>{x.Route}</td>
+                                    <td>{x.Origin}</td>
+                                    <td>{x.Description}</td>
+                                    <td>{x.Courier}</td>
+                                    <td>{x.SealNo}</td>
+                                    <td>{x.TransportType}</td>
+                                    <td>{x.VehicleRegNo}</td>
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
+            </div>
+        )
+    }
+
+    const LoadingDetailGrid = () => {
+
+        const {
+            loading,
+            setLoading,
+            detailGrid,
+            setDetailGrid,
+            loadingGrid
+        } = React.useContext(Context);
+
+        const [scanType, setScanType] = React.useState(1);
+        const [lastScanBagCN, setLastScanBagCN] = React.useState('');
+        const [scanned, setScanned] = React.useState(false);
+        const [focused, setFocused] = React.useState(false);
+        const bagCNRef = React.useRef(null);
+
+        const updateGrid = async (index, key, val) => {
+            let x = [...detailGrid];
+            x[index][key] = val;
+            setDetailGrid(x);
+            await UpdateLoadingDetails(x[index]);
+        }
+
+        const scanTypeChanged = (checked, val) => {
+            if (checked) {
+                setScanType(val);
+            }
+        }
+
+        const detailSummaryStyle = {
+            display: 'flex',
+            alignItems: 'center'
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                bagCNRef.current.blur();
+            }
+        }
+
+        const fetchCNInfo = (cn) => {
+            if (!detailGrid.some((x) => x.BagCN == cn)) {
+                setScanned(true);
+                const url = `${fetchCNUrl}?cn=${cn}`
+                fetch(url)
+                    .then(
+                        function (response) {
+                            if (response.status !== 200) {
+                                alert('Looks like there was a problem. Status Code: ' + response.status);
+                                setFocused(focused === true ? false : true);
+                                setScanned(false);
+                                return;
+                            }
+
+                            response.json().then(async function (rs) {
+                                if (rs.type == 0) {
+                                    let obj = [...detailGrid];
+                                    let z = null;
+                                    if (rs.CN) {
+                                        z = {
+                                            LoadingNo: 0,
+                                            BagCN: rs.CN,
+                                            OriginId: rs.OriginId,
+                                            Origin: rs.Origin,
+                                            DestinationId: rs.DestinationId,
+                                            Destination: rs.Destination,
+                                            Pcs: parseInt(rs.Pieces),
+                                            Weight: rs.Weight,
+                                            ServiceType: rs.ServiceType,
+                                            CNType: '',
+                                            SealNo: "",
+                                            IsBag: false,
+                                            Status: 7,
+                                            Remarks: "",
+                                            Sort: obj.length + 1
+                                        };
+                                    } else {
+                                        z = {
+                                            LoadingNo: 0,
+                                            BagCN: cn,
+                                            OriginId: +userBranch.Value,
+                                            Origin: userBranch.Text,
+                                            DestinationId: +userBranch.Value,
+                                            Destination: userBranch.Text,
+                                            Pcs: 1,
+                                            Weight: '0.5',
+                                            ServiceType: '',
+                                            CNType: '',
+                                            SealNo: "",
+                                            IsBag: false,
+                                            Status: 7,
+                                            Remarks: "",
+                                            Sort: obj.length + 1
+                                        };
+                                    }
+                                    obj.unshift(z);
+                                    setDetailGrid(obj);
+                                    await AddLoadingDetails(z);
+                                    setFocused(focused === true ? false : true);
+                                    setScanned(false);
+                                    setLastScanBagCN(cn);
+                                } else {
+                                    setFocused(focused === true ? false : true);
+                                    setScanned(false);
+                                    alert(rs.msg);
+                                }
+                            });
+                        }
+                    )
+                    .catch(function (err) {
+                        alert('Fetch Error :-S', err);
+                        setFocused(focused === true ? false : true);
+                        setScanned(false);
+                    });
+            } else {
+                alert('Bag/Consigment Already Exists');
+                setFocused(focused === true ? false : true);
+                setScanned(false);
+            }
+        }
+
+        const fetchBagInfo = (bagno) => {
+            setScanned(true);
+            if (!detailGrid.some((x) => x.BagCN == bagno)) {
+                const url = `${fetchBagUrl}?bagno=${bagno}`
+                fetch(url)
+                    .then(
+                        function (response) {
+                            if (response.status !== 200) {
+                                alert('Looks like there was a problem. Status Code: ' +
+                                    response.status);
+                                setFocused(focused === true ? false : true);
+                                setScanned(false);
+                                return;
+                            }
+
+                            response.json().then(async function (rs) {
+                                if (rs.type == 0) {
+                                    let obj = [...detailGrid];
+                                    let z = {
+                                        LoadingNo: 0,
+                                        BagCN: rs.data.Bag,
+                                        OriginId: rs.data.OriginId,
+                                        Origin: rs.data.OriginName,
+                                        DestinationId: rs.data.DestinationId,
+                                        Destination: rs.data.DestinationName,
+                                        Pcs: 0,
+                                        Weight: rs.data.Weight,
+                                        ServiceType: '',
+                                        CNType: '',
+                                        SealNo: rs.data.SealNo,
+                                        IsBag: true,
+                                        Status: 7,
+                                        Remarks: "",
+                                        Sort: obj.length + 1
+                                    };
+                                    obj.unshift(z);
+                                    setDetailGrid(obj);
+                                    await AddLoadingDetails(z);
+                                    setFocused(focused === true ? false : true);
+                                    setScanned(false);
+                                    setLastScanBagCN(bagno);
+                                } else {
+                                    setFocused(focused === true ? false : true);
+                                    setScanned(false);
+                                    alert(rs.msg);
+                                }
+                            });
+                        }
+                    )
+                    .catch(function (err) {
+                        alert('Fetch Error :-S', err);
+                        setFocused(focused === true ? false : true);
+                        setScanned(false);
+                    });
+            } else {
+                alert('Bag/Consigment Already Exists');
+                setFocused(focused === true ? false : true);
+                setScanned(false);
+            }
+        }
+
+
+        const validateCN = (val) => {
+
+            const prefix = cnlength.filter(x => x.Prefix == val.substring(0, x.PrefixLength))[0];
+
+            if (prefix) {
+                if (prefix.Length == val.length) {
+                    fetchCNInfo(val);
+                } else {
+                    alert('Prefix length not found');
+                    setFocused(focused === true ? false : true);
+                }
+            } else {
+                alert('Prefix not found');
+                setFocused(focused === true ? false : true);
+            }
+        }
+
+        const onScanExcess = (val) => {
+            if (scanType == 1) {
+                fetchBagInfo(val);
+            } else {
+                validateCN(val);
+            }
+        }
+
+        const onBagCNScanBlur = (e) => {
+            const val = e.target.value;
+            if (val) {
+                const index = detailGrid.findIndex((x) => x.BagCN == val && ((x.IsBag && scanType == 1) || (!x.IsBag && scanType == 2)));
+                if (index >= 0) {
+                    if (detailGrid[index].IsOld === undefined || detailGrid[index].IsOld === false) {
+                        if ([5, 7].includes(detailGrid[index].Status)) {
+                            alert('Already Scanned');
+                            setFocused(focused === true ? false : true);
+                        } else {
+                            updateGrid(index, 'Status', 5);
+                            setLastScanBagCN(val);
+                            setFocused(focused === true ? false : true);
+                        }
+                    } else {
+                        setFocused(focused === true ? false : true);
+                    }
+                } else {
+                    onScanExcess(val);
+                }
+            }
+        }
+
+        const onRemove = async (index, sts) => {
+            if (sts == 5) {
+                updateGrid(index, 'Status', 6);
+            } else {
+                let x = [...detailGrid];
+                const key = x[index].BagCN;
+                x.splice(index, 1);
+                setDetailGrid(x);
+                await DeleteLoadingDetails(key);
+            }
+        }
+
+        React.useEffect(() => {
+            bagCNRef.current.value = '';
+            bagCNRef.current.focus();
+        }, [focused])
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}>
+                        Type :
+                        <input type="radio" className="ml-1 mr-1" name="type" checked={scanType == 1} onChange={(e) => scanTypeChanged(e.target.checked, 1)} />Bag
+                        <input type="radio" className="ml-1 mr-1" name="type" checked={scanType == 2} onChange={(e) => scanTypeChanged(e.target.checked, 2)} />CN
+                    </div>
+                    <div className="col-lg-3 col-sm-12 form-inline" style={detailSummaryStyle}>
+                        {scanType == 1 ? "Bag" : "CN"}: <input type="text" ref={bagCNRef} onInput={process} onKeyPress={keypressHandler} onBlur={onBagCNScanBlur} className="form-control ml-2" readOnly={scanned} />
+                    </div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Short</b> : {detailGrid.filter((x) => x.Status == 6).length}</div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Recieved</b> : {detailGrid.filter((x) => x.Status == 5).length}</div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Excess</b> : {detailGrid.filter((x) => x.Status == 7).length}</div>
+                </div>
+                <div className="table-responsive mt-2">
+                    <table className="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>S.No</th>
+                                <th>Type</th>
+                                <th>Bag/CN</th>
+                                <th>Loading No</th>
+                                <th>Status</th>
+                                <th>Origin</th>
+                                <th>Destintion</th>
+                                <th>Seal No</th>
+                                <th>Pieces</th>
+                                <th>Weight</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                detailGrid.map((x, index) =>
+                                    <tr key={index} style={lastScanBagCN == x.BagCN ? { background: 'rgba(0,128,0,.5)', color: 'white' } : null}>
+                                        <td>
+                                            {x.Status != 6 ? <button type="button" className="btn btn-sm btn-danger" disabled={x.IsOld !== undefined && x.IsOld === true} onClick={(e) => onRemove(index, x.Status)}>X</button> : ''}
+                                        </td>
+                                        <td>{index + 1}</td>
+                                        <td>{x.IsBag ? 'Bag' : 'Out Piece'}</td>
+                                        <td>{x.BagCN}</td>
+                                        <td>{x.LoadingNo == 0 ? '' : x.LoadingNo}</td>
+                                        <td>
+                                            <div style={{ minWidth: '7rem' }}>
+                                                {
+                                                    function () {
+                                                        if (x.Status == 5) {
+                                                            return 'Recieved';
+                                                        } else if (x.Status == 6) {
+                                                            return 'Short Recieved';
+                                                        } else {
+                                                            return 'Excess Recieved';
+                                                        }
+                                                    }()
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>{x.Origin}</td>
+                                        <td>{x.Destination}</td>
+                                        <td>{x.IsBag ? <input type="text" value={x.SealNo} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={processAlphaWithSpace} style={{ minWidth: '7rem', maxWidth: '7rem' }} className="form-control" onChange={(e) => updateGrid(index, 'SealNo', e.target.value)} /> : ''}</td>
+                                        <td>{!x.IsBag ? <input type="text" style={{ minWidth: '4.2rem', maxWidth: '4.2rem' }} value={x.Pcs} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={process} maxLength="4" className="form-control" onChange={(e) => {
+                                            const val = e.target.value ? +e.target.value : 0
+                                            updateGrid(index, 'Pcs', val);
+                                        }} /> : ''}</td>
+                                        <td><input type="text" style={{ minWidth: '4.2rem', maxWidth: '4.2rem' }} value={x.Weight} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={processDecimal} maxLength="5" className="form-control" onChange={(e) => updateGrid(index, 'Weight', e.target.value)} /></td>
+                                        <td><input type="text" value={x.Remarks} onInput={processAlphaWithSpace} className="form-control" readOnly={x.IsOld !== undefined && x.IsOld === true} onChange={(e) => updateGrid(index, 'Remarks', e.target.value)} /></td>
+                                    </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    const MainForm = () => {
+
+        const styles = {
+            mainDiv: {
+                width: '100%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))',
+                gridAutoRows: '100px',
+                columnGap: '5px',
+                gridRowGap: '5px',
+            }
+        }
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            loadingGrid,
+            setLoadingGrid,
+            detailGrid,
+            setDetailGrid,
+            totalWeight,
+            setTotalWeight,
+            totalPcs,
+            setTotalPcs
+        } = React.useContext(Context);
+
+        const loadingRef = React.useRef(null);
+
+        const [loadingNumberEntered, setLoadingNumberEntered] = React.useState(false);
+
+        React.useEffect(() => {
+            if (detailGrid.length > 0) {
+                setTotalPcs(detailGrid.reduce((a, b) => a + (b.IsBag ? 1 : b.Pcs), 0));
+                setTotalWeight(detailGrid.reduce((a, b) => a + parseFloat(b.Weight), 0));
+            }
+        }, [detailGrid]);
+
+        const fetchLoading = (lid) => {
+            setLoadingNumberEntered(true);
+            const url = `${loadingDetailsURL}?lid=${lid}`;
+            fetch(url)
+                .then(
+                    function (response) {
+                        setLoadingNumberEntered(false);
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' +
+                                response.status);
+                            return;
+                        }
+
+                        // Examine the text in the response
+                        response.json().then(async function (rs) {
+                            if (rs.sts == 1) {
+                                if (rs.data) {
+                                    let lg = [...loadingGrid];
+                                    let dg = [...detailGrid];
+
+                                    if (!dg.some(x => rs.data.LoadingInfoDetails.map((y) => y.BagCN).includes(x.BagCN))) {
+                                        const obj = { ...rs.data, Sort: lg.length + 1 };
+                                        lg.unshift(obj);
+                                        setLoadingGrid(lg);
+                                        await AddLoadings(obj);
+                                        for (let item of rs.data.LoadingInfoDetails) {
+                                            const z = { ...item, Sort: dg.length + 1 };
+                                            dg.unshift(z);
+                                            await AddLoadingDetails(z);
+                                        }
+                                        setDetailGrid(dg);
+                                    } else {
+                                        alert('Bag/CN already found in previous Loading');
+                                    }
+                                }
+                            }
+                            loadingRef.current.value = '';
+                            loadingRef.current.focus();
+                        });
+                    }
+                ).catch(function (err) {
+                    setLoadingNumberEntered(false);
+                    console.log('Fetch Error :-S', err);
+                });
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                loadingRef.current.blur();
+            }
+        };
+
+        const onLoadingBlur = (e) => {
+            const val = e.target.value;
+            if (val) {
+                if (!loadingGrid.some((x) => x.LoadingNo == val)) {
+                    fetchLoading(val);
+                }
+                else {
+                    alert('Loading number already exists');
+                    loadingRef.current.value = '';
+                    loadingRef.current.focus();
+                }
+            }
+        }
+
+        const resetForm = () => {
+            setTotalWeight(0);
+            setTotalPcs(0);
+            setLoadingGrid([]);
+            setDetailGrid([]);
+        }
+
+
+        const postUnloading = (data) => {
+            setLoading(true);
+            fetch(postUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: unloadingData.id, model: data })
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        alert('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(async function (rs) {
+                        alert(rs.msg);
+                        if (rs.sts == 0) {
+                            await ClearLoadings();
+                            await ClearLoadingDetails();
+                            resetForm();
+                            window.open(`${printUrl}?id=${rs.EncryptedId}`, '_blank');
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                alert('Fetch Error :-S', err);
+            });
+        }
+
+
+        const onSave = () => {
+            if (loadingGrid.length > 0 && detailGrid.length > 0) {
+                const invalidData = detailGrid.some(x => (!x.IsBag && (x.Pcs <= 0 || x.Weight <= 0)) || (x.IsBag && x.Weight <= 0));
+                if (!invalidData) {
+                    const data = {
+                        OriginId: loadingGrid[loadingGrid.length - 1].OriginId,
+                        UnloadingDetail: detailGrid
+                    };
+                    postUnloading(data);
+                } else {
+                    alert('Invalid pieces or weight found');
+                }
+            } else {
+                alert('Please add loadings');
+            }
+        }
+
+        return (
+            <div style={styles.mainDiv}>
+                <div>
+                    <label>Loading No</label>
+                    <input className="form-control" onInput={process} ref={loadingRef} onKeyPress={keypressHandler} onBlur={onLoadingBlur} readOnly={loadingNumberEntered} />
+                </div>
+                <div>
+                    <label>Total Weight</label>
+                    <input className="form-control" readOnly={true} value={totalWeight} />
+                </div>
+                <div>
+                    <label>Total Pieces</label>
+                    <input className="form-control" readOnly={true} value={totalPcs} />
+                </div>
+                <div>
+                    <button type="button" className="btn btn-secondary" style={{ marginTop: '1.6rem' }} onClick={onSave}>Save</button>
+                </div>
+            </div>
+        )
+    }
+
+    function App() {
+
+        const {
+            loading,
+            setLoading,
+            loadingGrid,
+            setLoadingGrid,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        React.useEffect(() => {
+
+            if (unloadingData.loadings.length > 0) {
+                setLoadingGrid(unloadingData.loadings);
+            }
+            if (unloadingData.details.length > 0) {
+                setDetailGrid(unloadingData.details);
+            }
+        }, []);
+
+
+
+        React.useEffect(() => {
+            const confirmRestore = async () => {
+                const c = await CountLoadings();
+                const b = await CountLoadingDetails();
+                if (c > 0 && b > 0) {
+                    if (confirm("Unsaved data found want to save? If cancel data will be removed.")) {
+                        const loadingData = await GetLoadings();
+                        const loadingDetailsData = await GetLoadingDetails();
+                        setLoadingGrid(loadingData);
+                        setDetailGrid(loadingDetailsData);
+                    } else {
+                        await ClearLoadings();
+                        await ClearLoadingDetails();
+                    }
+                } else {
+                    await ClearLoadings();
+                    await ClearLoadingDetails();
+                }
+            };
+
+            if (unloadingData.id == 0) {
+                confirmRestore();
+            }
+
+            return () => console.log('unmounting...');
+        }, []);
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(10px)'
+            }
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>Unloading</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+                                <a href={searchUnloadingUrl} className="btn btn-sm btn-secondary" target="_blank">Search Unloadings</a>
+                            </div>
+                        </div>
+                        <MainForm />
+                        <br />
+                        {
+                            loadingGrid.length > 0 ? <LoadingGrid /> : ''
+                        }
+                        <br />
+                        {
+                            detailGrid.length > 0 ? <LoadingDetailGrid /> : ''
+                        }
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+
+        const [loading, setLoading] = React.useState(false);
+        const [loadingGrid, setLoadingGrid] = React.useState([]);
+        const [detailGrid, setDetailGrid] = React.useState([]);
+        const [totalWeight, setTotalWeight] = React.useState(0);
+        const [totalPcs, setTotalPcs] = React.useState(0);
+        return (
+            <Context.Provider value={{
+                loading,
+                setLoading,
+                loadingGrid,
+                setLoadingGrid,
+                detailGrid,
+                setDetailGrid,
+                totalWeight,
+                setTotalWeight,
+                totalPcs,
+                setTotalPcs
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

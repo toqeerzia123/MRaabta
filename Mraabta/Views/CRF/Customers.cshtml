@@ -1,0 +1,478 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    body {
+        font-family: Calibri;
+    }
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    th,
+    td {
+        vertical-align: middle !important;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script>
+    const { data, lvlrates } = @Html.Raw(Json.Encode(Model));
+    const userType = @ViewBag.UserType;
+    const updateCustomerStatusUrl = '@Url.Action("ChangeStatus","CRF")';
+    const generateAccountNoUrl = '@Url.Action("GenerateAccountNo","CRF")';
+    const printUrl = '@Url.Action("Print","CRF")';
+</script>
+<script type="text/babel">
+
+    const processString = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9A-Za-z ]/g, "");
+        e.target.value = numbers;
+    }
+
+    const Context = React.createContext(null);
+
+    const Rates = ({ userType, print, data }) => {
+
+        const inlineStyle = { display: 'flex', flexDirection: 'column', width: '100%', minWidth: '7vw', justifyContent: 'center', alignItems: 'center' };
+        const inlineStyle2 = { display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'center', alignItems: 'center' };
+        const inlineStyle3 = { display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' };
+
+        const highlightCell = (val) => {
+            return val ? { background: '#D10000', color: 'rgba(255,255,255,.8)', fontWeight: 'bold' } : { background: 'none' }
+        }
+
+        return (
+            <React.Fragment>
+                <div className="table-responsive">
+                    <table className="table table-bordered">
+                        <tbody>
+                            {
+                                data.Rates.map((x, index) => {
+                                    const lvlrate = lvlrates.filter(y => y.ProductId == x.ProductId)[0];
+                                    if ([1, 2].includes(x.ProductId)) {
+                                        return <React.Fragment key={index}>
+                                            <tr>
+                                                <th colSpan="2"><div style={inlineStyle3}><b>{x.ProductName}</b></div></th>
+                                                <th colSpan="3">0 KG - 0.5 KG</th>
+                                                <th colSpan="3">0.5 KG - 1 KG</th>
+                                                <th colSpan="3">Add. KG</th>
+                                                <th colSpan="2">2nd Day</th>
+                                                <th>Expected Revenue</th>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div className="text-left" style={inlineStyle2}>
+                                                        <b>Overnight</b> : {x.Overnight ? 'Yes' : 'No'}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style={inlineStyle2}>
+                                                        Add Factor : {x.AddFactor}
+                                                    </div>
+                                                </td>
+                                                <th>WC</th>
+                                                <th>SZ</th>
+                                                <th>DZ</th>
+                                                <th>WC</th>
+                                                <th>SZ</th>
+                                                <th>DZ</th>
+                                                <th>WC</th>
+                                                <th>SZ</th>
+                                                <th>DZ</th>
+                                                <th>Min</th>
+                                                <th>Add</th>
+                                                <th rowSpan="2">
+                                                    <div style={inlineStyle2}>{x.ExpectedRev}</div>
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div className="text-left" style={inlineStyle2}>
+                                                        <b>Second Day</b> : {x.SecondDay ? 'Yes' : 'No'}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style={inlineStyle2}>
+                                                        Min Weight : {x.MinWeight}
+                                                    </div>
+                                                </td>
+                                                <td style={highlightCell(x.ZeroToPoint5KGWC < lvlrate.ZeroToPoint5KGWC)}>{x.ZeroToPoint5KGWC}</td>
+                                                <td style={highlightCell(x.ZeroToPoint5KGSZ < lvlrate.ZeroToPoint5KGSZ)}>{x.ZeroToPoint5KGSZ}</td>
+                                                <td style={highlightCell(x.ZeroToPoint5KGDZ < lvlrate.ZeroToPoint5KGDZ)}>{x.ZeroToPoint5KGDZ}</td>
+                                                <td style={highlightCell(x.Point5To1KGWC < lvlrate.Point5To1KGWC)}>{x.Point5To1KGWC}</td>
+                                                <td style={highlightCell(x.Point5To1KGSZ < lvlrate.Point5To1KGSZ)}>{x.Point5To1KGSZ}</td>
+                                                <td style={highlightCell(x.Point5To1KGDZ < lvlrate.Point5To1KGDZ)}>{x.Point5To1KGDZ}</td>
+                                                <td style={highlightCell((x.AddFactor === 0.5 && x.AddKGWC < lvlrate.AddKGWC) || (x.AddFactor === 1 && x.AddKGWC < lvlrate.AddKGWC2))}>{x.AddKGWC}</td>
+                                                <td style={highlightCell((x.AddFactor === 0.5 && x.AddKGSZ < lvlrate.AddKGSZ) || (x.AddFactor === 1 && x.AddKGSZ < lvlrate.AddKGSZ2))}>{x.AddKGSZ}</td>
+                                                <td style={highlightCell((x.AddFactor === 0.5 && x.AddKGDZ < lvlrate.AddKGDZ) || (x.AddFactor === 1 && x.AddKGDZ < lvlrate.AddKGDZ2))}>{x.AddKGDZ}</td>
+                                                <td style={highlightCell((x.MinWeight === 3 && x.SecDayMin < lvlrate.SecDayMin) || (x.MinWeight === 5 && x.SecDayMin < lvlrate.SecDayMin2))}>{x.SecDayMin}</td>
+                                                <td style={highlightCell((x.MinWeight === 3 && x.SecDayAdd < lvlrate.SecDayAdd) || (x.MinWeight === 5 && x.SecDayAdd < lvlrate.SecDayAdd2))}>{x.SecDayAdd}</td>
+                                            </tr>
+                                        </React.Fragment>
+                                    } else if (x.ProductId == 3) {
+                                        return <React.Fragment key={index}>
+                                            <tr>
+                                                <th colSpan="2"><div style={inlineStyle3}><b>{x.ProductName}</b></div></th>
+                                                <th colSpan="2">Zone A</th>
+                                                <th colSpan="2">Zone B</th>
+                                                <th colSpan="7"></th>
+                                                <th>Expected Revenue</th>
+                                            </tr>
+                                            <tr>
+                                                <td rowSpan="2">
+                                                    <div className="text-left" style={inlineStyle2}>
+                                                        <b>E. Cargo</b> : {x.ECargo ? 'Yes' : 'No'}
+                                                    </div>
+                                                </td>
+                                                <td rowSpan="2">
+                                                    <div style={inlineStyle2}>
+                                                        Min Weight : {x.MinWeight}
+                                                    </div>
+                                                </td>
+                                                <th>Min</th>
+                                                <th>Add</th>
+                                                <th>Min</th>
+                                                <th>Add</th>
+                                                <th colSpan="7" rowSpan="2"></th>
+                                                <th rowSpan="2">
+                                                    <div style={inlineStyle2}>{x.ExpectedRev}</div>
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <td style={highlightCell((x.MinWeight === 5 && x.ZoneAMin < lvlrate.ZoneAMin) || (x.MinWeight === 10 && x.ZoneAMin < lvlrate.ZoneAMin2))}><div style={inlineStyle2}>{x.ZoneAMin}</div></td>
+                                                <td style={highlightCell((x.MinWeight === 5 && x.ZoneAAdd < lvlrate.ZoneAAdd) || (x.MinWeight === 10 && x.ZoneAAdd < lvlrate.ZoneAAdd2))}><div style={inlineStyle2}>{x.ZoneAAdd}</div></td>
+                                                <td style={highlightCell((x.MinWeight === 5 && x.ZoneBMin < lvlrate.ZoneBMin) || (x.MinWeight === 10 && x.ZoneBMin < lvlrate.ZoneBMin2))}><div style={inlineStyle2}>{x.ZoneBMin}</div></td>
+                                                <td style={highlightCell((x.MinWeight === 5 && x.ZoneBAdd < lvlrate.ZoneBAdd) || (x.MinWeight === 10 && x.ZoneBAdd < lvlrate.ZoneBAdd2))}><div style={inlineStyle2}>{x.ZoneBAdd}</div></td>
+                                            </tr>
+                                        </React.Fragment>
+                                    } else if (x.ProductId == 5) {
+                                        return <React.Fragment key={index}>
+                                            <tr>
+                                                <th colSpan="2"><div style={inlineStyle3}><b>{x.ProductName}</b></div></th>
+                                                <th colSpan="4">Flyer</th>
+                                                <th colSpan="4">Flyer (Window)</th>
+                                                <th colSpan="4"></th>
+                                            </tr>
+                                            <tr>
+                                                <td rowSpan="2">
+                                                    <div className="text-left" style={inlineStyle2}>
+                                                        <b>Flyer</b> : {x.Flyer ? 'Yes' : 'No'}
+                                                    </div>
+                                                </td>
+                                                <td rowSpan="2">
+                                                    <div className="text-left" style={inlineStyle2}>
+                                                        <b>Flyer (Window)</b> : {x.FlyerWind ? 'Yes' : 'No'}
+                                                    </div>
+                                                </td>
+                                                <th>S</th>
+                                                <th>M</th>
+                                                <th>L</th>
+                                                <th>XL</th>
+                                                <th>S</th>
+                                                <th>M</th>
+                                                <th>L</th>
+                                                <th>XL</th>
+                                                <th colSpan="4" rowSpan="2"></th>
+                                            </tr>
+                                            <tr>
+                                                <td style={highlightCell(x.FlyerS < lvlrate.FlyerS)}><div style={inlineStyle2}>{x.FlyerS}</div></td>
+                                                <td style={highlightCell(x.FlyerM < lvlrate.FlyerM)}><div style={inlineStyle2}>{x.FlyerM}</div></td>
+                                                <td style={highlightCell(x.FlyerL < lvlrate.FlyerL)}><div style={inlineStyle2}>{x.FlyerL}</div></td>
+                                                <td style={highlightCell(x.FlyerXL < lvlrate.FlyerXL)}><div style={inlineStyle2}>{x.FlyerXL}</div></td>
+                                                <td style={highlightCell(x.FlyerWinS < lvlrate.FlyerWinS)}><div style={inlineStyle2}>{x.FlyerWinS}</div></td>
+                                                <td style={highlightCell(x.FlyerWinM < lvlrate.FlyerWinM)}><div style={inlineStyle2}>{x.FlyerWinM}</div></td>
+                                                <td style={highlightCell(x.FlyerWinL < lvlrate.FlyerWinL)}><div style={inlineStyle2}>{x.FlyerWinL}</div></td>
+                                                <td style={highlightCell(x.FlyerWinXL < lvlrate.FlyerWinXL)}><div style={inlineStyle2}>{x.FlyerWinXL}</div></td>
+                                            </tr>
+                                        </React.Fragment>
+                                    }
+                                })
+                            }
+                            {
+                                data.IsFAC &&
+                                <tr>
+                                    <td>
+                                        <div style={inlineStyle2}>
+                                            <b>FAC</b>
+                                        </div>
+                                    </td>
+                                    <td style={highlightCell(data.FuelFactor < lvlrates[0].FACFuelFactor)}>
+                                        <div style={inlineStyle2}>
+                                            <b>{data.FuelFactor}</b>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </React.Fragment>)
+    }
+
+    const Row = (props) => {
+
+        const [showRates, setShowRates] = React.useState(false);
+        const [showDetails, setShowDetails] = React.useState(false);
+
+        return <React.Fragment>
+            <tr>
+                <td>{props.data.CustomerId}</td>
+                {
+                    userType == 1 &&
+                    <td>
+                        {
+                            props.data.Print && <a href={`${printUrl}?id=${props.data.CustomerId}`} className="btn btn-sm btn-secondary" target="_blank">Print</a>
+                        }
+                    </td>
+                }
+                <td>
+                    <button type="button" className="btn btn-sm btn-secondary" onClick={(e) => setShowRates(!showRates)}>Tariff</button>
+                </td>
+                <td><button type="button" className="btn btn-sm btn-secondary" onClick={(e) => setShowDetails(!showDetails)}>Log</button></td>
+                <td>{props.data.BusinessName}</td>
+                <td>{props.data.RequestedBy}</td>
+                <td>{props.data.FinalStatus ? 'Approved' : 'Pending'}</td>
+                <td>{props.data.NextApprover}</td>
+                {userType != 1 ?
+                    <td>
+                        <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center' }}>
+                            <button disabled={!props.data.Approve} type="button" className="btn btn-sm btn-secondary" onClick={(e) => props.updateCustomerStatus(true, props.data)}>Approve</button>
+                            {userType != 5 && <button disabled={!props.data.Approve} type="button" className="btn btn-sm btn-secondary" onClick={(e) => props.updateCustomerStatus(false, props.data)}>Reject</button>}
+                        </div>
+                    </td> : null}
+                {userType != 1 ?
+                    <td>
+                        <textarea readOnly={!props.data.Approve} onInput={processString} maxLength={200} className="form-control" value={props.data.Remarks} onChange={(e) => props.updateGrid(props.index, 'Remarks', e.target.value)}></textarea>
+                    </td> : null}
+            </tr>
+            {
+                showRates && <tr><td colSpan={userType == 1 ? 8 : 9}><Rates userType={userType} print={props.data.Print} data={props.data} /></td></tr>
+            }
+            {
+                showDetails ? <tr>
+                    <td colSpan={userType == 1 ? 8 : 9}>
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    props.data.Details.map((x, index) =>
+                                        <tr key={index}>
+                                            <td>{x.User}</td>
+                                            <td>{x.StatusName}</td>
+                                            <td>{x.Remarks}</td>
+                                            <td>{x.UpdatedDateTime}</td>
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                    </td>
+                </tr> : null
+            }
+        </React.Fragment>
+    }
+
+    const Grid = () => {
+
+        const { loading, setLoading } = React.useContext(Context);
+        const [grid, setGrid] = React.useState(data);
+
+        const updateCustomerStatus = async (approve, data) => {
+            try {
+                const { Details, ...rest } = data;
+
+                setLoading(true);
+                const response = await fetch(updateCustomerStatusUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: { Type: userType, Approve: approve, CustomerId: rest.CustomerId, Remarks: rest.Remarks, Level: rest.Level } })
+                });
+
+                setLoading(false);
+
+                if (response.status === 200) {
+                    const rs = await response.json();
+                    alert(rs.msg);
+                    if (rs.sts == 0) {
+                        setGrid(rs.data);
+                    }
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            }
+        }
+
+        const updateGrid = (index, key, val) => {
+            let x = [...grid];
+            x[index][key] = val;
+            setGrid(x);
+        }
+
+        const onApprove = async (customerId, rateId, name, branch) => {
+            try {
+                setLoading(true);
+                const response = await fetch(generateAccountNoUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ CustomerId: customerId, RateId: rateId, Name: name, Branch: branch })
+                });
+
+                setLoading(false);
+
+                if (response.status === 200) {
+                    const rs = await response.json();
+                    alert(rs.msg);
+                    if (rs.sts == 0) {
+                        setGrid(rs.data);
+                    }
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            }
+        }
+
+        return <div className="row">
+            <div className="col-12">
+                <div className="table-responsive">
+                    <table className="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                {userType == 1 && <th>Print</th>}
+                                <th>Tariff</th>
+                                <th>Log</th>
+                                <th>Business Name</th>
+                                <th>Requested By</th>
+                                <th>Final Status</th>
+                                <th>Next Approver</th>
+                                {userType != 1 ? <th>Action</th> : null}
+                                {userType != 1 ? <th>Remarks</th> : null}
+                            </tr>
+                            {
+                                grid.map(
+                                    (x, index) =>
+                                        <Row key={index} index={index} data={x} updateCustomerStatus={updateCustomerStatus} updateGrid={updateGrid} onApprove={onApprove} />
+                                )
+                            }
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    const App = () => {
+
+        const {
+            loading, setLoading
+        } = React.useContext(Context);
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(10px)'
+            }
+        }
+
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>Customers</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+                            </div>
+                        </div>
+                        <Grid />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+
+        const [loading, setLoading] = React.useState(false);
+
+        const values = {
+            loading, setLoading
+        }
+
+        return <Context.Provider value={values}>
+            {children}
+        </Context.Provider>
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

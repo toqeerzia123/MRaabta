@@ -1,0 +1,216 @@
+﻿@model IEnumerable<IEnumerable<MRaabta.Models.RunsheetPrintViewModel>>
+
+@{
+    Layout = null;
+    var sno = 1;
+}
+
+<!doctype html>
+
+<html lang="en">
+<head>
+    <title>Runsheet Print Preview</title>
+    <style>
+        @@media print and (width: 21cm) and (height: 29.7cm) {
+            @@page {
+                margin: 3cm;
+                font-size: 13px;
+            }
+        }
+
+        /* style sheet for "A4" printing */
+        @@media print and (width: 8.3in) and (height: 11.7in) {
+            @@page {
+                margin: 0px;
+                font-size: 13px;
+            }
+        }
+
+        /* style sheet for "letter" printing */
+        @@media print and (width: 8.5in) and (height: 11in) {
+            @@page {
+                margin: 0px;
+                font-size: 13px;
+            }
+        }
+
+
+
+        * {
+            padding: 0px;
+            margin: 0px;
+            font-size: 13px;
+        }
+
+        body {
+            padding: 20px;
+            font-family: Calibri;
+            font-size: 13px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            table td {
+                border: 1px solid black;
+            }
+
+        tr.hrow td {
+            height: 25px !important;
+            padding-left: 5px
+        }
+
+        #header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            #header div {
+                width: calc(100% / 3);
+            }
+
+
+        .snoCol {
+            width: 5% !important;
+            padding-left:2px;
+        }
+
+        .addCol {
+            width: 20% !important;
+            padding-left: 2px;
+        }
+
+        .receiverReasonCol {
+            width: 10% !important;
+        }
+
+        .signCol {
+            width: 15% !important;
+        }
+
+        .signimg {
+            width: 100%;
+            object-fit: contain;
+        }
+
+        .signdiv {
+            display: flex;
+            flex-direction: row;
+            padding-top: 50px;
+            padding-bottom: 20px;
+            justify-content: space-evenly;
+            align-items: center
+        }
+
+            .signdiv p {
+                border-top: 2px solid black;
+                width: calc(70% / 2);
+                text-align: center;
+            }
+    </style>
+</head>
+<body>
+    @if (Model.Any())
+    {
+        var headerInfo = Model.ElementAt(0).ElementAt(0);
+        foreach (var item in Model)
+        {
+    <div>
+        <div id="header">
+            <div>
+                <img src="~/images/mnpLogo.png" height="50" />
+            </div>
+            <div style="text-align:center">
+                <h4>UNDELIVERED CONSIGNMENTS</h4>
+            </div>
+            <div style="text-align:right">
+                <p style="font-size:small"><b>Date: @ViewBag.StartDate - @ViewBag.EndDate</b></p>
+                @*<p style="font-family: IDAutomationHC39M">@headerInfo.RS</p>*@
+            </div>
+        </div>
+        <div>
+            <br />
+            <h4>   @headerInfo.RiderName - @headerInfo.RiderCode - @headerInfo.Branch </h4>
+        </div>
+        <br />
+        <table>
+            @{
+                var i = 0;
+                while (i < item.Count())
+                {
+                    <tr>
+                        <td class="snoCol" style="vertical-align:text-top">
+                            <div style="display:flex;flex-direction:column">
+                                <p>@("S" + sno++)</p>
+                                <p>Origin: @item.ElementAt(i).Origin</p>
+                                <p>Dest: @item.ElementAt(i).Destination</p>
+                                <p>Pieces: @item.ElementAt(i).Pieces</p>
+                                <p>Weight: @item.ElementAt(i).Weight</p>
+                            </div>
+                        </td>
+                        <td class="addCol" style="vertical-align:text-top">
+                            <div style="display:flex;flex-direction:column">
+                                <p>Runsheet # @item.ElementAt(i).RS</p>
+                                <p>CN# @item.ElementAt(i).CN </p>
+                                <p>Attempt Date: @item.ElementAt(i).PerformedOn </p>
+                                <p>Consignee Name: @item.ElementAt(i).Consignee</p>
+                                <p>Consignee Phone #: @item.ElementAt(i).Phone</p>
+                                <p>Consignee Address: @item.ElementAt(i).ConsigneeAddress</p>
+                                <p>Undelivered Reason: @item.ElementAt(i).Reason</p>
+                                <p>Rider Comments: @item.ElementAt(i++).Comments</p>
+                            </div>
+                        </td>
+                        @if (i < item.Count())
+                        {
+                            <td class="snoCol" style="vertical-align:text-top">
+                                <div style="display:flex;flex-direction:column">
+                                    <p>@("S" + sno++)</p>
+                                    <p>Origin: @item.ElementAt(i).Origin</p>
+                                    <p>Dest: @item.ElementAt(i).Destination</p>
+                                    <p>Pieces: @item.ElementAt(i).Pieces</p>
+                                    <p>Weight: @item.ElementAt(i).Weight</p>
+                                </div>
+                            </td>
+                            <td class="addCol" style="vertical-align:text-top">
+                                <div style="display:flex;flex-direction:column">
+                                    <p>Runsheet # @item.ElementAt(i).RS</p>
+                                    <p>CN# @item.ElementAt(i).CN </p>
+                                    <p>Attempt Date: @item.ElementAt(i).PerformedOn </p>
+                                    <p>Consignee Name: @item.ElementAt(i).Consignee</p>
+                                    <p>Consignee Phone #: @item.ElementAt(i).Phone</p>
+                                    <p>Consignee Address: @item.ElementAt(i).ConsigneeAddress</p>
+                                    <p>Undelivered Reason: @item.ElementAt(i).Reason</p>
+                                    <p>Rider Comments: @item.ElementAt(i++).Comments</p>
+                                </div>
+                            </td>
+                        }
+                        else
+                        {
+                            <td class="snoCol"></td>
+                            <td class="addCol" colspan="2"></td>
+                        }
+                    </tr>
+                }
+            }
+        </table>
+        <footer style="page-break-after:always">
+            <div class="signdiv">
+                <p>Courier/SDO Signature</p>
+                <p>Debriefer/Pending Desk</p>
+            </div>
+        </footer>
+
+    </div>
+            <br>
+        }
+    }
+    else
+    {
+        <label>No Record Found</label>
+    }
+</body>
+</html>

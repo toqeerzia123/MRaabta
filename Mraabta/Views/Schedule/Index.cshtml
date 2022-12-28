@@ -1,0 +1,121 @@
+﻿@model MRaabta.Repo.ScheduleRepo
+
+@{
+    ViewBag.Title = "Index";
+}
+<link href="@Url.Content("~/Content/themes/base/jquery-ui.min.css")" rel="stylesheet" />
+<!-- Required jQuery and jQuery UI Javascript references -->
+<script src="@Url.Content("~/Scripts/jquery-3.3.1.min.js")"></script>
+<script src="@Url.Content("~/Scripts/jquery-ui-1.12.1.min.js")"></script>
+<link href="~/Content/Site.css" rel="stylesheet" />
+
+<div class="row mt-5" id="listdiv">
+    <div class="col-12">
+        <h3 class="text-center">Update Couriers Schedule</h3>
+    </div>
+    <div class="col-12 mt-3" id="tblreq">
+    </div>
+</div>
+<div class="row" id="div_main">
+    <table>
+        <tr>
+            <td>
+                <label>Old Courier&nbsp;<span style="color:red">*</span></label>
+                @Html.DropDownList("oldCourierID", ViewBag.Couriers as List<SelectListItem>, new { @class = "form-control" })
+            </td>
+
+        </tr>
+        <tr>
+            <td>
+                <label>New Courier&nbsp;<span style="color:red">*</span></label>
+                @Html.DropDownList("newCourierID", ViewBag.Couriers as List<SelectListItem>, new { @class = "form-control" })
+            </td>
+
+        </tr>
+        <tr>
+            <td>
+                <div style="padding-top:20px">
+                    <label>Shift Type:</label>
+                    <input checked="checked" type="radio" id="RB_TYPE" name="RB_TYPE" value="1" onclick="getDate(this)"> All
+                    <input type="radio" id="RB_TYPE" name="RB_TYPE" value="2" onclick="getDate(this)"> Date Wise
+                </div>
+            </td>
+        </tr>
+        <tr id="tr_date" >
+            <td>
+                <label>Date</label>
+                <input id="Date" name="Date" type="date" class="form-control">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="col-3 mt-3">
+                    <input type="button" name="btn_update" value="Update" class="btn btn-onLine" id="btn_update" />
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        document.getElementById("tr_date").style.display = "none";
+    });
+
+    function getDate(rb) {
+        var tr_date = document.getElementById("tr_date");
+        if (rb.value == '1') {
+            tr_date.style.display = "none";
+        }
+        else {
+            tr_date.style.display = "block";
+        }
+    }
+
+
+    $('#btn_update').click(function (e) {
+        e.preventDefault();
+        var data = {
+            CourierTransfer: []
+        };
+
+        if ($('input[name="RB_TYPE"]:checked').val() === '2' && !$('#Date').val()) {
+            swal("Select Date");
+            return;
+        }
+        else if ($('input[name="RB_TYPE"]:checked').val() === '2') {
+            data.RB_TYPE = $('input[name="RB_TYPE"]:checked').val();
+            data.Date = $('#Date').val();
+            data.oldCourierID = $('#oldCourierID').val();
+            data.newCourierID = $('#newCourierID').val();
+
+            updateSchdeule(data);
+        }
+        else if ($('input[name="RB_TYPE"]:checked').val() === '1') {
+            data.RB_TYPE = $('input[name="RB_TYPE"]:checked').val();
+            data.oldCourierID = $('#oldCourierID').val();
+            data.newCourierID = $('#newCourierID').val();
+            updateSchdeule(data);
+        }
+    });
+
+    var updateSchdeule = (data) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("updateSchedule", "Schedule")',
+                data: JSON.stringify({ model: data }),
+                dataType: 'json',
+                contentType:'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+
+                    }
+                    swal(rs.msg);
+                }
+            });
+        };
+
+</script>
+
+

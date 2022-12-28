@@ -1,0 +1,861 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section styles{
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <style>
+        #container {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        #container1 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        #container2 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        #container3 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+    </style>
+}
+
+
+@section scripts{
+    <script type="text/javascript">
+        var nanToZero = (val, round = true) => {
+        if (isNaN(val)) {
+        return 0;
+        } else {
+        return round ? Math.round(val) : val;
+        }
+    };
+
+    $(function () {
+        var dataexists = '@ViewBag.err';
+        if (dataexists != "") {
+            swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+            }, function () {
+                     window.location = "../Login";
+            });
+
+        }
+        $(document).on({
+                ajaxStart: function () { $("#wait").show() },
+                ajaxStop: function () { $("#wait").hide(); },
+           });
+
+        $("#btn_search").click(function (e) {
+            debugger;
+
+            e.preventDefault();
+            var Category = $("#ddl_category").val();
+
+            if (!Category) {
+                swal('Select Category');
+                 $('#container').empty();
+                 $('#container1').empty();
+                 $('#container2').empty();
+                $('#container3').empty();
+                $('#main_heading').empty();
+                $('#sub_sub_para').empty();
+                $('#sub_heading').empty();
+                $('#chartContainer').empty();
+
+                return;
+            }
+            else {
+                cityCount(Category);
+                cityStats(Category);
+            }
+
+            var abc = (v) => isNaN(v) ? 0 : v;
+
+            function cityCount(Category) {
+                     $.ajax({
+                    type: 'post',
+                    url: '../CityReport/GetCitiesCount',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify({ Category: Category }),
+                    success: function (rs) {
+                    if (rs.dataPoints.length == 0) {
+
+                        }
+                        else {
+                        debugger;
+                        // TOTAL DELIVERED OF CITIES
+                        var IslamabadTotalDelivered = rs.dataPoints[0].IslamabadTotalDelivered;
+                        var KarachiTotalDelivered = rs.dataPoints[0].KarachiTotalDelivered;
+                        var LahoreTotalDelivered = rs.dataPoints[0].LahoreTotalDelivered;
+                        var RawalpindiTotalDelivered = rs.dataPoints[0].RawalpindiTotalDelivered;
+                        // TCN DOWMLOADED OF CITIES
+                        var KarachiTCNDownloaded = rs.dataPoints[0].KarachiTCNDownloaded;
+                        var IslamabadTCNDownloaded = rs.dataPoints[0].IslamabadTCNDownloaded;
+                        var LahoreTCNDownloaded = rs.dataPoints[0].LahoreTCNDownloaded;
+                        var RawalpindiTCNDownloaded = rs.dataPoints[0].RawalpindiTCNDownloaded;
+
+                        // PERCENTAGES FOR CITIES
+                        var per_IslamabadTotalDeliveredan = nanToZero((IslamabadTotalDelivered / IslamabadTCNDownloaded),false);
+                        var per_KarachiTotalDeliveredan = nanToZero((KarachiTotalDelivered / KarachiTCNDownloaded),false);
+                        var per_LahoreTotalDownloadedan = nanToZero((LahoreTotalDelivered / LahoreTCNDownloaded),false);
+                        var per_RawalpindiTotalDownloadedan = nanToZero((RawalpindiTotalDelivered / RawalpindiTCNDownloaded),false);
+
+                        per_IslamabadTotalDeliveredan = abc(per_IslamabadTotalDeliveredan);
+                        per_KarachiTotalDeliveredan = abc(per_KarachiTotalDeliveredan);
+                        per_LahoreTotalDownloadedan = abc(per_LahoreTotalDownloadedan);
+                        per_RawalpindiTotalDownloadedan = abc(per_RawalpindiTotalDownloadedan);
+
+
+
+                        }
+                        $('#container').empty();
+                        $('#container1').empty();
+                        $('#container2').empty();
+                        $('#container3').empty();
+                        $('#container').html("<span id='pro_chart_del'></span>");
+                        $('#container1').html("<span id='pro_chart_undel'></span>");
+                        $('#container2').html("<span id='pro_chart_per'></span>");
+                        $('#container3').html("<span id='pro_chart_unper'></span>");
+                        //$('#main_heading').html('<h3 class="mt-2" style="text-align: center; border:1px solid black; margin:1px;">City Wise Statistic</h3>')
+                        //  $('#sub_sub_para').html("<span class='col-md-12'><span class='col-md-6'><input type='radio' style='margin-top:10px; -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;' checked></input><b style='margin-left: 5px;'>    Total CN Downloaded:  </b> " + TCNDownloaded + "  </span><span class='col-md-6'><input type='radio' style='margin-left:5px; -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;' checked></input><b style='margin-left: 5px;'>    Total Downloaded Runsheet:</b> " + DownloadedRunsheet + "</span></span>")
+                        if (KarachiTCNDownloaded == 0 && IslamabadTCNDownloaded == 0 && LahoreTCNDownloaded == 0 && RawalpindiTCNDownloaded == 0) {
+                        //Islamabad
+                        var bar = new ProgressBar.Circle(container, {
+                             color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                             },
+                              svgStyle: {
+                                display: 'block',
+
+                                // Important: make sure that your container has same
+                                // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                width: '85%'
+                             },
+
+                          from: { color: '#00897b', width: 12 },
+                          to: { color: '#00897b', width: 12 },
+                          // Set default step function for all animate calls
+                             step: function (state, circle) {
+
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                                 var value = (Math.round(0) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_del').html("<h6 style='text-align: center;width:10em;'>Islamabad Total Delivered <span style='color:#00897b;'>" + IslamabadTotalDelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar.text.style.fontSize = '2rem';
+                        bar.animate(0);  // Number from 0.0 to 1.0
+
+                        //Karachi
+
+                        var bar1 = new ProgressBar.Circle(container1, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                             style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                            },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                            width: '85%'
+                            },
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#c62828', width: 12 },
+                          to: { color: '#c62828', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(0) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_undel').html("<h6 style='text-align: center;width:10em;'>Karachi Total Downloaded <span style='color:#c62828;'>" + KarachiTotalDelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar1.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar1.text.style.fontSize = '2rem';
+                        bar1.animate(0);  // Number from 0.0 to 1.0
+
+                        //Lahore
+
+                        var bar2 = new ProgressBar.Circle(container2, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                            autoStyleContainer: false,
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                            },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                             width: '85%'
+                            },
+                                 style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#e65100', width: 12 },
+                          to: { color: '#e65100', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                           circle.path.setAttribute('stroke', state.color);
+                           circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(0) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_per').html("<h6 style='text-align: center;width:10em;'>Lahore Total Downloaded <span style='color:#e65100'>" + LahoreTotalDelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar2.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar2.text.style.fontSize = '2rem';
+
+                        bar2.animate(0);  // Number from 0.0 to 1.0
+
+                        //Rawalpindi
+                        var bar3 = new ProgressBar.Circle(container3, {
+                          color: '#aaa',
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                            autoStyleContainer: false,
+                            style: {
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                              },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                            width: '85%'
+                              },
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#0277bd', width: 12 },
+                          to: { color: '#0277bd', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                           circle.path.setAttribute('stroke', state.color);
+                           circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(0)+'%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+
+                                $('#pro_chart_unper').html("<h6 style='text-align: center; width:10em;'>Rawalpindi Total Downloaded <span style='color:#0277bd'>" + RawalpindiTotalDelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar3.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar3.text.style.fontSize = '2rem';
+
+
+                        bar3.animate(0);  // Number from 0.0 to 1.0
+                        }
+                        else {
+                      //Islamabad
+                        var bar = new ProgressBar.Circle(container, {
+                             color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                             },
+                              svgStyle: {
+                                display: 'block',
+
+                                // Important: make sure that your container has same
+                                // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                width: '85%'
+                             },
+
+                          from: { color: '#00897b', width: 12 },
+                          to: { color: '#00897b', width: 12 },
+                          // Set default step function for all animate calls
+                             step: function (state, circle) {
+
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                                 var value = (Math.round(per_IslamabadTotalDeliveredan * 100) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_del').html("<h6 style='text-align: center;width:10em;'>Islamabad Total Delivered <span style='color:#00897b;'>" + IslamabadTotalDelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar.text.style.fontSize = '2rem';
+                        bar.animate(per_IslamabadTotalDeliveredan);  // Number from 0.0 to 1.0
+
+                        //Karachi
+
+                        var bar1 = new ProgressBar.Circle(container1, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                             style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                            },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                            width: '85%'
+                            },
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#c62828', width: 12 },
+                          to: { color: '#c62828', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(per_KarachiTotalDeliveredan * 100) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_undel').html("<h6 style='text-align: center;width:10em;'>Karachi Total Delivered <span style='color:#c62828;'>" + KarachiTotalDelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar1.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar1.text.style.fontSize = '2rem';
+                        bar1.animate(per_KarachiTotalDeliveredan);  // Number from 0.0 to 1.0
+
+                        //Lahore
+
+                        var bar2 = new ProgressBar.Circle(container2, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                            autoStyleContainer: false,
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                            },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                             width: '85%'
+                            },
+                                 style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#e65100', width: 12 },
+                          to: { color: '#e65100', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                           circle.path.setAttribute('stroke', state.color);
+                           circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(per_LahoreTotalDownloadedan * 100) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_per').html("<h6 style='text-align: center;width:10em;'>Lahore Total Delivered <span style='color:#e65100'>" + LahoreTotalDelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar2.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar2.text.style.fontSize = '2rem';
+                        bar2.animate(per_LahoreTotalDownloadedan);  // Number from 0.0 to 1.0
+
+                        //Rawalpindi
+                        var bar3 = new ProgressBar.Circle(container3, {
+                          color: '#aaa',
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                            autoStyleContainer: false,
+                            style: {
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                              },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                            width: '85%'
+                              },
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#0277bd', width: 12 },
+                          to: { color: '#0277bd', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                           circle.path.setAttribute('stroke', state.color);
+                           circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(per_RawalpindiTotalDownloadedan * 100)+'%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+
+                                $('#pro_chart_unper').html("<h6 style='text-align: center; width:10em;'>Rawalpindi Total Delivered <span style='color:#0277bd'>" + RawalpindiTotalDelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar3.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar3.text.style.fontSize = '2rem';
+                        bar3.animate(per_RawalpindiTotalDownloadedan);  // Number from 0.0 to 1.0
+                        }
+
+
+                            }
+
+                });
+            }
+
+              function cityStats(Category) {
+                     $.ajax({
+                    type: 'post',
+                    url: '../CityReport/GetCityStats',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify({ Category: Category }),
+                         success: function (rs) {
+                        //Total Riders Count
+                        var KarachiTotalRidersCount = rs.dataPoints[0].KarachiTotalRidersCount;
+                        var IslamabadTotalRidersCount = rs.dataPoints[0].IslamabadTotalRidersCount;
+                        var RawalpindiTotalRidersCount = rs.dataPoints[0].RawalpindiTotalRidersCount;
+                        var LahoreTotalRidersCount = rs.dataPoints[0].LahoreTotalRidersCount;
+                        //Total Active Riders
+                        var KarachiActiveRiders = rs.dataPoints[0].KarachiActiveRiders;
+                        var LahoreActiveRiders = rs.dataPoints[0].LahoreActiveRiders;
+                        var IslamabadActiveRiders = rs.dataPoints[0].IslamabadActiveRiders;
+                        var RawalpindiActiveRiders = rs.dataPoints[0].RawalpindiActiveRiders;
+                        //Total Offline Riders
+                        var KarachiOfflineRiders = rs.dataPoints[0].KarachiOfflineRiders;
+                        var LahoreOfflineRiders = rs.dataPoints[0].LahoreOfflineRiders;
+                        var IslamabadOfflineRiders = rs.dataPoints[0].IslamabadOfflineRiders;
+                        var RawalpindiOfflineRiders = rs.dataPoints[0].RawalpindiOfflineRiders;
+                        //Total TCN Downloaded
+                        var KarachiTCNDownloaded = rs.dataPoints[0].KarachiTCNDownloaded;
+                        var IslamabadTCNDownloaded = rs.dataPoints[0].IslamabadTCNDownloaded;
+                        var RawalpindiTCNDownloaded = rs.dataPoints[0].RawalpindiTCNDownloaded;
+                        var LahoreTCNDownloaded = rs.dataPoints[0].LahoreTCNDownloaded;
+                        //Total Downloadeed Runsheet
+                        var KarachiDownloadedRunsheet = rs.dataPoints[0].KarachiDownloadedRunsheet;
+                        var LahoreDownloadedRunsheet = rs.dataPoints[0].LahoreDownloadedRunsheet;
+                        var IslamabadDownloadedRunsheet = rs.dataPoints[0].IslamabadDownloadedRunsheet;
+                        var RawalpindiDownloadedRunsheet = rs.dataPoints[0].RawalpindiDownloadedRunsheet;
+                        //Total Undelivered
+                        var KarachiTotalUndelivered = rs.dataPoints[0].KarachiTotalUndelivered;
+                        var IslamabadTotalUndelivered = rs.dataPoints[0].IslamabadTotalUndelivered;
+                        var RawalpindiTotalUndelivered = rs.dataPoints[0].RawalpindiTotalUndelivered;
+                        var LahoreTotalUndelivered = rs.dataPoints[0].LahoreTotalUndelivered;
+                             //Total delivered RTS
+                        var KarachiTotaldeliveredRTS = rs.dataPoints[0].KarachiTotalDeliveredRTS;
+                        var IslamabadTotaldeliveredRTS = rs.dataPoints[0].IslamabadTotalDeliveredRTS;
+                        var RawalpindiTotaldeliveredRTS = rs.dataPoints[0].RawalpindiTotalDeliveredRTS ;
+                        var LahoreTotaldeliveredRTS = rs.dataPoints[0].LahoreTotalDeliveredRTS;
+
+                        //$('#heading1').html("<span style='font-size:18px;font-family: Georgia, serif;'>Karachi</span><hr/>");
+                        //$('#heading2').html("<span style='font-size:18px;font-family: Georgia, serif;'>Islamabad</span><hr/>");
+                        //$('#heading3').html("<span style='font-size:18px; font-family: Georgia, serif;'>Rawalpindi</span><hr/>");
+                        //$('#heading4').html("<span style='font-size:18px; font-family: Georgia, serif;'>Lahore</span><hr/>");
+                        //$('#karachi_stats').html("<div><span style='font-weight:bold; text-align:center;'>Total Riders</span><span> " + KarachiTotalRidersCount + "</span><br/><span style='font-weight:bold; text-align:center;'>Active Riders</span><span> " + KarachiActiveRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>Offline Riders</span><span> " + KarachiOfflineRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>TCN Downloaded</span><span> " + KarachiTCNDownloaded + "</span><br/><span style='font-weight:bold; text-align:center;'>Downloaded Runsheet</span><span> " + KarachiDownloadedRunsheet + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Undelivered</span><span> " + KarachiTotalUndelivered + "</span></div>");
+                        //$('#Islamabad_stats').html("<div><span style='font-weight:bold; text-align:center;'>Total Riders</span><span> " + IslamabadTotalRidersCount + "</span><br/><span style='font-weight:bold; text-align:center;'>Active Riders</span><span> " + IslamabadActiveRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>Offline Riders</span><span> " + IslamabadOfflineRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>TCN Downloaded</span><span> " + IslamabadTCNDownloaded + "</span><br/><span style='font-weight:bold; text-align:center;'>Downloaded Runsheet</span><span> " + IslamabadDownloadedRunsheet + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Undelivered</span><span> " + IslamabadTotalUndelivered + "</span></div>");
+                        //$('#Rawalpindi_stats').html("<div><span style='font-weight:bold; text-align:center;'>Total Riders</span><span> " + KarachiTotalRidersCount + "</span><br/><span style='font-weight:bold; text-align:center;'>Active Riders</span><span> " + RawalpindiActiveRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>Offline Riders</span><span> " + RawalpindiOfflineRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>TCN Downloaded</span><span> " + RawalpindiTCNDownloaded + "</span><br/><span style='font-weight:bold; text-align:center;'>Downloaded Runsheet</span><span> " + RawalpindiDownloadedRunsheet + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Undelivered</span><span> " + RawalpindiTotalUndelivered + "</span></div>");
+                             //$('#Lahore_stats').html("<div><span style='font-weight:bold; text-align:center;'>Total Riders</span><span> " + KarachiTotalRidersCount + "</span><br/><span style='font-weight:bold; text-align:center;'>Active Riders</span><span> " + LahoreActiveRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>Offline Riders</span><span> " + LahoreOfflineRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>TCN Downloaded</span><span> " + LahoreTCNDownloaded + "</span><br/><span style='font-weight:bold; text-align:center;'>Downloaded Runsheet</span><span> " + LahoreDownloadedRunsheet + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Undelivered</span><span> " + LahoreTotalUndelivered + "</span></div>");
+                        $('#Islamabad_stats').html("<div class='card'><div class='card-header' style='font-weight:bold; font-family:New Century Schoolbook, TeX Gyre Schola, serif; font-size:16px;'>Islamabad</div><div class='card-body'><span style='font-weight:bold; text-align:center;'>Total Riders</span><span> " + IslamabadTotalRidersCount + "</span><br/><span style='font-weight:bold; text-align:center;'>Active Riders</span><span> " + IslamabadActiveRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>Offline Riders</span><span> " + IslamabadOfflineRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>TCN Downloaded</span><span> " + IslamabadTCNDownloaded + "</span><br/><span style='font-weight:bold; text-align:center;'>Downloaded Runsheet</span><span> " + IslamabadDownloadedRunsheet + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Undelivered</span><span> " + IslamabadTotalUndelivered + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Delivered RTS</span><span> " + IslamabadTotaldeliveredRTS + "</span></div></div>")
+                        $('#karachi_stats').html("<div class='card'><div class='card-header' style='font-weight:bold; font-family:New Century Schoolbook, TeX Gyre Schola, serif; font-size:16px;'>Karachi</div><div class='card-body'><span style='font-weight:bold; text-align:center;'>Total Riders</span><span> " + KarachiTotalRidersCount + "</span><br/><span style='font-weight:bold; text-align:center;'>Active Riders</span><span> " + KarachiActiveRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>Offline Riders</span><span> " + KarachiOfflineRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>TCN Downloaded</span><span> " + KarachiTCNDownloaded + "</span><br/><span style='font-weight:bold; text-align:center;'>Downloaded Runsheet</span><span> " + KarachiDownloadedRunsheet + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Undelivered</span><span> " + KarachiTotalUndelivered + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Delivered RTS</span><span> " + KarachiTotaldeliveredRTS + "</span></div></div>")
+                        $('#Rawalpindi_stats').html("<div class='card'><div class='card-header' style='font-weight:bold; font-family:New Century Schoolbook, TeX Gyre Schola, serif; font-size:16px;'>Rawalpindi</div><div class='card-body'><span style='font-weight:bold; text-align:center;'>Total Riders</span><span> " + RawalpindiTotalRidersCount + "</span><br/><span style='font-weight:bold; text-align:center;'>Active Riders</span><span> " + RawalpindiActiveRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>Offline Riders</span><span> " + RawalpindiOfflineRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>TCN Downloaded</span><span> " + RawalpindiTCNDownloaded + "</span><br/><span style='font-weight:bold; text-align:center;'>Downloaded Runsheet</span><span> " + RawalpindiDownloadedRunsheet + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Undelivered</span><span> " + RawalpindiTotalUndelivered + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Delivered RTS</span><span> " + RawalpindiTotaldeliveredRTS + "</span></div></div>")
+                        $('#Lahore_stats').html("<div class='card'><div class='card-header' style='font-weight:bold; font-family:New Century Schoolbook, TeX Gyre Schola, serif; font-size:16px;'>Lahore</div><div class='card-body'><span style='font-weight:bold; text-align:center;'>Total Riders</span><span> " + LahoreTotalRidersCount + "</span><br/><span style='font-weight:bold; text-align:center;'>Active Riders</span><span> " + LahoreActiveRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>Offline Riders</span><span> " + LahoreOfflineRiders + "</span><br/><span style='font-weight:bold; text-align:center;'>TCN Downloaded</span><span> " + LahoreTCNDownloaded + "</span><br/><span style='font-weight:bold; text-align:center;'>Downloaded Runsheet</span><span> " + LahoreDownloadedRunsheet + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Undelivered</span><span> " + LahoreTotalUndelivered + "</span><br/><span style='font-weight:bold; text-align:center;'>Total Delivered RTS</span><span> " + LahoreTotaldeliveredRTS + "</span></div></div>")
+                            }
+
+                });
+            }
+        });
+
+        });
+
+    </script>
+}
+
+
+<h3 style="text-align:center;"> City Wise Performance Report</h3>
+<hr style="border:1px solid black" />
+<div class="row mt-3">
+    <div class="col-1 mt-2">
+        <label for="inputState" style="font-size:15px; font-family:sans-serif;">Category</label>
+    </div>
+    <div class="col-3 mt-2">
+        <select id="ddl_category" class="form-control">
+            <option value='1'>January</option>
+            <option value='2'>February</option>
+            <option value='3'>March</option>
+            <option value='4'>April</option>
+            <option value='5'>May</option>
+            <option value='6'>June</option>
+            <option value='7'>July</option>
+            <option value='8'>August</option>
+            <option value='9'>September</option>
+            <option value='10'>October</option>
+            <option value='11'>November</option>
+            <option value='12'>December</option>
+        </select>
+
+    </div>
+
+    <div class="col-3">
+        <button type="button" class="btn btn-light" style="border:1px solid black; height: 34px;margin-top: 6px;font-size: 15px;" id="btn_search">Search</button>
+    </div>
+
+
+</div>
+<hr style="border:1px solid black" />
+<div id="wait" style="display:none;width:69px;height:89px;border:1px solid black;position:absolute;top:50%;left:50%;padding:2px;">
+    <img src="~/images/loader.gif" width="64" height="64" /><br>Loading..
+</div>
+@* Progress Bar *@
+<link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600,800,900" rel="stylesheet" type="text/css">
+<span id="main_heading"></span>
+<span id="sub_sub_para"></span>
+<div class="row col-md-12">
+    <div class="col-md-3" style="margin-top:5px;">
+        <div id="container">
+            <span id="pro_chart_del"></span>
+        </div>
+    </div>
+    <div class="col-md-3" style="margin-top:5px;">
+        <div id="container1">
+            <span id="pro_chart_undel"></span>
+        </div>
+    </div>
+    <div class="col-md-3" style="margin-top:5px;">
+        <div id="container3">
+            <span id="pro_chart_per"></span>
+        </div>
+    </div>
+    <div class="col-md-3" style="margin-top:5px;">
+        <div id="container2">
+            <span id="pro_chart_unper"></span>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div id="main_heading1">
+            <div id="heading2" style="text-align:center;"></div>
+            <div id="Islamabad_stats"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div id="main_heading">
+            <div id="heading1" style="text-align:center;"></div>
+            <div id="karachi_stats"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div id="main_heading2">
+            <div id="heading3" style="text-align:center;"></div>
+            <div id="Rawalpindi_stats"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div id="main_heading3">
+            <div id="heading4" style="text-align:center;"></div>
+            <div id="Lahore_stats"></div>
+        </div>
+    </div>
+</div>

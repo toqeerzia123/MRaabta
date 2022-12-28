@@ -1,0 +1,424 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<link href="~/Content/Site.css" rel="stylesheet" />
+<link href="@Url.Content("../Content/themes/base/jquery-ui.min.css")" rel="stylesheet" />
+<!-- Required jQuery and jQuery UI Javascript references -->
+<script src="@Url.Content("../Scripts/jquery-3.4.1.min.js")"></script>
+<script src="@Url.Content("../Scripts/jquery-ui.min.js")"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<!DOCTYPE html>
+
+<style>
+    .modal-dialog {
+        height: 75%; /* = 90% of the .modal-backdrop block = %90 of the screen */
+    }
+
+    .modal-content {
+        height: 100%; /* = 100% of the .modal-dialog block */
+    }
+
+    .img-container {
+        text-align: center;
+        display: block;
+    }
+
+    #myInput {
+        background-image: url('/css/searchicon.png'); /* Add a search icon to input */
+        background-position: 10px 12px; /* Position the search icon */
+        background-repeat: no-repeat; /* Do not repeat the icon image */
+        width: 100%; /* Full-width */
+        font-size: 16px; /* Increase font-size */
+        padding: 12px 20px 12px 40px; /* Add some padding */
+        border: 1px solid #ddd; /* Add a grey border */
+        margin-bottom: 12px; /* Add some space below the input */
+    }
+
+    td {
+        /*font-size: 12px;*/
+        text-align: center;
+        height: 50px;
+    }
+
+    tr {
+        /*font-size: 12px;*/
+        text-align: center;
+    }
+
+    th {
+        font-size: 15px;
+        font-weight: bolder;
+        height: 50px;
+    }
+
+    table {
+        font-family: Lato;
+    }
+</style>
+
+<div id="mainbody" style="  width:84%;">
+    <h2 style="text-align:center">Revenue Report</h2>
+
+    <div class="row">
+        <div class="col-md-5 mt-3">
+            <label>From Date</label>
+            <input id="StartDate" name="StartDate" type="date" class="form-control" style="height:30px">
+        </div>
+        <div class="col-md-5 mt-3">
+            <label>To Date</label>
+            <input id="EndDate" name="EndDate" type="date" class="form-control" style="height:30px">
+        </div>
+        <div class="col-md-2 mt-3">
+            <input type="button" name="btn_search" value="Search" class="btn btn-onLine " id="btn_search" />
+        </div>
+
+    </div>
+
+    <div id="div_body" style="visibility: hidden;">
+        <div class="card mt-2">
+            <div class="card ">
+                <div class="card-header" style=" font-size:20px; font-weight:bolder; font-family:'Cambria Math';background-color:#424242;">
+                    <span class="ml-1" style="color:white;">Total Amount</span>
+                </div>
+                <div style="margin-left:1px; display: flex; flex-wrap: wrap;">
+                    <div class="col-md-4 " style="width:20%;align-content: center;text-align: center; ">
+                        <span style="font-size:1.5vw; font-weight:bolder; font-family:Lato;">Amount Charged</span><br /><div class="row img-container"><img src="../images/growth.png" style="height:50px;width:20%; margin-top:4px; margin-bottom: 5px; object-fit: cover; margin-left: 10px;" /><span id="bar_charged" style="font-size:2vw; text-align:center; font-family:Lato; margin-top: 10px;"></span></div>
+                    </div>
+                    <div class="col-md-4" style="width:20%;align-content: center;text-align: center;;">
+                        <span style="font-size:1.5vw; font-weight:bolder; font-family:Lato; margin-left: 45px;">GST</span><br /> <div class="row img-container"><img src="../images/gst.png" style="height: 50px;width:20%;  margin-top:4px; object-fit: cover; margin-left: 10px; margin-bottom: 5px;" /><span id="bar_gst" style="font-size:2vw; text-align:center; font-family:Lato; margin-top: 20px;"></span></div>
+                    </div>
+                    <div class="col-md-4" style="width:20%;align-content: center;text-align: center;">
+                        <span style="font-size:1.5vw; font-weight:bolder; font-family:Lato; margin-left: 10px;">Total Amount</span><br /><div class="row img-container"><img src="../images/money-bag.png" style="height:50px;width:18%; margin-top:4px; object-fit: cover; margin-left: 10px; margin-bottom: 5px;" /><span id="bar_total" style="font-size:2vw; text-align:center; font-family:Lato; margin-top: 10px;"></span></div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+        <div class="panel-body mainTable mt-3">
+
+            <div id="div_tbl_details" style="width: 100%" class="mt-2 mb-2">
+
+
+                <table id="tbl_pickUphead" style="width: 100%" class="mt-2 mb-2">
+                    <thead style="background-color:#eeeeee; font-size:20px; font-weight:bolder; font-family:'Cambria Math';background-color:#424242;">
+                        <tr>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">SNO.</th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Consignment Number</th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Amount Charged</th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Service Type</th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Rider</th>
+                        </tr>
+
+
+                    </thead>
+
+
+                    <tbody id="tbl_pickup">
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="modal fade" id="ModalPopUp" role="dialog">
+    <div class="modal-dialog err-pop" style="">
+        <div class="modal-content">
+            <div class="modal-header" style=" font-size:20px; font-weight:bolder; font-family:'Cambria Math';background-color:#424242;">
+                <span id="ticketnumber" style="color:white;"></span>
+
+                @*<h5 class="modal-title" id="exampleModalLabel">Ticket Number</h5>*@
+
+                @*<h4 style="text-align: center"></h4>*@
+                <button id="DivClose" type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body" role="dialog">
+                <div id="Staus">
+
+                    <table class="MainTbl table table-striped">
+                        <thead>
+                            <tr style="font-size:12px;">
+
+                                <th>Origin </th>
+                                <th>Destination </th>
+                                <th>Weight </th>
+                                <th>Pieces</th>
+
+                            </tr>
+                        </thead>
+                        <tbody id="tblStatus" style="font-size:12px;">
+                        </tbody>
+                    </table>
+
+                </div>
+                <div class="row">
+                    <table class="  .table-borderless" style=" width: 50%;">
+
+                        <tr style="font-size:12px;">
+                            <td>Charged Amount </td>
+                        </tr>
+                        <tr style="font-size:12px;">
+                            <td>Gst</td>
+                        </tr>
+                        <tr style="font-size:12px;">
+                            <td>discount</td>
+                        </tr>
+                        <tr style="font-size:12px;">
+                            <td>discount gst</td>
+                        </tr>
+
+                    </table>
+                    <table class="    .table-borderless" style=" width: 50%;">
+
+                        <tr style="font-size:15px;">
+                            <td id="tbl_camount"> </td>
+                        </tr>
+                        <tr style="font-size:15px;">
+                            <td id="tbl_gst"></td>
+                        </tr>
+                        <tr style="font-size:15px;">
+                            <td id="tbl_dis"></td>
+                        </tr>
+                        <tr style="font-size:15px;">
+                            <td id="tbl_disgst"></td>
+                        </tr>
+
+
+                    </table>
+                    <table class="MainTbl table table-striped" style=" width: 50%;">
+
+                        <tr style="font-size:14px;">
+                            <th>Total Amount</th>
+                        </tr>
+
+
+                    </table>
+                    <table class=" MainTbl table table-striped" style=" width: 50%;">
+
+                        <tr style="font-size:16px;">
+                            <td id="tbl_totalAmount"></td>
+                        </tr>
+
+
+                    </table>
+                </div>
+
+
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    debugger;
+   function formatNumber(num) {
+  return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+}
+    $(function () {
+        var sDate, eDate;
+         $('#StartDate').change(function () {
+            debugger;
+             sDate = $(this).val();
+             //if(eDate != null && eDate != null && sDate <= eDate) {
+             //    getRiders(sDate, eDate);
+             //}
+             if(sDate > eDate) {
+                 swal('Select Correct Date');
+             }
+
+
+         });
+         $('#EndDate').change(function () {
+            debugger;
+              eDate = $(this).val();
+             //alert(eDate);
+              //if(sDate != null && eDate !=null && sDate <= eDate) {
+              //   getRiders(sDate, eDate);
+              //}
+             //else
+             if(sDate > eDate) {
+                 swal('Select Correct Date');
+             }
+         });
+          $('body').on('click', '.btnView', function () {
+              debugger;
+              var ticketNumber = $(this).val();
+              getRequestDetails(ticketNumber);
+               $('#ModalPopUp').modal('show');
+
+          });
+        var getRequestDetails = (ticketNumber) => {
+             var postData = { ticketNumber: ticketNumber};
+             $.ajax(
+                {
+
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: '@Url.Action("getconsignmentamount", "TotalRevenue")',
+                    data: JSON.stringify(postData),
+                     success: function (data) {
+                        var rs = data.result;
+                         var rows = '';
+                         var chargedamount = '';
+                         var gst = '';
+                         var discount = '';
+                         var discountgst = '';
+                         var totalAmount = '';
+
+
+
+                         var text = '';
+                     var num = 'Consignment Number: '+ticketNumber;
+                     //$(".modal-header #reqId").val(id);
+                     $('#ticketnumber').text(num);
+                     //name += " Stock"
+                     //$('#zone').text(name); <td>${x.consignmentNumber == null}  ? `${x.consignmentNumber}` : `<i>not issued</i>`}</td>
+                     for (let x of rs) {
+                         debugger;
+
+                         rows += `<tr>
+                                    <td>${x.origin}</td>
+                                    <td>${x.destination}</td>
+                                    <td>${x.Weight}</td>
+                                    <td>${x.pieces}</td>
+
+                                    </tr>`;
+
+                          totalAmount  = x.totalAmount;
+                         gst = x.gst;
+                         discount = x.discountApplied;
+
+                         discountgst = x.discountGST;
+                         chargedamount = x.Amount;
+
+
+
+                     }
+
+                         $('#tblStatus').html(rows);
+                         $('#tbl_camount').html(chargedamount);
+                         $('#tbl_gst').html(gst);
+                         $('#tbl_dis').html(discount);
+                         $('#tbl_disgst').html(discountgst);
+                         $('#tbl_totalAmount').html(totalAmount);
+
+
+
+
+
+
+                    }
+
+                });
+
+        };
+
+        var getstats = (SDate,EDate) => {
+              var postData = { SDate: SDate, EDate: EDate };
+
+                $.ajax(
+                {
+
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: '@Url.Action("getStats", "TotalRevenue")',
+                    data: JSON.stringify(postData),
+                     success: function (data) {
+
+                         var r = data.result;
+                         var amount   = null;
+                             var gst = null ;
+                             var total = null;
+
+                    debugger;
+                         for (let x of r) {
+                            amount   =x.Amount ;
+                            gst = x.gst ;
+                            total = x.totalAmount ;
+
+
+
+                         }
+
+                             $('#bar_charged').html(formatNumber(amount));
+                             $('#bar_gst').html(formatNumber(gst));
+                             $('#bar_total').html(formatNumber(total));
+
+                    }
+
+                });
+
+         };
+
+         $("#btn_search").click(function (e) {
+            debugger;
+             e.preventDefault();
+             document.getElementById("div_body").removeAttribute("style");
+            var SDate = $("#StartDate").val().toString();
+             var EDate = $("#EndDate").val().toString();
+
+              //if (!riderCode) {
+              //  swal('Select From Rider');
+              //  return;
+            //}
+            if (!SDate) {
+                swal('Select From Date');
+                return;
+            }
+            if (!EDate) {
+                swal('Select To Date');
+                return;
+            }
+            else {
+                debugger;
+                getstats(sDate, EDate);
+                var postData = {  SDate: SDate, EDate: EDate };
+                debugger;
+                 $.ajax(
+                {
+
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: '@Url.Action("getAmount", "TotalRevenue")',
+                    data: JSON.stringify(postData),
+                     success: function (data) {
+
+                         var rows = '';
+                         var sno = 0;
+                         var r = data.result;
+                         debugger;
+                         for (let x of r) {
+                             sno++;
+
+                        rows += `<tr style='font-size:14px; text-align:center; margin:0px; padding:0px; font-family:Lato;'>
+                                    <td>${sno}</td>
+<td><button id="${x.consignmentNumber}" type="button" class="btn btn-dark btnView" data-id="${x.consignmentNumber}" value="${x.consignmentNumber}">${x.consignmentNumber}</button>  </td>
+                                    <td>${x.Amount}</td>
+                                    <td>${x.ServiceType}</td>
+
+                                    <td>${x.rider}</td>
+
+                                </tr>`;
+
+                         }
+                         debugger;
+                         $('#tbl_pickup').html(rows);
+
+                    }
+
+                });
+
+            }
+
+         });
+    });
+
+
+</script>

@@ -1,0 +1,141 @@
+﻿@using System.Data
+@model DataTable
+
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+<!DOCTYPE html>
+
+<html>
+    <head>
+    <meta name="viewport" content="width=device-width" />
+
+    <title>Index</title>
+    <link href="@Url.Content("../Content/themes/base/jquery-ui.min.css")" rel="stylesheet" />
+    <!-- Required jQuery and jQuery UI Javascript references -->
+    <script src="@Url.Content("../Scripts/jquery-3.4.1.min.js")"></script>
+    <script src="@Url.Content("../Scripts/jquery-ui.min.js")"></script>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $("#upload").click(function (e) {
+
+                debugger;
+                e.preventDefault();
+                $.ajax({
+                    //url: '/Mraabta/CSVUpload/Upload/',
+                    url: '../CSVUpload/Upload/',
+                    dataType: "json",
+                    type: "POST",
+                    contentType: 'application/json; charset=utf-8',
+
+                    success: function (data) {
+                      swal(data)
+                        $("#tbl_csv").empty();
+
+                    }
+
+                });
+
+            });
+        });
+        if (dataexists != "") {
+          swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+                }, function() {
+                    window.location = "../Login";
+                });
+        }
+    </script>
+
+    </head>
+    <body>
+        <h2 style="text-align:center;">CSV Bulk Upload</h2>
+        <form action="" method="post" enctype="multipart/form-data">
+            <br />
+            <input type="file" name="file" id="fileInput" required style="border:1px solid black;" />
+
+            <input type="submit" id="show_preview" value="Preview" />
+
+
+        </form>
+        <br />
+
+        @if (ViewBag.Model != null)
+        {
+            <div id="tbl_csv">
+                <table class="table table-responsive table-bordered" style="overflow:scroll; height:400px;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col"> S No. </th>
+                            <th scope="col"> Runsheet Number</th>
+                            <th scope="col"> Consignment Number </th>
+                            <th scope="col"> Name </th>
+                            <th scope="col"> Phone Number </th>
+                            <th scope="col"> COD Amount </th>
+                            <th scope="col"> Created By </th>
+                            <th scope="col"> Created On </th>
+                            <th scope="col"> Reason </th>
+                            <th scope="col"> Relation </th>
+                            <th scope="col"> Picker Name </th>
+                            <th scope="col"> Longitude </th>
+                            <th scope="col"> Latitude </th>
+                            <th scope="col"> User_Id </th>
+                            <th scope="col"> Picker Contact Number </th>
+                            <th scope="col"> Rider Comments </th>
+                            <th scope="col"> NIC Number </th>
+                            <th scope="col"> Rider IEMI </th>
+                            <th scope="col"> Rider Amount Entered </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int i = 0; }
+                        @foreach (DataRow row in Model.Rows)
+                        {
+                            <tr style="text-align:center">
+                                <td style="width:6%"> @{ i++; }   @i.ToString() </td>
+                                @if (@row["runsheet_number"].ToString().TrimStart('"').TrimEnd('"') == null)
+                                {
+                                    <td style="width:6%">0</td>
+                                }
+                                else
+                                {
+                                    <td style="width:6%">@row["runsheet_number"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                }
+                                <td style="width:6%">@row["cn_number"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["name"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["phone_no"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["cod_amount"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["created_by"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["created_on"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["reason"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["relation"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["picker_name"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["latitude"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["longitude"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["user_id"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["picker_contact_number"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["rider_comments"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["nic_cumber"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["rider_iemi"].ToString().TrimStart('"').TrimEnd('"')</td>
+                                <td style="width:6%">@row["is_entered_cod_amount"].ToString().TrimStart('"').TrimEnd('"')</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <br />
+                <input type="button" value="Submit" id="upload" style="align-content:center; align-items:center; text-align:center;width:5em;" class="btn" />
+            </div>
+      
+        }
+        else if(ViewBag.Model == null)
+        {
+    
+        }
+    </body>
+</html>

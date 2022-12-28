@@ -1,0 +1,120 @@
+﻿@{
+    //var user = Newtonsoft.Json.JsonConvert.DeserializeObject<MRaabta.Models.UserModel>(Request.Cookies.Get("userCookie").Value);
+    //var menus = new MRaabta.Repository.UserRepository().GetMenues(user.Uid);
+    //var urlCookie = Request.Cookies.Get("urlCookie").Value;
+    var user = Session["UserInfo"] as MRaabta.Models.UserModel;
+    var menus = Session["Menus"] as List<MRaabta.Models.MenuModel>;
+    var urlCookie = "";
+    try
+    {
+        if (Session["DashboardHomeUrl"] != null)
+        {
+            urlCookie = Session["DashboardHomeUrl"].ToString();
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+     
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="description" content="Vali is a responsive and free admin theme built with Bootstrap 4, SASS and PUG.js. It's fully customizable and modular.">
+
+    <title>Admin - Dashboard</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Main CSS-->
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="~/Content/NewContent/main.css">
+    <link rel="stylesheet" type="text/css" href="~/Content/NewContent/theme.css">
+    <link href="~/Content/datatable.css" rel="stylesheet" />
+    <!-- Font-icon css-->
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+
+        .sweet-overlay {
+            background: rgba(0, 0, 0, .7) !important;
+        }
+
+        body {
+            background:url(@Url.Content("~/images/back.jpg"));
+            background-size:cover;
+            background-attachment:fixed;
+            /*background: rgb(182, 58, 0);
+            background: linear-gradient(180deg, rgba(182, 58, 0, 1) 0%, rgba(242, 103, 38, 1) 100%);*/
+        }
+
+        .app-header__logo {
+            background: none;
+        }
+    </style>
+    @RenderSection("styles", false)
+</head>
+<body class="app sidebar-mini rtl">
+    <!-- Navbar-->
+    <header class="app-header">
+        <a class="app-header__logo" href="@urlCookie">
+            <img src="@Url.Content("~/images/mnpLogo.png")" height="50" />
+        </a>
+        <!-- Sidebar toggle button--><a class="app-sidebar__toggle" href="#" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
+        <!-- Navbar Right Menu-->
+        <ul class="app-nav">
+
+            <!-- User Menu-->
+            <li class="dropdown">
+                <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Open Profile Menu"><i class="fa fa-user fa-lg"></i></a>
+                <ul class="dropdown-menu settings-menu dropdown-menu-right">
+                    <li><a class="dropdown-item" href="@Url.Action("Logout","Login")"><i class="fa fa-sign-out fa-lg"></i> Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </header>
+    <!-- Sidebar menu-->
+    <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
+    <aside class="app-sidebar">
+        <div class="app-sidebar__user">
+            <img class="app-sidebar__user-avatar" src="~/Images/user-icon/user.jpg" alt="User Image">
+            <div>
+                <p class="app-sidebar__user-name">@(user.Name)</p>
+                <p class="app-sidebar__user-designation">@(user.LocationName)</p>
+            </div>
+        </div>
+        <ul class="app-menu">
+            @foreach (var menu in menus)
+            {
+                <li class="treeview">
+                    <a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-laptop"></i><span class="app-menu__label">@menu.MenuName</span><i class="treeview-indicator fa fa-angle-right"></i></a>
+                    <ul class="treeview-menu">
+                        @foreach (var subMenu in menu.SubMenus)
+                        {
+                            <li><a class="treeview-item" href="@Url.Content("~/Files/"+subMenu.Hyperlink)"><i class="icon fa fa-circle-o"></i> @subMenu.SubMenuName</a></li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+    </aside>
+    @RenderBody()
+    <!-- Essential javascripts for application to work-->
+    <script src="~/Scripts/jquery-3.5.1.min.js"></script>
+    <script src="~/Scripts/umd/popper.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/main.js"></script>
+    <script src="~/Scripts/datatable.js"></script>
+    <!-- The javascript plugin to display page loading on top-->
+    <script src="~/Scripts/plugins/pace.min.js"></script>
+    <!-- Page specific javascripts-->
+    <script type="text/javascript" src="~/Scripts/plugins/chart.js"></script>
+    <script src="~/Scripts/select2.min.js"></script>
+    <script src="~/Scripts/sweetalert.min.js"></script>
+    <script src="~/Scripts/react.development.js"></script>
+    <script src="~/Scripts/react-dom.development.js"></script>
+    <script src="~/Scripts/babel.min.js"></script>
+    @RenderSection("scripts", false)
+</body>
+</html>

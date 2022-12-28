@@ -1,0 +1,29 @@
+﻿@model IEnumerable<MRaabta.Models.ViewArrivalModel>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>BRANCH CODE</th>
+            <th>EXPRESS CENTER</th>
+            <th>RIDER CODE</th>
+            <th>WEIGHT</th>
+            <th>CREATE ON</th>
+            <th>CONSIGNMENT COUNT</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var x in Model)
+        {
+            <tr>
+                <td><a style="color:blue; text-decoration:underline" href="@Url.Action("ArrivalSlip","Arrival", new { id = x.Id })" target="_blank">@x.Id</a></td>
+                <td>@x.Branch</td>
+                <td>@x.ExpressCenter</td>
+                <td>@x.RiderCode</td>
+                <td>@x.Weight</td>
+                <td>@x.Date.ToString("dd-MMM-yyyy")</td>
+                <td>@x.Count</td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,415 @@
+﻿@model MRaabta.Models.Customer
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0px;
+            font-family: Calibri;
+        }
+
+        .headerInfo {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: calc(100% / 5);
+        }
+
+            .headerInfo div {
+                width: 100%;
+                height: 60%;
+                color: black;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+        fieldset {
+            border: 1px solid black;
+            font-size: 12px;
+            margin-bottom: 10px
+        }
+
+            fieldset legend {
+                width: auto;
+                font-weight: bolder;
+                font-size: 18px;
+                margin-left: 13px
+            }
+
+        #customerinfo {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            #customerinfo th, #customerinfo td {
+                text-align: left;
+                padding-top: 5px;
+                padding-bottom: 5px;
+            }
+
+        #ratetable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+            #ratetable th, #ratetable td {
+                text-align: center;
+                border: 1px solid black;
+            }
+
+
+        .inlineStyle {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-width: 7vw;
+            justify-content: center;
+            align-items: center
+        }
+
+
+        .inlineStyle2 {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            justify-content: center;
+            align-items: center
+        }
+    </style>
+</head>
+
+<body>
+    <div style="display:flex;flex-direction:row;justify-content:space-evenly;margin-top:85px">
+        <div class="headerInfo">
+            <div>@Model.Rates.FirstOrDefault().AccountNo</div>
+        </div>
+        <div class="headerInfo">
+        </div>
+        <div class="headerInfo">
+        </div>
+        <div class="headerInfo">
+            <div>@Model.Zone</div>
+        </div>
+        <div class="headerInfo">
+            <div>@Model.City</div>
+        </div>
+        <div class="headerInfo">
+        </div>
+    </div>
+    <div class="content" style="margin-top:30px">
+        <fieldset>
+            <legend>Customer Info</legend>
+            <table id="customerinfo">
+                @if (Model.IsSingle == 0)
+                {
+                    <tr>
+                        <th>Customer Id</th>
+                        <td>@Model.Id</td>
+                        <th>Type</th>
+                        <td>Group</td>
+                        <th>Group</th>
+                        <td>@Model.Group</td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <th>Customer Id</th>
+                        <td>@Model.Id</td>
+                        <th colspan="2"></th>
+                        <th>Type</th>
+                        <td>Single</td>
+                    </tr>
+                }
+                <tr>
+                    <th>Business Name:</th>
+                    <td colspan="3">@Model.BusinessName</td>
+                    <th>Industry:</th>
+                    <td>@Model.Industry</td>
+                </tr>
+                <tr>
+                    <th>Contact Person:</th>
+                    <td>@Model.ContactPerson</td>
+                    <th>Designation:</th>
+                    <td>@Model.Designation</td>
+                    <th>Phone Number:</th>
+                    <td>@Model.PhoneNo</td>
+                </tr>
+                <tr>
+                    <th>Fax Number:</th>
+                    <td>@Model.FaxNo</td>
+                    <th>Email Id:</th>
+                    <td>@Model.Email</td>
+                    <th>CNIC No:</th>
+                    <td>@Model.CNIC</td>
+                </tr>
+                <tr>
+                    <th>Customer Address:</th>
+                    <td colspan="5">
+                        House/Office No : @Model.HouseOrOfficeNo,
+                        Floor No : @Model.FloorNo,
+                        Building Name : @Model.BuildingName,
+                        Plot No : @Model.PlotNo,
+                        Street : @Model.Street,
+                        Sector/Zone : @Model.SectorOrZone,
+                        Area : @Model.Area,
+                        City : @Model.City
+                    </td>
+                </tr>
+                <tr>
+                    <th>NTN Number:</th>
+                    <td>@Model.NTNNumber</td>
+                    <th>GST Number:</th>
+                    <td>@Model.GSTNumber</td>
+                    <th></th>
+                    <td></td>
+                </tr>
+            </table>
+        </fieldset>
+
+        <fieldset>
+            <legend>Bank Details</legend>
+            <table id="customerinfo">
+                <tr>
+                    <th>Beneficiary Name:</th>
+                    <td>@Model.BeneficiaryName</td>
+                    <th>Beneficiary Relation:</th>
+                    <td>@Model.BeneficiaryRelation</td>
+                    <th>IBAN:</th>
+                    <td>@Model.IBAN</td>
+                </tr>
+                <tr>
+                    <th>Bank Name:</th>
+                    <td>@Model.BankName</td>
+                    <th>Bank Branch Code:</th>
+                    <td>@Model.BankBranchCode</td>
+                    <th>Bank Branch City:</th>
+                    <td>@Model.BankBranchCityName</td>
+                </tr>
+            </table>
+        </fieldset>
+
+        <fieldset>
+            <legend>Rates</legend>
+            <table id="customerinfo">
+                <tr>
+                    <td colspan="6">
+                        <table id="ratetable">
+
+                            <tbody>
+                                @foreach (var x in Model.Rates)
+                                {
+                                    if (new List<int> { 1, 2 }.Contains(x.ProductId))
+                                    {
+                                        <tr>
+                                            <th colspan="2">@x.ProductName</th>
+                                            <th colspan="3">0 KG - 0.5 KG</th>
+                                            <th colspan="3">0.5 KG - 1 KG</th>
+                                            <th colspan="3">Add. KG</th>
+                                            <th colspan="2">2nd Day</th>
+                                            <th>Expected Revenue</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="text-left inlineStyle2">
+                                                    <b>Overnight</b> : @(x.Overnight ? "Yes" : "No")
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="inlineStyle2">
+                                                    Add Factor : @x.AddFactor
+                                                </div>
+                                            </td>
+                                            <th>WC</th>
+                                            <th>SZ</th>
+                                            <th>DZ</th>
+                                            <th>WC</th>
+                                            <th>SZ</th>
+                                            <th>DZ</th>
+                                            <th>WC</th>
+                                            <th>SZ</th>
+                                            <th>DZ</th>
+                                            <th>Min</th>
+                                            <th>Add</th>
+                                            <th rowspan="2">
+                                                @x.ExpectedRev
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="text-left inlineStyle2">
+                                                    <b>Second Day</b> : @(x.SecondDay ? "Yes" : "No")
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="inlineStyle2">
+                                                    Min Weight : @x.MinWeight
+                                                </div>
+                                            </td>
+                                            <td>@x.ZeroToPoint5KGWC</td>
+                                            <td>@x.ZeroToPoint5KGSZ</td>
+                                            <td>@x.ZeroToPoint5KGDZ</td>
+                                            <td>@x.Point5To1KGWC</td>
+                                            <td>@x.Point5To1KGSZ</td>
+                                            <td>@x.Point5To1KGDZ</td>
+                                            <td>@x.AddKGWC</td>
+                                            <td>@x.AddKGSZ</td>
+                                            <td>@x.AddKGDZ</td>
+                                            <td>@x.SecDayMin</td>
+                                            <td>@x.SecDayAdd</td>
+                                        </tr>
+                                    }
+                                    else if (x.ProductId == 3)
+                                    {
+                                        <tr>
+                                            <th colspan="2">@x.ProductName</th>
+                                            <th colspan="2">Zone A</th>
+                                            <th colspan="2">Zone B</th>
+                                            <th colspan="7"></th>
+                                            <th>Expected Revenue</th>
+                                        </tr>
+                                        <tr>
+                                            <td rowspan="2">
+                                                <div class="text-left inlineStyle2">
+                                                    <b>E. Cargo</b> : @(x.ECargo ? "Yes" : "No")
+                                                </div>
+                                            </td>
+                                            <td rowspan="2">
+                                                <div class="inlineStyle2">
+                                                    Min Weight : @x.MinWeight
+                                                </div>
+                                            </td>
+                                            <th>Min</th>
+                                            <th>Add</th>
+                                            <th>Min</th>
+                                            <th>Add</th>
+                                            <th colspan="7" rowspan="2"></th>
+                                            <th rowspan="2">
+                                                <div class="inlineStyle2">@x.ExpectedRev</div>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="inlineStyle2">@x.ZoneAMin</div></td>
+                                            <td><div class="inlineStyle2">@x.ZoneAAdd</div></td>
+                                            <td><div class="inlineStyle2">@x.ZoneBMin</div></td>
+                                            <td><div class="inlineStyle2">@x.ZoneBAdd</div></td>
+                                        </tr>
+                                    }
+                                    else if (x.ProductId == 5)
+                                    {
+                                        <tr>
+                                            <th colspan="2">@x.ProductName</th>
+                                            <th colspan="4">Flyer</th>
+                                            <th colspan="4">Flyer (Window)</th>
+                                            <th colspan="4"></th>
+                                        </tr>
+                                        <tr>
+                                            <td rowspan="2">
+                                                <div class="text-left inlineStyle2">
+                                                    <b>Flyer</b> : @(x.Flyer ? "Yes" : "No")
+                                                </div>
+                                            </td>
+                                            <td rowspan="2">
+                                                <div class="text-left inlineStyle2">
+                                                    <b>Flyer (Window)</b> : @(x.FlyerWind ? "Yes" : "No")
+                                                </div>
+                                            </td>
+                                            <th>S</th>
+                                            <th>M</th>
+                                            <th>L</th>
+                                            <th>XL</th>
+                                            <th>S</th>
+                                            <th>M</th>
+                                            <th>L</th>
+                                            <th>XL</th>
+                                            <th colspan="4" rowspan="2"></th>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="inlineStyle2">@x.FlyerS</div></td>
+                                            <td><div class="inlineStyle2">@x.FlyerM</div></td>
+                                            <td><div class="inlineStyle2">@x.FlyerL</div></td>
+                                            <td><div class="inlineStyle2">@x.FlyerXL</div></td>
+                                            <td><div class="inlineStyle2">@x.FlyerWinS</div></td>
+                                            <td><div class="inlineStyle2">@x.FlyerWinM</div></td>
+                                            <td><div class="inlineStyle2">@x.FlyerWinL</div></td>
+                                            <td><div class="inlineStyle2">@x.FlyerWinXL</div></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Expected Revenue:</th>
+                    <td>@Model.ExpectedRevenue</td>
+                    <th>Fuel Factor:</th>
+                    <td>@(Model.IsFAF ? "FAF" : "FAC") @Model.FuelFactor%</td>
+                    <th>Invoicing Scheduler:</th>
+                    <td>@Model.InvoicingScheduler</td>
+                </tr>
+                <tr>
+                    <th>Recovery Type:</th>
+                    <td>@(Model.IsAutoRecovery ? "Auto" : "Manual")</td>
+                    <th>Credit Terms/Days:</th>
+                    <td>@Model.CreditTermsOrDays</td>
+                    <th>Sales Decision:</th>
+                    <td>@(Model.SalesDecision == 1 ? "Centralized" : "Decentralized")</td>
+                </tr>
+                <tr>
+                    <th>Billing Instruction:</th>
+                    <td>@(Model.BillingInstruction == 1 ? "Centralized" : "Decentralized")</td>
+                    <th>Annual Rate Revision</th>
+                    <td>@Model.AnnualRateRevision</td>
+                    <th>Minimum Billing:</th>
+                    <td>@Model.MinimumBilling</td>
+                </tr>
+                <tr>
+                    <th>Recovery Mode:</th>
+                    <td>@(Model.RecoveryMode == 1 ? "Cash" : "Bank")</td>
+                    <th>E-Invoicing</th>
+                    <td>@(Model.EInvoicing ? "Yes" : "No")</td>
+                    <th>Print Invoice</th>
+                    <td>@(Model.PrintInvoice ? "Yes" : "No")</td>
+                </tr>
+                <tr>
+                    <th>Tax Excemption:</th>
+                    <td>@(Model.TaxExcemption  ? "Yes" : "No")</td>
+                    <th></th>
+                    <td></td>
+                    <th></th>
+                    <td></td>
+                </tr>
+            </table>
+        </fieldset>
+
+        <fieldset>
+            <legend>M&P POC Details</legend>
+            <table id="customerinfo">
+                <tr>
+                    <th>Sales Person:</th>
+                    <td>@Model.CreatedBy</td>
+                    <th>Contact Number:</th>
+                    <td></td>
+                    <th>Email Id:</th>
+                    <td>@Model.CreatedByEmail</td>
+                </tr>
+            </table>
+        </fieldset>
+    </div>
+</body>
+
+</html>

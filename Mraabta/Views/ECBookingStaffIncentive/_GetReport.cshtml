@@ -1,0 +1,80 @@
+﻿@model IEnumerable<MRaabta.Models.ECBookingStaffIncentiveReportModel>
+
+@{ var i = 0;}
+
+<div class="panel-body mainTable">
+    @if (Model.Any() && Model != null)
+    {
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <br />
+                <h4 style="justify-self:center;align-self:center">Total Records: @Model.Count().ToString("N0")</h4>
+                <h5 style="justify-self:center;align-self:center">Total Incentive: @Model.Sum(e => e.TotalIncentive).ToString("N0")</h5>
+
+                @* <h5 style="justify-self:center;align-self:center">Total Incentive: @Model.First().RiderCode</h5>*@
+            </div>
+        </div>
+        <br />
+        <h5 style="text-align:center">
+            This incentive detail does not include incentive against HPS, International shipments, Cellophane, and any other campaign which is launched from time to time. These mentioned incentives shall be manually calculated and added to the final incentive sheet.
+        </h5><br />
+        <label class="form-control" style="background-color: #EA5B0C;color:white;font-size:20px;text-align:center;">@Model.First().Rider_Code - @Model.First().Branch</label>
+        <div style=" width:100%;">
+            <table id="tbl_pickUp" class="table-bordered mt-4 table table_data" border="1" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>CN</th>
+                        <th>Domestic</th>
+                        <th>International</th>
+                        <th>FedEx</th>
+                        <th>Express Cargo</th>
+                        <th>My Air Cargo</th>
+                        <th>Total Incentive</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            @{
+                                i = i + 1;
+                                <td>@i</td>
+                                <td>@item.AccountReceivingDate.ToString("yyyy-MM-dd")</td>
+                                <td>@item.AccountReceivingDate.DayOfWeek</td>
+                                <td><a class="cnlink" target="_blank" style="color:darkblue;" href="@Url.Action("GetDetailReport","ECBookingStaffIncentive", new {  AccountReceivingDate = item.AccountReceivingDate.ToString("yyyy-MM-dd"), Type = 0 })">@item.CNCount.ToString("N0")</a></td>
+                                <td>@item.Domestic.ToString("N0")</td>
+                                <td>@item.International.ToString("N0")</td>
+                                <td>@item.FedEx.ToString("N0")</td>
+                                <td>@item.RoadNRail.ToString("N0")</td>
+                                <td>@item.MyAirCargo.ToString("N0")</td>
+                                <td>@item.TotalIncentive.ToString("N0")</td>
+                            }
+                        </tr>
+                    }
+                    <tr style="background-color: #ddd;">
+                        <td></td>
+                        <td><b>Total</b></td>
+                        <td></td>
+                        <td><b><a class="cnlink" target="_blank" style="color:darkblue;" href="@Url.Action("GetDetailReport","ECBookingStaffIncentive", new { Month = ViewBag.Month, Year = ViewBag.Year, Type = 1 })">@Model.Sum(e => e.CNCount).ToString("N0")</a></b></td>
+                        <td><b>@Model.Sum(e => e.Domestic).ToString("N0")</b></td>
+                        <td><b>@Model.Sum(e => e.International).ToString("N0")</b></td>
+                        <td><b>@Model.Sum(e => e.FedEx).ToString("N0")</b></td>
+                        <td><b>@Model.Sum(e => e.RoadNRail).ToString("N0")</b></td>
+                        <td><b>@Model.Sum(e => e.MyAirCargo).ToString("N0")</b></td>
+                        <td><b>@Model.Sum(e => e.TotalIncentive).ToString("N0")</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <br />
+        <h5 style="text-align: center;background-color: #EA5B0C;">No Records Found</h5>
+    }
+</div>

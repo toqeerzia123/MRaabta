@@ -1,0 +1,325 @@
+﻿@model IEnumerable<MRaabta.Models.RecoveryLetterDetailModel>
+
+@{
+    string a = "";
+    int i = 0;
+    Layout = null;
+}
+
+<html>
+<head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style type="text/css" media="print">
+        @@page {
+            width: auto;
+            height: 99VH;
+            size: A4; /* auto is the initial value */
+            margin: 0; /* this affects the margin in the printer settings */
+            font-size: 9px !important;
+        }
+
+        body {
+            font-size: 9px;
+        }
+    </style>
+</head>
+<body>
+    @if (Model != null && Model.Count() != 0)
+    {
+        foreach (var item in Model.GroupBy(x => x.AccountNumber))
+        {
+            <div style='clear: both; float: left; margin: 2px 2px 2px 2px;'>
+                <br />
+                @if (ViewBag.Days == "61-90 Days")
+                {
+                    <table class='cn_tbl' width="100%" style="float:left; ">
+                        <tr>
+                            <td style='float:left;width:200px; height:100px;padding-left:30px;'><img src="~/images/mnpLogo.png " width='150px' height='70px'></td>
+                            <td style='float:right;width:500px;height:100px;vertical-align:top;text-align:right; font-size:12px;padding-right:30px;'>M&P Express Logistics (Private) Limited <br>World wide House, C-17<br>Main Korangi Road Defence<br>Phase II DHA Karachi.<br>NTN No. 0860540-8<br />02138653210</td>
+                        </tr>
+                    </table><table class='cn_tbl' width="100%" style="float:left; ">
+                        <tr style='background-color:#f2f2f2'><td colspan="4" style='font-weight:bold;text-align:center; font-size:20px;'>Credit Control Department</td></tr>
+                        <tr style='background-color:#f2f2f2'><td colspan="4" height='4px' bgcolor='#000'></td></tr>
+                        <tr style='background-color:#f2f2f2;padding-left:30px;padding-right:30px;'>
+                            <td style='font-weight:bold;text-align:center;float:left;padding-left:30px;padding-right:30px;'>Date: @DateTime.UtcNow.ToString("dd-MM-yyyy")</td>
+                        </tr>
+                        <tr><td><br /></td></tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Account: </b> @item.First().AccountNumber</td>
+                        </tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Name: </b> @item.First().ClientName</td>
+                        </tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Address:</b> @item.First().ClientAddress</td>
+                        </tr>
+                        <tr><td><br><td></tr>
+                        <tr><td><br><td></tr>
+                    </table>
+                    <table width="100%" style="padding-left:30px;padding-right:30px;">
+                        <tr><td colspan='2' style="font-weight:bold;text-align:center; font-size:18px;">Outstanding Letter: FIRST</td></tr>
+                    </table>
+                    <table width="100%" style="padding-left:30px;padding-right:30px;">
+                        <tr><td><br><td></tr>
+                        <tr><td colspan='2' style='font-weight: bold; text-align:left;font-size: 15px;'>SUBJECT: PAYMENT OF DUES </td></tr>
+                        <tr><td><br><td></tr>
+                        <tr><td>Dear Sir/ Madam,</td></tr>
+                        <tr><td><br><td></tr>
+
+                    </table>
+                    <table width="100%">
+                        <tr>
+                            <td width='100' style="padding-left:30px;padding-right:30px;line-height:1.6;text-align: justify; text-justify: inter-word;padding-right:30px;">
+                                <p>
+                                    We would like to bring it into your notice that our
+                                    @if (item.Count() > 1)
+                                    {<label>invoices</label>}
+                                    else
+                                    {
+                                        <label>invoice number<u style="white-space: nowrap"> &nbsp;@item.First().Invoice &nbsp; </u></label>} dated
+                                    <u style="white-space: nowrap"> &nbsp; @item.First().InvoiceMonth  &nbsp; </u> &nbsp; for an amount of rupees
+                                    <u style="white-space: nowrap">  &nbsp; @item.Sum(x => x.Outstanding).ToString("N")  &nbsp; </u> &nbsp; still remains unpaid.  <br />
+
+                                    This is to remind you that our bills are payable within <u style="white-space: nowrap">  &nbsp; @ViewBag.Days  &nbsp; </u> &nbsp; days from the date of invoice as per the terms and conditions agreed with you at the time of account opening with us. We would appreciate if you kindly clear your dues as soon as possible. <br />
+
+                                    We appreciate your business with us and we reiterate our commitment to provide you quality service of highest standards. <br />
+
+                                    Please disregard this reminder in case payment has already been made by you. <br />
+
+                                    Thanks and best regards. <br /> <br />
+
+                                    (RMCC) <br /> <br />
+
+                                    M&P Couriers<br /><br /> <br />
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                }
+                @if (ViewBag.Days == "91-120 Days")
+                {
+                    <table class='cn_tbl' width="100%" style="float:left; ">
+                        <tr>
+                            <td style='float:left;width:200px; height:100px;padding-left:30px;'><img src="~/images/mnpLogo.png " width='150px' height='70px'></td>
+                            <td style='float:right;width:500px;height:100px;vertical-align:top;text-align:right; font-size:12px;padding-right:30px;'>M&P Express Logistics (Private) Limited <br>World wide House, C-17<br>Main Korangi Road Defence<br>Phase II DHA Karachi.<br>NTN No. 0860540-8<br />02138653210</td>
+                        </tr>
+                    </table><table class='cn_tbl' width="100%" style="float:left; ">
+                        <tr style='background-color:#f2f2f2'><td colspan="4" style='font-weight:bold;text-align:center; font-size:20px;'>Credit Control Department</td></tr>
+                        <tr style='background-color:#f2f2f2'><td colspan="4" height='4px' bgcolor='#000'></td></tr>
+                        <tr style='background-color:#f2f2f2;padding-left:30px;padding-right:30px;'>
+                            <td style='font-weight:bold;text-align:center;float:left;padding-left:30px;padding-right:30px;'>Date: @DateTime.UtcNow.ToString("dd-MM-yyyy")</td>
+                        </tr>
+                        <tr><td><br /></td></tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Account: </b> @item.First().AccountNumber</td>
+                        </tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Name: </b> @item.First().ClientName</td>
+                        </tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Address:</b> @item.First().ClientAddress</td>
+                        </tr>
+                        <tr><td><br><td></tr>
+                        <tr><td><br><td></tr>
+                    </table>
+                    <table width="100%" style="padding-left:30px;padding-right:30px;">
+                        <tr><td colspan='2' style="font-weight:bold;text-align:center; font-size:18px;">Outstanding Letter: SECOND</td></tr>
+                    </table>
+                    <table width="100%" style="padding-left:30px;padding-right:30px;">
+                        <tr><td><br><td></tr>
+                        <tr><td colspan='2' style='font-weight: bold; text-align:left;font-size: 15px;'>SUBJECT: PAYMENT OF DUES </td></tr>
+                        <tr><td><br><td></tr>
+                        <tr><td>Dear Sir/ Madam,</td></tr>
+                        <tr><td><br><td></tr>
+
+                    </table>
+                    <table width="100%">
+                        <tr>
+                            <td width='100' style="padding-left:30px;padding-right:30px;line-height:1.6;text-align: justify; text-justify: inter-word;padding-right:30px;">
+                                <p>
+                                    We would like to bring it into your notice that our
+                                    @if (item.Count() > 1)
+                                    {<label>invoices</label>}
+                                    else
+                                    {
+                                        <label>invoice number<u style="white-space: nowrap"> &nbsp;@item.First().Invoice &nbsp; </u></label>} dated
+                                    <u style="white-space: nowrap"> &nbsp; @item.First().InvoiceMonth  &nbsp; </u> &nbsp; for an amount of rupees
+                                    <u style="white-space: nowrap">  &nbsp; @item.Sum(x => x.Outstanding).ToString("N")  &nbsp; </u> &nbsp; still remains unpaid.  <br />
+
+                                    This is to remind you that our bills are payable within <u style="white-space: nowrap">  &nbsp; @ViewBag.Days  &nbsp; </u> &nbsp; days from the date of invoice as per the terms and conditions agreed with you at the time of account opening with us. We would appreciate if you kindly clear your dues as soon as possible. <br />
+
+                                    We appreciate your business with us and we reiterate our commitment to provide you quality service of highest standards. <br />
+
+                                    Please disregard this reminder in case payment has already been made by you. <br />
+
+                                    Thanks and best regards. <br /> <br />
+
+                                    (RMCC) <br /> <br />
+
+                                    M&P Couriers<br /><br /> <br />
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                }
+                @if (ViewBag.Days == "Above 120 till Jan-16")
+                {
+                    <table class='cn_tbl' width="100%" style="float:left; ">
+                        <tr>
+                            <td style='float:left;width:200px; height:100px;padding-left:30px;'>
+                                <img src="~/images/mnpLogo.png " width='150px' height='70px'>
+                            </td>
+                            <td style='float:right;width:500px;height:100px;vertical-align:top;text-align:right; font-size:12px;padding-right:30px;'>M&P Express Logistics (Private) Limited <br>World wide House, C-17<br>Main Korangi Road Defence<br>Phase II DHA Karachi.<br>NTN No. 0860540-8<br />02138653210</td>
+                        </tr>
+                    </table><table class='cn_tbl' width="100%" style="float:left; ">
+                        <tr style='background-color:#f2f2f2'>
+                            <td colspan="4" style='font-weight:bold;text-align:center; font-size:24px;'>Credit Control Department</td>
+                        </tr>
+                        <tr style='background-color:#f2f2f2'><td colspan="4" height='4px' bgcolor='#000'></td></tr>
+                        <tr style='background-color:#f2f2f2'>
+                            <td style='font-weight:bold;text-align:center;float:left;padding-left:30px;padding-right:30px;'>Date: @DateTime.UtcNow.ToString("dd-MM-yyyy")</td>
+                        </tr>
+                        <tr><td><br /></td></tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Account: </b> @item.First().AccountNumber</td>
+                        </tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Name:</b> @item.First().ClientName</td>
+                        </tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Address:</b> @item.First().ClientAddress</td>
+                        </tr>
+                        <tr><td><br><td></tr>
+                        <tr><td><br><td></tr>
+                    </table>
+                    <table width="100%" style="padding-left:30px;padding-right:30px;">
+                        <tr><td colspan='2' style="font-weight:bold;text-align:center; font-size:18px;">Outstanding Letter: THIRD</td></tr>
+                    </table>
+                    <table width="100%" style="padding-left:30px;padding-right:30px;">
+                        <tr><td><br><td></tr>
+                        <tr><td colspan='2' style='font-weight: bold; text-align:left;font-size: 15px;'>SUBJECT: PAYMENT OF DUES, HOLD OF CREDIT FACILITY AND PICKUP </td></tr>
+                        <tr><td><br><td></tr>
+                        <tr><td>Dear Sir/ Madam,</td></tr>
+                        <tr><td><br><td></tr>
+
+                    </table>
+                    <table width="100%">
+                        <tr>
+                            <td width='100' style="padding-left:30px;padding-right:30px;line-height:1.6;text-align: justify; text-justify: inter-word;padding-right:30px;">
+                                <p>
+                                    We would like to bring it into your notice that our
+                                    @if (item.Count() > 1)
+                                    {<label>invoices</label>}
+                                    else
+                                    {
+                                        <label>invoice number<u style="white-space: nowrap"> &nbsp;@item.First().Invoice &nbsp; </u></label>} dated
+                                    <u style="white-space: nowrap"> &nbsp; @item.First().InvoiceMonth  &nbsp; </u> &nbsp; for an amount of rupees
+                                    <u style="white-space: nowrap">  &nbsp; @item.Sum(x => x.Outstanding).ToString("N")  &nbsp; </u> &nbsp; still remains unpaid.  <br />
+
+                                    This is to remind you that our bills are payable within <u style="white-space: nowrap">  &nbsp; @ViewBag.Days  &nbsp; </u> &nbsp; days from the date of invoice as per the terms and conditions agreed with you at the time of account opening with us. We would appreciate if you kindly clear your dues as soon as possible. <br />
+
+                                    We appreciate your business with us and we reiterate our commitment to provide you quality service of highest standards. <br />
+
+                                    Please disregard this reminder in case payment has already been made by you. <br />
+
+                                    Thanks and best regards. <br /> <br />
+
+                                    (RMCC) <br /> <br />
+
+                                    M&P Couriers<br /><br /> <br />
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                }
+                <table>
+                    <tr style='font-weight:bold;padding-left:30px;padding-right:30px;'>
+                        <td style="padding-left:30px;padding-right:30px;"><i>This document is System generated and does not require any signature</i></td>
+                    </tr>
+                </table>
+                <span><br><br><br><br><br><br><br><br></span>
+                <div style="padding-left:30px;padding-right:30px;">
+                    <table style='float:left; width:100%; text-align:center;border: 1px solid black;' cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style='font-weight: bold; line-height:50px; text-align:left;padding-left:5px;border: 1px solid black;' width="30%">Applicable From: @DateTime.UtcNow.ToString("dd-MM-yyyy") <br /> </td>
+                            <td style='font-weight: bold; text-align:left;padding-left:5px;border: 1px solid black;'>Prepared By: <br /> </td>
+                            <td style='font-weight: bold; text-align:left;padding-left:5px;border: 1px solid black;'>Approved By: <br /> </td>
+                            <td style='font-weight: bold; text-align:left;padding-left:5px;border: 1px solid black;'>Reviewed By: <br /> </td>
+                        </tr>
+                    </table>
+                </div>
+                <div style="page-break-after:always;"></div>
+                @if (item.Count() > 1)
+                {
+                    <br /><br /><br /><br /><br />
+                    <table class='cn_tbl' width="100%" style="float:left; ">
+                        <tr>
+                            <td style='float:left;width:200px; height:100px;padding-left:30px;'><img src="~/images/mnpLogo.png " width='150px' height='70px'></td>
+                            <td style='float:right;width:500px;height:100px;vertical-align:top;text-align:right; font-size:12px;padding-right:30px;'>M&P Express Logistics (Private) Limited <br>World wide House, C-17<br>Main Korangi Road Defence<br>Phase II DHA Karachi.<br>NTN No. 0860540-8<br />02138653210</td>
+                        </tr>
+                    </table><table class='cn_tbl' width="100%" style="float:left; ">
+                        <tr style='background-color:#f2f2f2'><td colspan="4" style='font-weight:bold;text-align:center; font-size:20px;'>Credit Control Department</td></tr>
+                        <tr style='background-color:#f2f2f2'><td colspan="4" height='4px' bgcolor='#000'></td></tr>
+                        <tr style='background-color:#f2f2f2;padding-left:30px;padding-right:30px;'>
+                            <td style='font-weight:bold;text-align:center;float:left;padding-left:30px;padding-right:30px;'>Date: @DateTime.UtcNow.ToString("dd-MM-yyyy")</td>
+                        </tr>
+                        <tr><td><br /></td></tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Account: </b> @item.First().AccountNumber</td>
+                        </tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Name: </b> @item.First().ClientName</td>
+                        </tr>
+                        <tr>
+                            <td style='text-align:center;float:left;padding-left:30px;padding-right:30px;'><b>Address:</b> @item.First().ClientAddress</td>
+                        </tr>
+                        <tr><td><br><td></tr>
+                        <tr><td><br><td></tr>
+                    </table>
+                    <div style="padding-left:30px;padding-right:30px;">
+                        <h1>Invoice Details</h1>
+                        <table style='float:left; width:100%; text-align:center;border: 1px solid black;' cellpadding="0" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <td style='font-weight: bold; line-height:50px; text-align:left;padding-left:5px;border: 1px solid black;' width="30%">Invoice #<br /> </td>
+                                    <td style='font-weight: bold; text-align:left;padding-left:5px;border: 1px solid black;'>Invoice Amount <br /> </td>
+                                    <td style='font-weight: bold; text-align:left;padding-left:5px;border: 1px solid black;'>Outstanding Amount <br /> </td>
+                                    <td style='font-weight: bold; text-align:left;padding-left:5px;border: 1px solid black;'>Invoice Month <br /> </td>
+                                    <td style='font-weight: bold; text-align:left;padding-left:5px;border: 1px solid black;'>Days <br /> </td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ij in item)
+                                {
+                                    <tr>
+                                        <td style='line-height:50px; text-align:left;padding-left:5px;border: 1px solid black;' width="30%">@ij.Invoice<br /> </td>
+                                        <td style=' text-align:left;padding-left:5px;border: 1px solid black;'>@ij.InvoiceAmount <br /> </td>
+                                        <td style=' text-align:left;padding-left:5px;border: 1px solid black;'>@ij.Outstanding <br /> </td>
+                                        <td style=' text-align:left;padding-left:5px;border: 1px solid black;'>@ij.InvoiceMonth<br /> </td>
+                                        <td style=' text-align:left;padding-left:5px;border: 1px solid black;'>@ij.TotalDays <br /> </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td style='line-height: 50px; text-align: left; padding-left: 5px; border: 1px solid black;'>  <br /> </td>
+                                    <td style='font-size:larger; text-align:left;padding-left:5px;border: 1px solid black;'><b> @item.Sum(c => c.InvoiceAmount) </b><br /> </td>
+                                    <td style='font-size: larger; text-align: left; padding-left: 5px; border: 1px solid black;'><b> @item.Sum(c => c.Outstanding) </b> <br /> </td>
+                                    <td style=' text-align:left;padding-left:5px;border: 1px solid black;'> <br /> </td>
+                                    <td style=' text-align:left;padding-left:5px;border: 1px solid black;'>  <br /> </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <label>No Data</label>
+    }
+</body>
+
+</html>

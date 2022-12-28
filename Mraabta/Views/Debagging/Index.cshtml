@@ -1,0 +1,553 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script>
+    const cnlength =  @Html.Raw(Json.Encode(ViewBag.CNLengths));
+    const bagInfoUrl = '@Url.Action("GetBagInfo","Debagging")';
+    const getExcessManCNUrl = '@Url.Action("GetExcessManCN","Debagging")';
+    const saveUrl = '@Url.Action("Save","Debagging")';
+    const searchUrl = '@Url.Action("Search","Debagging")';
+    const printUrl = '@Url.Action("Print","Debagging")';
+</script>
+<script type="text/babel">
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processDecimal = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9.]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlpha = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlphaWithSpace = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z ]/g, "");
+        e.target.value = numbers;
+    }
+
+    const Context = React.createContext(null);
+
+    const DetailGrid = () => {
+
+        const {
+            loading,
+            setLoading,
+            detailGrid,
+            setDetailGrid,
+            loadingGrid
+        } = React.useContext(Context);
+
+        const [IsMan, setIsMan] = React.useState(true);
+        const [scanned, setScanned] = React.useState(false);
+        const [lastScan, setLastScan] = React.useState('');
+        const manCnRef = React.useRef(null);
+
+
+        const getExcessManCN = async (no, isMan) => {
+            try {
+                setScanned(true);
+                const response = await fetch(getExcessManCNUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ no, isMan })
+                });
+
+                if (response.status === 200) {
+
+                    const json = await response.json();
+
+                    if (json.sts == 0) {
+                        if (json.data) {
+                            const z = [...detailGrid];
+                            z.unshift(json.data);
+                            setDetailGrid(z);
+                        } else {
+                            alert('No data found');
+                        }
+                    } else {
+                        alert(json.msg);
+                    }
+                    manCnRef.current.value = '';
+                    manCnRef.current.focus();
+
+                } else {
+
+                    alert('Looks like there was a problem. Status Code: ' + response.status);
+                    manCnRef.current.value = '';
+                    manCnRef.current.focus();
+
+                }
+
+                setScanned(false);
+
+            } catch (error) {
+
+                manCnRef.current.value = '';
+                manCnRef.current.focus();
+                setScanned(false);
+                console.log('Fetch Error :-S', error);
+
+            }
+        }
+
+
+        const updateGrid = async (index, key, val) => {
+            let x = [...detailGrid];
+            x[index][key] = val;
+            setDetailGrid(x);
+        }
+
+        const detailSummaryStyle = {
+            display: 'flex',
+            alignItems: 'center'
+        }
+
+
+        const validateCN = (val) => {
+
+            if (val[0] == 5 && val.length != 15) {
+                alert('Invalid length of COD Consignment');
+                manCnRef.current.value = '';
+                manCnRef.current.focus();
+                return false;
+            }
+
+            const prefix = cnlength.filter(x => x.Prefix == val.substring(0, x.PrefixLength))[0];
+
+            if (prefix) {
+                if (prefix.Length == val.length) {
+                    return true;
+                } else {
+                    alert('Prefix length not found');
+                    manCnRef.current.value = '';
+                    manCnRef.current.focus();
+                    return false;
+                }
+            } else {
+                alert('Prefix not found');
+                manCnRef.current.value = '';
+                manCnRef.current.focus();
+                return false;
+            }
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                manCnRef.current.blur();
+            }
+        }
+
+        const onManCNScanBlur = async e => {
+            const val = e.target.value;
+            if (val) {
+                const index = detailGrid.findIndex(x => x.IsMan == IsMan && x.ManCN == val);
+                if (index >= 0) {
+                    const z = [...detailGrid];
+                    if (z[index].Status == 6) {
+                        z[index].Status = 5;
+                        setDetailGrid(z);
+                        manCnRef.current.value = '';
+                        manCnRef.current.focus();
+                        setLastScan(val);
+                    } else {
+                        alert('Already Scanned');
+                        manCnRef.current.value = '';
+                        manCnRef.current.focus();
+                    }
+                } else {
+                    if (!IsMan) {
+                        if (!validateCN(val)) {
+                            manCnRef.current.value = '';
+                            manCnRef.current.focus();
+                            return;
+                        }
+                    }
+                    await getExcessManCN(val, IsMan);
+                    setLastScan(val);
+                }
+            }
+        }
+
+        const onRemove = async (index, sts) => {
+            if (sts == 5) {
+                updateGrid(index, 'Status', 6);
+            } else {
+                let x = [...detailGrid];
+                x.splice(index, 1);
+                setDetailGrid(x);
+            }
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}>
+                        Type :
+                <input type="radio" className="ml-1 mr-1" name="type" checked={IsMan} onChange={() => setIsMan(true)} />Manifest
+                <input type="radio" className="ml-1 mr-1" name="type" checked={!IsMan} onChange={() => setIsMan(false)} />CN
+                </div>
+                    <div className="col-lg-3 col-sm-12 form-inline" style={detailSummaryStyle}>
+                        {IsMan ? "Manifest" : "CN"}: <input type="text" ref={manCnRef} onInput={process} onKeyPress={keypressHandler} onBlur={onManCNScanBlur} className="form-control ml-2" readOnly={scanned} />
+                    </div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Short</b> : {detailGrid.filter((x) => x.Status == 6).length}</div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Recieved</b> : {detailGrid.filter((x) => x.Status == 5).length}</div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Excess</b> : {detailGrid.filter((x) => x.Status == 7).length}</div>
+                </div>
+                <div className="table-responsive mt-2">
+                    <table className="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>S.No</th>
+                                <th>Manifest/CN</th>
+                                <th>Type</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Status</th>
+                                <th>Weight</th>
+                                <th>Pieces</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                detailGrid.map((x, index) =>
+                                    <tr key={index} style={lastScan == x.ManCN ? { background: 'rgba(0,128,0,.5)', color: 'white' } : null}>
+                                        <td>
+                                            {
+                                                [5, 7].includes(x.Status) ? <button type="button" className="btn btn-sm btn-danger" onClick={() => onRemove(index, x.Status)}>Remove</button> : ''
+                                            }
+                                        </td>
+                                        <td>{index + 1}</td>
+                                        <td>{x.ManCN}</td>
+                                        <td>{x.IsMan ? 'Manifest' : 'Consignment'}</td>
+                                        <td>{x.Origin}</td>
+                                        <td>{x.Destination}</td>                                        
+                                        <td>
+                                            {
+                                                function () {
+                                                    if (x.Status == 6)
+                                                        return 'Short Received';
+                                                    else if (x.Status == 5)
+                                                        return 'Received';
+                                                    else if (x.Status == 7)
+                                                        return 'Excess Received';
+                                                    else
+                                                        return '';
+                                                }()
+                                            }
+                                        </td>
+                                        <td>{x.TotalWeight}</td>
+                                        <td>{x.Pieces}</td>
+                                        <td><textarea className="form-control" value={x.Reason} onChange={(e) => updateGrid(index, 'Reason', e.target.value)}></textarea></td>
+                                    </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    const MainForm = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const bagRef = React.useRef(null);
+
+        const updateData = (key, val) => setData({ ...data, [key]: val });
+
+        const fetchBagging = async (bagno) => {
+            setLoading(true);
+            const url = `${bagInfoUrl}?bagno=${bagno}`;
+            try {
+                const response = await fetch(url);
+                setLoading(false);
+                if (response.status === 200) {
+                    const json = await response.json();
+                    if (json.sts == 0) {
+                        if (json.data) {
+                            const { Details, ...data } = json.data;
+                            setData(data);
+                            setDetailGrid(Details);
+                        } else {
+                            alert('Bag not found');
+                            bagRef.current.value = '';
+                            bagRef.current.focus();
+                        }
+                    } else {
+                        alert(json.msg);
+                        bagRef.current.value = '';
+                        bagRef.current.focus();
+                    }
+                } else {
+                    alert('Looks like there was a problem. Status Code: ' + response.status);
+                    bagRef.current.value = '';
+                    bagRef.current.focus();
+                }
+            } catch (error) {
+                setLoading(false);
+                bagRef.current.value = '';
+                bagRef.current.focus();
+                console.log('Fetch Error :-S', error);
+            }
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                bagRef.current.blur();
+            }
+        };
+
+        const onbagBlur = async (e) => {
+            const val = e.target.value;
+            if (val)
+                fetchBagging(val);
+        }
+
+        const reset = () => {
+            const d = {
+                BagNo: '',
+                OriginId: 0,
+                Origin: '',
+                Destination: '',
+                TotalWeight: '',
+                SealNo: '',
+                Date: ''
+            };
+            setData(d);
+            setDetailGrid([]);
+        }
+
+        const save = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(saveUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: { ...data, Details: detailGrid } })
+                });
+                setLoading(false);
+                if (response.status === 200) {
+                    const json = await response.json();
+                    if (json.sts == 0) {
+                        alert(`Debagging# ${json.msg} saved successfully`);
+                        window.open(`${printUrl}?id=${json.msg}`, '_blank');
+                        reset();
+                    } else {
+                        alert(json.msg);
+                    }
+                } else {
+                    alert('Looks like there was a problem. Status Code: ' + response.status);
+                }
+
+            } catch (error) {
+                setLoading(false);
+                console.log('Fetch Error :-S', error);
+            }
+        }
+
+        const onSave = () => {
+            if (!data.BagNo) {
+                alert('Enter Bagno');
+                return;
+            }
+
+            if (!data.TotalWeight) {
+                alert('Enter Total Weight');
+                return;
+            }
+
+            if (detailGrid.filter(x => x.Status == 6).length > 0) {
+                if (confirm('Short received Manifests/CNs found are you sure?')) {
+                    save();
+                }
+            } else {
+                save();
+            }
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-lg col-sm-12">
+                        <label>Bag No</label>
+                        <input className="form-control" onInput={process} ref={bagRef} onKeyPress={keypressHandler} onBlur={onbagBlur} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Origin</label>
+                        <input className="form-control" readOnly={true} value={data.Origin} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Destination</label>
+                        <input className="form-control" readOnly={true} value={data.Destination} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Total Weight</label>
+                        <input className="form-control" onInput={processDecimal} value={data.TotalWeight} onChange={(x) => updateData('TotalWeight', x.target.value)} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Seal No</label>
+                        <input className="form-control" readOnly={true} value={data.SealNo} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Date</label>
+                        <input className="form-control" readOnly={true} value={data.Date} />
+                    </div>
+                </div>
+                <div className="row mt-3">
+                    <div className="col-lg col-sm-12 text-right">
+                        <button type="button" className="btn btn btn-secondary" onClick={onSave}>Save</button>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    function App() {
+
+        const {
+            loading,
+            detailGrid
+        } = React.useContext(Context);
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(10px)'
+            }
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>Debagging</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+                                <a href={searchUrl} className="btn btn-sm btn-secondary" target="_blank">Search Debaggings</a>
+                            </div>
+                        </div>
+                        <MainForm />
+                        <br />
+                        <br />
+                        {
+                            detailGrid.length > 0 ? <DetailGrid /> : ''
+                        }
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+
+        const d = {
+            BagNo: '',
+            OriginId: 0,
+            Origin: '',
+            Destination: '',
+            TotalWeight: '',
+            SealNo: '',
+            Date: ''
+        };
+
+        const [loading, setLoading] = React.useState(false);
+        const [data, setData] = React.useState(d);
+        const [loadingGrid, setLoadingGrid] = React.useState([]);
+        const [detailGrid, setDetailGrid] = React.useState([]);
+        return (
+            <Context.Provider value={{
+                loading,
+                setLoading,
+                data,
+                setData,
+                detailGrid,
+                setDetailGrid
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

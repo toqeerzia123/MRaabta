@@ -1,0 +1,251 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    table {
+        font-size: 12px;
+    }
+</style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <h2 class="text-center">Search Loadings</h2>
+        <div id="root"></div>
+    </div>
+</main>
+
+
+@section scripts{
+<script>
+    var Branches =  @Html.Raw(Json.Encode(ViewBag.Branches));
+    var TransportType =  @Html.Raw(Json.Encode(ViewBag.TransportType));
+    var date = '@DateTime.Now.ToString("yyyy-MM-dd")';
+    var postUrl = '@Url.Action("GetLoadings","Loading")';
+    var hrefUrl = '@Url.Action("PrintLoading","Loading")';
+    var editUrl = '@Url.Action("Index","Loading")';
+</script>
+<script type="text/babel">
+
+    function Grid(props) {
+
+        return (
+            <div style={{ overflowX: 'auto' }}>
+                {
+                    props.data.length == 0 ? '' :
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>SNo</th>
+                                    <th>Edit</th>
+                                    <th>Loading No</th>
+                                    <th>Date</th>
+                                    <th>Transport Type</th>
+                                    <th>Vehicle Name</th>
+                                    <th>Courier Name</th>
+                                    <th>Origin</th>
+                                    <th>Destination</th>
+                                    <th>Description</th>
+                                    <th>Flight No</th>
+                                    <th>Seal No</th>
+                                    <th>Departure Flight Date/Time</th>
+                                    <th>Total Weight</th>
+                                    <th>User Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    props.data.map((x, index) =>
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td>
+                                                {
+                                                    x.IsUnloaded == 0 ? <a href={editUrl + '?id=' + x.EncryptedId} className="btn btn-sm btn-outline-secondary">Edit</a> : ''
+                                                }
+                                            </td>
+                                            <td><a target="_blank" href={hrefUrl + '?id=' + x.Id} style={{ color: 'blue', textDecoration: 'underline' }}>{x.Id}</a></td>
+                                            <td style={{ minWidth: '100px' }}>{x.Date}</td>
+                                            <td>{x.TransportType}</td>
+                                            <td>{x.VehicleName}</td>
+                                            <td>{x.CourierName}</td>
+                                            <td>{x.Origin}</td>
+                                            <td>{x.Destination}</td>
+                                            <td>{x.Description}</td>
+                                            <td>{x.FlightNo}</td>
+                                            <td>{x.SealNo}</td>
+                                            <td style={{ minWidth: '100px' }}>{x.DepartureFlightDate}</td>
+                                            <td>{x.TotalWeight}</td>
+                                            <td>{x.CreatedBy}</td>
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                }
+            </div>
+        );
+    }
+
+
+    function DropDownList(props) {
+        return (
+            <div>
+                <label>{props.label}</label>
+                <select className={props.class} value={props.value} onChange={(x) => {
+                    props.onChange(x);
+                }}>
+                    <option value="">Select {props.label}</option>
+                    {
+                        props.data.map((x, index) => <option value={x.Value} key={index}>{x.Text}</option>)
+                    }
+                </select>
+            </div>
+        )
+    }
+
+    function App() {
+
+        const [data, setData] = React.useState({
+            date: date,
+            loadingNo: '',
+            sealNo: '',
+            destinationId: '',
+            transportType: ''
+        });
+
+        const [gridData, setGridData] = React.useState([]);
+
+        const [loading, setLoading] = React.useState(false);
+
+        const getLoadings = () => {
+            setLoading(true);
+            fetch(postUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 0) {
+                            if (rs.data.length > 0) {
+                                setGridData(rs.data);
+                            } else {
+                                alert('No data found');
+                            }
+                        } else {
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const process = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+        const styles = {
+
+            mainDiv: {
+                width: '100%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))',
+                gridAutoRows: '65px',
+                columnGap: '5px',
+            }
+        }
+
+        const overlayStyle = {
+            position: 'fixed',
+            top: '0px',
+            left: '0px',
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)',
+            zIndex: 10000,
+            backdropFilter: 'blur(15px)'
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={overlayStyle}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div>
+                    <div style={styles.mainDiv}>
+                        <div>
+                            <label>Date</label>
+                            <input type="date" className="form-control" value={data.date} onChange={(x) => {
+                                let rs = { ...data, date: x.target.value };
+                                setData(rs);
+                            }} />
+                        </div>
+                        <div>
+                            <label>Loading Number</label>
+                            <input type="text" className="form-control" onInput={process} value={data.loadingNo} onChange={(x) => {
+                                let rs = { ...data, loadingNo: x.target.value };
+                                setData(rs);
+                            }} />
+                        </div>
+                        <div>
+                            <label>Seal Number</label>
+                            <input type="text" className="form-control" value={data.sealNo} onChange={(x) => {
+                                let rs = { ...data, sealNo: x.target.value.trim() };
+                                setData(rs);
+                            }} />
+                        </div>
+                        <DropDownList label="Destination" data={Branches} value={data.destinationId} class="form-control" onChange={(x) => {
+                            let rs = { ...data, destinationId: x.target.value };
+                            setData(rs);
+                        }} />
+                        <DropDownList label="Transport Type" data={TransportType} value={data.transportType} class="form-control" onChange={(x) => {
+                            let rs = { ...data, transportType: x.target.value };
+                            setData(rs);
+                        }} />
+                        <div style={{ alignSelf: 'end' }}>
+                            <button type="button" className="btn btn-outline-secondary" onClick={getLoadings}>Search</button>
+                        </div>
+                    </div>
+                    <br />
+                    <Grid data={gridData} />
+                </div>
+            </div>
+        );
+    }
+    ReactDOM.render(<App />, document.querySelector('#root'));
+</script>
+}

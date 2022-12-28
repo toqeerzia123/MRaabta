@@ -1,0 +1,478 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    table {
+        font-size: 12px;
+    }
+</style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <h2 class="text-center">PRA Reports</h2>
+        <div id="root"></div>
+    </div>
+</main>
+
+
+@section scripts{
+<script>
+    var zones =  @Html.Raw(Json.Encode(ViewBag.Zones));
+    var currentDate = '@DateTime.Now.ToString("yyyy-MM")';
+    var reportUrl = '@Url.Action("GetReport","PRAReport")';
+</script>
+<script type="text/babel">
+    function JSONToCSVConvertor(JSONData, ReportTitle, ShowLabel) {
+        //If JSONData is not an object then JSON.parse will parse the JSON string in an Object
+        var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
+
+        var CSV = '';
+        //Set Report title in first row or line
+
+        //CSV += ReportTitle + '\r\n\n';
+
+        //This condition will generate the Label/Header
+        if (ShowLabel) {
+            var row = "";
+
+            //This loop will extract the label from 1st index of on array
+            for (var index in arrData[0]) {
+
+                //Now convert each value to string and comma-seprated
+                row += index + ',';
+            }
+
+            row = row.slice(0, -1);
+
+            //append Label row with line break
+            CSV += row + '\r\n';
+        }
+
+        //1st loop is to extract each row
+        for (var i = 0; i < arrData.length; i++) {
+            var row = "";
+
+            //2nd loop will extract each column and convert it in string comma-seprated
+            for (var index in arrData[i]) {
+                if (index == 'CN') {
+                    //row += '="' + `${arrData[i][index]}` + '",';
+                    row += `="${arrData[i][index]}",`;
+                } else {
+                    row += `"${arrData[i][index]}",`;
+                }
+            }
+
+            row.slice(0, row.length - 1);
+
+            //add a line break after each row
+            CSV += row + '\r\n';
+        }
+
+        if (CSV == '') {
+            alert("Invalid data");
+            return;
+        }
+
+        //Generate a file name
+        var fileName = "MyReport_";
+        //this will remove the blank-spaces from the title and replace it with an underscore
+        fileName += ReportTitle.replace(/ /g, "_");
+
+        //Initialize file format you want csv or xls
+        var uri = 'data:text/csv;charset=utf-8,' + escape(CSV);
+
+        // Now the little tricky part.
+        // you can use either>> window.open(uri);
+        // but this will not work in some browsers
+        // or you will not get the correct file extension    
+
+        //this trick will generate a temp <a /> tag
+        var link = document.createElement("a");
+        link.href = uri;
+
+        //set the visibility hidden so it will not effect on your web-layout
+        link.style = "visibility:hidden";
+        link.download = fileName + ".csv";
+
+        //this part will append the anchor tag and remove it after automatic click
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+
+    const Context = React.createContext(null);
+
+    const SummaryGrid = (props) => {
+
+        const exportData = () => {
+            JSONToCSVConvertor(props.data, 'PRAReport', true);
+        }
+
+        const sticky = {
+            position: 'sticky',
+            top: 0,
+            zIndex: 1000,
+            background: 'rgba(255,255,255,.5)'
+        }
+
+        return (
+            <div>
+                <div className="text-right">
+                    <button type="button" onClick={exportData} className="btn btn-sm btn-secondary">Export</button>
+                </div>
+                <div className="table-responsive mt-2" style={{ height: '50vh' }}>
+                    <table className="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th style={sticky}>Region</th>
+                                <th style={sticky}>Zone</th>
+                                <th style={sticky}>Branch</th>
+                                <th style={sticky}>Accout Receiving Date</th>
+                                <th style={sticky}>Invoice Type</th>
+                                <th style={sticky}>Total Booked CNs</th>
+                                <th style={sticky}>Invoiced CNs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                props.data.map((x, index) =>
+                                    <tr key={index}>
+                                        <td>{x.Region}</td>
+                                        <td>{x.Zone}</td>
+                                        <td>{x.Branch}</td>
+                                        <td>{x.AccoutReceivingDate}</td>
+                                        <td>{x.InvoiceType}</td>
+                                        <td>{x.TotalBookedCNs}</td>
+                                        <td>{x.InvoicedCns}</td>
+                                    </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )
+    };
+
+    const Grid = () => {
+
+        const { gridData, setGridData, loading, setLoading } = React.useContext(Context);
+
+        const [take, setTake] = React.useState(100);
+
+        const exportData = () => {
+            JSONToCSVConvertor(gridData, 'PRAReport', true);
+        }
+
+        var runSearch = true;
+
+        const scroll = (e) => {
+            var target = e.target;
+
+            if (target.scrollTop >= (target.scrollHeight - target.offsetHeight)) {
+
+                if (!runSearch) {
+                    return;
+                }
+
+                setLoading(true);
+                runSearch = false;
+                setTimeout(function () {
+                    runSearch = true;
+                    setTake(take + 100);
+                    setLoading(false);
+                }, 1000);
+            }
+        }
+
+        const sticky = {
+            position: 'sticky',
+            top: 0,
+            zIndex: 1000,
+            background: 'rgba(255,255,255,.5)'
+        }
+
+        return (
+            <div>
+                <div className="text-right">
+                    <button type="button" onClick={exportData} className="btn btn-sm btn-secondary">Export</button>
+                </div>
+                <div className="table-responsive mt-2" style={{ height: '50vh' }} onScroll={scroll}>
+                    <table className="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th style={sticky}>Region</th>
+                                <th style={sticky}>Zone</th>
+                                <th style={sticky}>Branch</th>
+                                <th style={sticky}>CN</th>
+                                <th style={sticky}>AccoutReceivingDate</th>
+                                <th style={sticky}>InvoiceDate</th>
+                                <th style={sticky}>InvoiceNumber</th>
+                                <th style={sticky}>InvoiceType</th>
+                                <th style={sticky}>Consigner</th>
+                                <th style={sticky}>ConsignerNTN</th>
+                                <th style={sticky}>DestZone</th>
+                                <th style={sticky}>DestBranch</th>
+                                <th style={sticky}>Service</th>
+                                <th style={sticky}>Weight</th>
+                                <th style={sticky}>Pcs</th>
+                                <th style={sticky}>CNChargedAmount</th>
+                                <th style={sticky}>PRAChargedAmount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                gridData.slice(0, take).map((x, index) =>
+                                    <tr key={index}>
+                                        <td>{x.Region}</td>
+                                        <td>{x.Zone}</td>
+                                        <td>{x.Branch}</td>
+                                        <td>{x.CN}</td>
+                                        <td>{x.AccoutReceivingDate}</td>
+                                        <td>{x.InvoiceDate}</td>
+                                        <td>{x.InvoiceNumber}</td>
+                                        <td>{x.InvoiceType}</td>
+                                        <td>{x.Consigner}</td>
+                                        <td>{x.ConsignerNTN}</td>
+                                        <td>{x.DestZone}</td>
+                                        <td>{x.DestBranch}</td>
+                                        <td>{x.Service}</td>
+                                        <td>{x.Weight}</td>
+                                        <td>{x.Pcs}</td>
+                                        <td>{x.CNChargedAmount}</td>
+                                        <td>{x.PRAChargedAmount}</td>
+                                    </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    }
+
+    const App = () => {
+
+        const { data, setData, gridData, setGridData, loading, setLoading, summaryData, setSummaryData } = React.useContext(Context);
+
+        const updateData = (key, val) => {
+            let x = { ...data };
+            x[key] = val;
+            setData(x);
+        }
+
+        const getReports = () => {
+            setLoading(true);
+            fetch(reportUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: data.type, zoneCode: data.zone, dt: data.date + '-01'
+                })
+            }).then(async function (response) {
+                setLoading(false);
+                if (response.status !== 200) {
+                    const text = await response.text();
+                    console.log(text);
+                    //console.log('Looks like there was a problem. Status Code: ' + response.status);
+                    return;
+                }
+                response.json().then(function (rs) {
+                    if (rs.sts == 0) {
+                        if (rs.data.length > 0) {
+                            if (rs.type != 6) {
+                                setGridData(rs.data);
+                            }
+                            else {
+                                setSummaryData(rs.data);
+                            }
+                        } else {
+                            alert('No data found');
+                            setGridData([]);
+                            setSummaryData([]);
+                        }
+                    } else {
+                        alert(rs.msg);
+                    }
+                });
+            }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        React.useEffect(() => {
+            if (gridData.length > 0) {
+                setSummaryData([]);
+            }
+        }, [gridData]);
+
+        React.useEffect(() => {
+            if (summaryData.length > 0) {
+                setGridData([]);
+            }
+        }, [summaryData]);
+
+        const overlayStyle = {
+            position: 'fixed',
+            top: '0px',
+            left: '0px',
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)',
+            zIndex: 10000,
+            backdropFilter: 'blur(15px)'
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={overlayStyle}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div>
+                    <div className="row">
+                        <div className="col-lg-3 col-sm-12">
+                            <label>Month</label>
+                            <input type="month" className="form-control" value={data.date} onChange={(x) => updateData('date', x.target.value)} readOnly={![1, 6].includes(data.type)} />
+                        </div>
+                        <div className="col-lg-3 col-sm-12">
+                            <label>Zone</label>
+                            <select className="form-control" value={data.zone} onChange={(x) => updateData('zone', x.target.value)} disabled={data.type != 1}>
+                                {
+                                    zones.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        <div className="col-lg-3 col-sm-12">
+                            <label>Report Type</label>
+                            <div className="form-check">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" defaultChecked={true} name="optradio" onChange={(x) => {
+                                        if (x.target.checked)
+                                            updateData('type', 1);
+                                    }} />Difference In Charge Amount Report
+                                    </label>
+                            </div>
+                            <div className="form-check">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" name="optradio" onChange={(x) => {
+                                        if (x.target.checked)
+                                            updateData('type', 2);
+                                    }} />Today Shared Report</label>
+                            </div>
+                            <div className="form-check">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" name="optradio" onChange={(x) => {
+                                        if (x.target.checked)
+                                            updateData('type', 3);
+                                    }} />Remaining Data Report</label>
+                            </div>
+                            <div className="form-check">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" name="optradio" onChange={(x) => {
+                                        if (x.target.checked)
+                                            updateData('type', 4);
+                                    }} />Failed To Send Report</label>
+                            </div>
+                            <div className="form-check">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" name="optradio" onChange={(x) => {
+                                        if (x.target.checked)
+                                            updateData('type', 5);
+                                    }} />Qualified But Not Send</label>
+                            </div>
+                            <div className="form-check">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" name="optradio" onChange={(x) => {
+                                        if (x.target.checked)
+                                            updateData('type', 6);
+                                    }} />Summary Report</label>
+                            </div>
+                        </div>
+                        <div className="col-lg-3 col-sm-12">
+                            <button type="button" className="btn btn-outline-secondary" style={{ marginTop: '1.5rem' }} onClick={getReports}>Get</button>
+                        </div>
+                    </div>
+                    <br />
+                    <RenderGrid type={data.type} summaryData={summaryData} gridData={gridData} />
+                </div>
+            </div>
+        );
+    }
+
+    const RenderGrid = (props) => {
+        if (props.gridData.length > 0 && props.type != 6)
+            return <Grid />
+        else if (props.summaryData.length > 0 && props.type == 6)
+            return <SummaryGrid data={props.summaryData} />
+        else
+            return '';
+    }
+
+    const Store = ({ children }) => {
+
+        const [loading, setLoading] = React.useState(false);
+
+        const [data, setData] = React.useState({
+            date: currentDate,
+            zone: zones[0].Value,
+            type: 1
+        });
+
+        const [gridData, setGridData] = React.useState([]);
+        const [summaryData, setSummaryData] = React.useState([]);
+
+        return (
+            <Context.Provider value={{
+                data, setData, gridData, setGridData, loading, setLoading, summaryData, setSummaryData
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store><App /></Store>, document.querySelector('#root'));
+</script>
+}

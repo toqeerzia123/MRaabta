@@ -1,0 +1,162 @@
+﻿@model MRaabta.Models.GetDeliveryDataWithDistance
+
+
+@{
+    Layout = null;
+}
+
+<link href="~/Content/Site.css" rel="stylesheet" />
+@*<link href="~/assets/css/bootstrap.css" rel="stylesheet" />*@
+<script type="text/javascript">
+    $(function () {
+        document.getElementById('totalKmDistance').innerHTML ='Total distance travelled (approx.): '+@Model.distanceKm+' km<br>' + '@(ViewBag.IsPartiallyOff == true ? "Location was partially turned off." : "")';
+    });
+    $('table.table_data').each(function () {
+        debugger;
+        var currentPage = 0;
+        var numPerPage = 10;
+        var $table = $(this);
+        $table.bind('repaginate', function () {
+            $table.find('tbody tr').hide().slice(currentPage * numPerPage, (currentPage + 1) * numPerPage).show();
+        });
+        $table.trigger('repaginate');
+        var numRows = $table.find('tbody tr').length;
+        var numPages = Math.ceil(numRows / numPerPage);
+        var $pager = $('<div class="pager"></div>');
+        for (var page = 0; page < numPages; page++) {
+            $('<span class="page-number"></span>').text(page + 1).bind('click', {
+                newPage: page
+            }, function (event) {
+                currentPage = event.data['newPage'];
+                $table.trigger('repaginate');
+                $(this).addClass('active').siblings().removeClass('active');
+            }).appendTo($pager).addClass('clickable');
+        }
+
+        $pager.insertAfter($table).find('span.page-number:first').addClass('active');
+
+
+    });
+</script>
+<style>
+    #tbl_pickUp {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+        #tbl_pickUp td, #tbl_pickUp th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #tbl_pickUp tr:hover {
+            background-color: #ddd;
+        }
+
+        #tbl_pickUp th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #ddd;
+            color: black;
+        }
+
+    #tbl_pickUp1 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        border: none;
+    }
+
+        #tbl_pickUp1 td, #tbl_pickUp1 th {
+            border: none;
+            padding: 8px;
+            border-bottom: 1px solid #bdbdbd;
+            border-top: 1px solid #bdbdbd;
+        }
+
+        #tbl_pickUp1 tr:hover {
+            background-color: #ddd;
+        }
+
+        #tbl_pickUp1 th {
+            /*padding-top: 12px;
+            padding-bottom: 12px;*/
+            text-align: left;
+            /*background-color: #ddd;*/
+            background-color: #e0e0e0;
+            color: black;
+        }
+</style>
+
+<link href="~/Content/themes/Css/tableCss.css" rel="stylesheet" />
+@if (Model.list.Count() > 0 && Model.list != null)
+{
+    <table id="tbl_pickUp" class="table_data" border="1">
+        <thead>
+            <tr>
+                <th>S No.</th>
+                <th>Runsheet Date</th>
+                <th>Runsheet Creation Time</th>
+                <th>Runsheet</th>
+                @*<th>City</th>*@
+                @*<th>Route</th>*@
+                <th>Total CNs</th>
+                <th>Performed</th>
+                <th>Delivered</th>
+                <th>Total Touchpoints</th>
+                <th>Total Time Taken</th>
+                <th>Map</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ int i = 0; }
+            @foreach (var asset in Model.list)
+            {
+                <tr>
+                    <td style="width:6%"> @{ i++; }   @i.ToString() </td>
+                    <td style="width:12%">@asset.RunsheetDate.ToString()</td>
+                    <td style="width:12%">@asset.RUNSHEETTIME.ToString()</td>
+                    @*<td> @Html.ActionLink(asset.locationName, "GetPickUpChildByLocations", new { locationID = asset.locationID, PickUpDate = asset.PickUpTime }, new { @class = "GetLocationPickUp", LocationID = asset.locationID, PickUpDate = asset.PickUpTime }) </td>*@
+                    @*<td> @Html.ActionLink(asset.locationName, "GetPickUpChildByLocations", new { locationID = asset.locationID, PickUpDate = asset.PickUpTime }) </td>*@
+                    @*<td style="width:10%"><input name="lb_locationName" class="link_button" value="@asset.RunsheetNumber" onclick="getDtails(@asset.RunsheetNumber);" style="outline: none;" ></td>*@
+                    <td style="width:10%"><input type="button" name="lb_locationName" class="link_button" value="@asset.RunsheetNumber" onclick="getDtails(@asset.RunsheetNumber);"></td>
+                    @*<td style="width:5%">@asset.Sname</td>*@
+                    @*<td style="width:15%">@asset.ROUTE_MASTER</td>*@
+                    @*<td style="width:15%">@asset.COURIER</td>*@
+                    <td style="width:7%">@asset.TotalCN</td>
+                    <td style="width:5%">@asset.PODCN</td>
+                    <td style="width:5%">@asset.DLVCN</td>
+                    <td style="width:7%">@asset.Touchpoints</td>
+                    @{
+                        if (asset.TotalTimeTaken == "" && asset.TotalCN == 0 && asset.PODCN == 0)
+                        {
+                            <td style="width:7%">No Consignments</td>
+                        }
+                        else if (asset.TotalTimeTaken == "" && asset.TotalCN != 0 && asset.PODCN == 0)
+                        {
+                            <td style="width:7%">No Activity Performed</td>
+                        }
+                        else if (asset.TotalTimeTaken == "00:00")
+                        {
+                            <td style="width:7%">Single Touchpoint</td>
+                        }
+                        else
+                        {
+                            <td style="width:7%">@asset.TotalTimeTaken</td>
+                        }
+                    }
+                    <td style="width:10%"><a target="_blank" href="@Url.Action("Index","DlvRoute", new { isCN = false, rs = asset.RunsheetNumber})">View Map</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <script type="text/javascript">
+        swal("No Record Found.");
+    </script>
+}
+

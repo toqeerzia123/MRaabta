@@ -1,0 +1,208 @@
+﻿.link_button {
+    font-weight: 400;
+    color: #007bff;
+    text-decoration: none;
+    border: none;
+    background: none;
+}
+
+    .link_button:hover {
+        text-decoration: underline;
+    }
+/* Move down content because we have a fixed navbar that is 50px tall */
+.btn {
+    border: 0;
+    background: #ddd;
+    color: #000 !important;
+}
+
+    .btn:hover {
+        border: 0;
+        background: #444 !important;
+        color: #fff !important;
+    }
+
+.btn-onLine {
+    margin-top: 27px !important;
+}
+/*Table Margining to arrange proper view  Start*/
+.mainTable {
+    float: left;
+    min-height: 770px;
+    overflow: auto;
+    width: 99%;
+}
+
+.childTable {
+    float: left;
+    width: 100%;
+    min-height: 500px;
+    overflow: auto;
+}
+/*Table Margining to arrange proper view End*/
+
+/*Zooming Image Start*/
+
+.zoom {
+    padding: 9px;
+    transition: transform .2s;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+}
+
+    .zoom:hover {
+        transform: scale(7.5);
+    }
+/*Zooming Image End*/
+
+/*----------- menu start --------------*/
+
+.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    padding: 0;
+    margin: 0;
+}
+
+    .dropdown-content li {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+    }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+
+/*----------- menu end --------------*/
+
+
+
+body {
+    padding-top: 10px;
+    padding-bottom: 20px;
+}
+
+/*----------- Pagging --------------*/
+div.pager {
+    text-align: center;
+    margin: 1em 0;
+}
+
+    div.pager span {
+        display: inline-block;
+        width: 1.8em;
+        height: 1.8em;
+        line-height: 1.8;
+        text-align: center;
+        cursor: pointer;
+        background: #808080;
+        color: #fff;
+        margin-right: 0.5em;
+    }
+
+        div.pager span.active {
+            background: lightgrey;
+            color: black;
+        }
+
+/*Table Content CSS*/
+
+.tbl-basic {
+    background-color: #ddd !important;
+    color: black !important;
+    width: 100%;
+    border-color: #ddd !important;
+}
+
+    .tbl-basic h1 {
+        font-weight: bold !important;
+    }
+
+
+
+.panel-body table {
+    float: left;
+    width: 100%;
+}
+
+/*.panel-body table td #div_ddlRiders td {
+        float: left;
+        width: 65%;
+    }
+
+        .panel-body table td #div_ddlRiders td .panel-default1 {
+            float: left;
+            width: 65%;
+        }*/
+
+#div_ddlRiders div {
+    float: left;
+    width: 100%;
+}
+
+
+.box_div table td {
+    float: left;
+    width: 10%;
+}
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Set widths on the form inputs since otherwise they're 100% wide */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+
+
+/* Responsive: Portrait tablets and up */
+@media screen and (min-width: 768px) {
+    .jumbotron {
+        margin-top: 20px;
+    }
+
+    .body-content {
+        padding: 0;
+    }
+}

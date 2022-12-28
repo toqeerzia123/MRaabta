@@ -1,0 +1,613 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    body {
+        font-family: Calibri;
+    }
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    table {
+        font-size: 13px;
+    }
+
+    table td {
+        white-space: nowrap;
+    }
+</style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <h3 class="text-center">Generate Advise Pending</h3>
+        <div id="root"></div>
+    </div>
+</main>
+
+
+@section scripts{
+<script>
+    const timeNow = '@DateTime.Now.ToString("HH:mm")';
+    const reasons =  @Html.Raw(Json.Encode(ViewBag.Reasons));
+    const phoneStatus =  @Html.Raw(Json.Encode(ViewBag.PhoneStatus));
+    const status =  @Html.Raw(Json.Encode(ViewBag.Status));
+    const reattempts =  @Html.Raw(Json.Encode(ViewBag.Reattempts));
+    const cn = '@ViewBag.CN';
+    const notesUrl = '@Url.Action("GetNotes","GenerateAdvicePending")';
+    const cnInfoUrl = '@Url.Action("GetCNInfo","GenerateAdvicePending")';
+    const insertTicketUrl = '@Url.Action("InsertTicket","GenerateAdvicePending")';
+</script>
+<script type="text/babel">
+
+    const d = {
+        CN: '',
+        TicketNo: '',
+        Reason: '',
+        Note: '',
+        PhoneStatus: '',
+        CallingTime: timeNow,
+        Consignee: '',
+        ConsigneeCell: '',
+        ConsigneeAddress: '',
+        Status: '',
+        Reattempt: '',
+        Remarks: '',
+        ClosingDate: '',
+        UserType: 0,
+        Shippper: '',
+        AccountNo: '',
+        Origin: 0,
+        Destination: 0,
+    };
+
+    const Context = React.createContext(null);
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processString = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-z ]/g, "");
+        e.target.value = numbers;
+    }
+
+    const DDL = (props) => {
+        const { disabled = false } = props;
+        return (
+            <React.Fragment>
+                <label>{props.label}</label>
+                <select className="form-control input-sm" value={props.value} onChange={(e) => props.onChange(e)} disabled={props.disabled}>
+                    <option value="">Select {props.label}</option>
+                    {
+                        props.data.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                    }
+                </select>
+            </React.Fragment>
+        )
+    }
+
+    const CNInfo = (props) => {
+
+        const styles = {
+            fontSize: 13
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row" style={styles}>
+                    <div className="col-12 text-center">
+                        <h4>Consignment Track</h4>
+                    </div>
+                    <div className="col-lg col-sm-12"><b>Consignment No</b></div>
+                    <div className="col-lg col-sm-12">{props.data.CN}</div>
+                    <div className="col-lg col-sm-12"><b>Origin</b></div>
+                    <div className="col-lg col-sm-12">{props.data.Origin}</div>
+                    <div className="col-lg col-sm-12"><b>Destination</b></div>
+                    <div className="col-lg col-sm-12">{props.data.Destination}</div>
+                </div>
+                <div className="row" style={styles}>
+                    <div className="col-lg col-sm-12"><b>Account No</b></div>
+                    <div className="col-lg col-sm-12">{props.data.AccountNo}</div>
+                    <div className="col-lg col-sm-12"><b>Shipper Name</b></div>
+                    <div className="col-lg col-sm-12">{props.data.Consigner}</div>
+                    <div className="col-lg col-sm-12"><b>Booking Date</b></div>
+                    <div className="col-lg col-sm-12">{props.data.BookingDate}</div>
+                </div>
+                <div className="row" style={styles}>
+                    <div className="col-lg col-sm-12"><b>Consignee</b></div>
+                    <div className="col-lg col-sm-12">{props.data.Consignee}</div>
+                    <div className="col-lg col-sm-12"><b>Consignee Cell#</b></div>
+                    <div className="col-lg col-sm-12">{props.data.ConsigneePhoneNo}</div>
+                    <div className="col-lg col-sm-12"><b>Service Type</b></div>
+                    <div className="col-lg col-sm-12">{props.data.ServiceType}</div>
+                </div>
+                <div className="row" style={styles}>
+                    <div className="col-lg col-sm-12"><b>NCI Status</b></div>
+                    <div className="col-lg col-sm-12">{props.data.NCIStatusName}</div>
+                    <div className="col-lg col-sm-12"><b>COD Amount</b></div>
+                    <div className="col-lg col-sm-12">{props.data.CodAmount}</div>
+                    <div className="col-lg col-sm-12"><b>CN Status</b></div>
+                    <div className="col-lg col-sm-12">{props.data.CNStatus == '59' ? 'Return to Shipper' : props.data.CNStatus == '123' ? 'Delivered' : 'Undelivered'}</div>
+                </div>
+                <div className="row" style={styles}>
+                    <div className="col-lg-2 col-sm-12"><b>Consignee Address</b></div>
+                    <div className="col-lg col-sm-12">{props.data.ConsigneeAddress}</div>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    const LogInfo = (props) => {
+        return (
+            <div className="row">
+                <div className="col-12 text-center">
+                    <h4>Pending Ticket Log</h4>
+                </div>
+                <div className="col-12">
+                    <div className="table-responsive">
+                        <table className="table table-bordered w-100">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Log Status</th>
+                                    <th>Ticket No</th>
+                                    <th>Reason</th>
+                                    <th>Standard Notes</th>
+                                    <th>Phone Call Status</th>
+                                    <th>Call Time</th>
+                                    <th>Ticket Status</th>
+                                    <th>Reattempt</th>
+                                    <th>Comment</th>
+                                    <th>Consignee</th>
+                                    <th>Consignee Cell#</th>
+                                    <th>Consignee Address</th>
+                                    <th>Created By</th>
+                                    <th>Created On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    props.data.map((x, index) =>
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td>{x.LogStatus}</td>
+                                            <td>{x.TicketNo}</td>
+                                            <td>{x.Reason}</td>
+                                            <td>{x.Notes}</td>
+                                            <td>{x.CallStatus}</td>
+                                            <td>{x.CallTime}</td>
+                                            <td>{x.NCIStatus}</td>
+                                            <td>{x.Reattempt}</td>
+                                            <td>{x.Comment}</td>
+                                            <td>{x.Consignee}</td>
+                                            <td>{x.ConsigneeCell}</td>
+                                            <td>{x.ConsigneeAddress}</td>
+                                            <td>{x.CreatedBy}</td>
+                                            <td>{x.CreatedOn}</td>
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const TicketInfo = () => {
+
+        const {
+            data,
+            setData,
+            loading,
+            setLoading,
+            cnInfo,
+            setCnInfo,
+            logInfo,
+            setLogInfo,
+            showTicketInfo,
+            setShowTicketInfo
+        } = React.useContext(Context);
+
+        const [notes, setNotes] = React.useState([]);
+        const [reattemptRemarks, setReattemptRemarks] = React.useState([]);
+
+        const updateData = (key, val) => setData({ ...data, [key]: val });
+
+        const getNotes = async (rid) => {
+
+            setLoading(true);
+
+            try {
+                const response = await fetch(notesUrl + '?rid=' + rid);
+
+                setLoading(false);
+
+                if (response.status === 200) {
+
+                    const rs = await response.json();
+
+                    if (rs.sts == 0) {
+                        setNotes(rs.data);
+                        setData({ ...data, Note: '' });
+                    } else {
+                        alert(rs.msg);
+                        setNotes([]);
+                    }
+
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        React.useEffect(() => {
+            if (data.Reason) {
+                getNotes(data.Reason);
+            } else {
+                setNotes([]);
+                setData({ ...data, Note: '' });
+            }
+        }, [data.Reason]);
+
+
+        React.useEffect(() => {
+            if (data.Status == '3') {
+                setReattemptRemarks(reattempts);
+            } else {
+                setReattemptRemarks([]);
+                setData({ ...data, Reattempt: '' });
+            }
+        }, [data.Status]);
+
+
+        const validate = () => {
+
+            if (data.UserType == 2) {
+
+                if (!data.Reason) {
+                    alert('Select Reason');
+                    return false;
+                }
+
+                if (!data.Note) {
+                    alert('Select Standard Note');
+                    return false;
+                }
+
+                if (!data.PhoneStatus) {
+                    alert('Select Call Status');
+                    return false;
+                }
+
+                if (!data.CallingTime) {
+                    alert('Select Call Time');
+                    return false;
+                }
+            }
+
+
+            if (!data.Remarks) {
+                alert('Enter Remarks');
+                return false;
+            }
+
+            if (data.Status) {
+                if (data.Status == '3') {
+                    if (!data.Reattempt) {
+                        alert('Select Reattempt Remarks');
+                        return false;
+                    }
+                }
+            } else {
+                alert('Select Status');
+                return false;
+            }
+
+            return true;
+
+        }
+
+
+        const insertTicket = async () => {
+            if (validate()) {
+
+                setLoading(true);
+
+                try {
+                    const response = await fetch(insertTicketUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ model: data })
+                    });
+
+                    setLoading(false);
+
+                    if (response.status === 200) {
+                        const rs = await response.json();
+                        if (rs.sts == 0) {
+                            alert(`Ticket# ${rs.msg} generated`);
+                            setData(d);
+                            setCnInfo(null);
+                            setLogInfo([]);
+                            setShowTicketInfo(false);
+                        } else {
+                            alert(rs.msg);
+                        }
+                    } else {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                    }
+
+                } catch (error) {
+                    setLoading(false);
+                    console.log(error);
+                }
+            }
+        }
+
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-12 text-center">
+                        <h4>Ticket Info</h4>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <DDL label="Reasons" value={data.Reason} data={reasons} onChange={(e) => updateData('Reason', e.target.value)} disabled={data.UserType != 2 ? true : false} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <DDL label="Standard Note" value={data.Note} data={notes} onChange={(e) => updateData('Note', e.target.value)} disabled={data.UserType != 2 ? true : false} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <DDL label="Call Status" value={data.PhoneStatus} data={phoneStatus} onChange={(e) => updateData('PhoneStatus', e.target.value)} disabled={data.UserType != 2 ? true : false} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Calling Time</label>
+                        <input type="time" className="form-control input-sm" value={data.CallingTime} onChange={(e) => updateData('CallingTime', e.target.value)} readOnly={data.UserType != 2 ? true : false} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Consignee</label>
+                        <input type="text" className="form-control input-sm" value={data.Consignee} onChange={(e) => updateData('Consignee', e.target.value)} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Consignee Cell#</label>
+                        <input type="text" className="form-control input-sm" value={data.ConsigneeCell} onChange={(e) => updateData('ConsigneeCell', e.target.value)} />
+                    </div>
+                </div>
+                <div className="row mt-2">
+                    <div className="col-lg-6 col-sm-12">
+                        <label>Consignee Address</label>
+                        <textarea className="form-control input-sm" value={data.ConsigneeAddress} onChange={(e) => updateData('ConsigneeAddress', e.target.value)}></textarea>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Remarks</label>
+                        <textarea className="form-control input-sm" onInput={processString} value={data.Remarks} onChange={(e) => updateData('Remarks', e.target.value)}></textarea>
+                    </div>
+                </div>
+                <div className="row mt-2">
+                    <div className="col-lg-3 col-sm-12">
+                        <DDL label="Ticket Status" value={data.Status} data={
+                            function () {
+                                if (data.UserType == 1) {
+                                    return status.filter(x => x.Value == 3);
+                                } else if (data.UserType == 2) {
+                                    return status.filter(x => x.Value == 1);
+                                } else if (data.UserType == 3) {
+                                    return status.filter(x => ['2', '3'].includes(x.Value));
+                                } else {
+                                    return [];
+                                }
+                            }()} onChange={(e) => updateData('Status', e.target.value)} />
+                    </div>
+                    <div className="col-lg-3 col-sm-12">
+                        <DDL label="Reattempt Remarks" value={data.Reattempt} data={reattemptRemarks} onChange={(e) => updateData('Reattempt', e.target.value)} />
+                    </div>
+                    <div className="col-lg-3 col-sm-12">
+                        <label>Closing Date</label>
+                        <input type="text" className="form-control input-sm" value={data.ClosingDate} readOnly />
+                    </div>
+                    <div className="col-lg-3 col-sm-12 text-right">
+                        <button type="button" className="btn btn-secondary" style={{ marginTop: 26 }} onClick={insertTicket}>Initiate</button>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    const App = () => {
+
+        const {
+            data,
+            setData,
+            loading,
+            setLoading,
+            cnInfo,
+            setCnInfo,
+            logInfo,
+            setLogInfo,
+            showTicketInfo,
+            setShowTicketInfo
+        } = React.useContext(Context);
+
+
+        const cnRef = React.useRef(null);
+
+        const overlayStyle = {
+            position: 'fixed',
+            top: '0px',
+            left: '0px',
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)',
+            zIndex: 10000,
+            backdropFilter: 'blur(15px)'
+        }
+
+
+
+        const getCNInfo = async (cn) => {
+
+            setLoading(true);
+
+            try {
+                const response = await fetch(cnInfoUrl + '?cn=' + cn);
+
+                setLoading(false);
+
+                if (response.status === 200) {
+
+                    const rs = await response.json();
+
+                    if (rs.sts == 0) {
+                        const dt = rs.data;
+                        setCnInfo(dt.cnInfo);
+                        setLogInfo(dt.logData ? dt.logData : []);
+                        if (dt.showPendingInfo) {
+                            const z = {
+                                ...data,
+                                CN: dt.cnInfo.CN,
+                                TicketNo: dt.cnInfo.TicketNo,
+                                Consignee: dt.cnInfo.Consignee,
+                                ConsigneeCell: dt.cnInfo.ConsigneePhoneNo,
+                                ConsigneeAddress: dt.cnInfo.ConsigneeAddress,
+                                ClosingDate: dt.cnInfo.ticketClosingDate,
+                                UserType: dt.role,
+                                Shippper: dt.cnInfo.Consigner,
+                                AccountNo: dt.cnInfo.AccountNo,
+                                Origin: dt.cnInfo.OriginId,
+                                Destination: dt.cnInfo.DestinationId
+                            };
+                            setData(z);
+                            setShowTicketInfo(true);
+                        } else {
+                            alert(dt.msg);
+                            setData(d);
+                            setShowTicketInfo(false);
+                        }
+                    } else {
+                        alert(rs.msg);
+                        setData(d);
+                        setCnInfo(null);
+                        setLogInfo([]);
+                        setShowTicketInfo(false);
+                    }
+
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        const onCNBlur = async (e) => {
+            const val = e.target.value;
+            if (val) {
+                await getCNInfo(val);
+                cnRef.current.value = '';
+                cnRef.current.focus();
+            }
+
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                cnRef.current.blur();
+            }
+        }
+
+        React.useEffect(() => {
+            if (cn) {
+                setTimeout(async function () {
+                    await getCNInfo(cn);
+                }, 1000);
+            }
+        }, [])
+
+        return (
+
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={overlayStyle}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <React.Fragment>
+                    <div className="row">
+                        <div className="col-lg-3 col-sm-12">
+                            <label>Consignment No</label>
+                            <input type="text" onInput={process} maxLength="15" className="form-control input-sm" ref={cnRef} defaultValue={cn} onKeyPress={keypressHandler} onBlur={onCNBlur} />
+                        </div>
+                    </div>
+                    {cnInfo ? <CNInfo data={cnInfo} /> : ''}
+                    {showTicketInfo ?
+                        <React.Fragment>
+                            <br />
+                            <TicketInfo />
+                        </React.Fragment> : ''
+                    }
+                    <br />
+                    {logInfo.length > 0 ? <LogInfo data={logInfo} /> : ''}
+                </React.Fragment>
+            </div>
+        );
+    }
+
+    const Store = ({ children }) => {
+        const [data, setData] = React.useState(d);
+        const [loading, setLoading] = React.useState(false);
+        const [cnInfo, setCnInfo] = React.useState(null);
+        const [logInfo, setLogInfo] = React.useState([]);
+        const [showTicketInfo, setShowTicketInfo] = React.useState(false);
+        return (
+            <Context.Provider value={{
+                data,
+                setData,
+                loading,
+                setLoading,
+                cnInfo,
+                setCnInfo,
+                logInfo,
+                setLogInfo,
+                showTicketInfo,
+                setShowTicketInfo
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>, document.querySelector('#root'));
+</script>
+}

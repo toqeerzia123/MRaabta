@@ -1,0 +1,54 @@
+﻿
+@{
+    ViewBag.Title = "FirebaseTest";
+}
+
+<script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-messaging.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-analytics.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  var firebaseConfig = {
+    apiKey: "AIzaSyCVaebNxpeW1z5heqzvLyPz5aKp-4hbj2o",
+    authDomain: "mpex-customer-v1.firebaseapp.com",
+    projectId: "mpex-customer-v1",
+    storageBucket: "mpex-customer-v1.appspot.com",
+    messagingSenderId: "991422944281",
+    appId: "1:991422944281:web:495936b19292f0ad5e4688",
+    measurementId: "G-FNHQVMQ7ZL"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    const messaging = firebase.messaging();
+
+    // Add the public key generated from the console here.
+    messaging.getToken().then((currentToken) => {
+        alert(currentToken);
+    });
+
+    console.log(token);
+    alert(token);
+
+    //messaging.getToken({ vapidKey: '<YOUR_PUBLIC_VAPID_KEY_HERE>' }).then((currentToken) => {
+    //  if (currentToken) {
+    //    sendTokenToServer(currentToken);
+    //    updateUIForPushEnabled(currentToken);
+    //  } else {
+    //    // Show permission request.
+    //    console.log('No registration token available. Request permission to generate one.');
+    //    // Show permission UI.
+    //    updateUIForPushPermissionRequired();
+    //    setTokenSentToServer(false);
+    //  }
+    //}).catch((err) => {
+    //  console.log('An error occurred while retrieving token. ', err);
+    //  showToken('Error retrieving registration token. ', err);
+    //  setTokenSentToServer(false);
+    //});
+
+</script>
+

@@ -1,0 +1,279 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+
+    .material-switch>input[type="checkbox"] {
+        display: none;
+    }
+
+    .material-switch>label {
+        cursor: pointer;
+        height: 0px;
+        position: relative;
+        width: 40px;
+    }
+
+    .material-switch>label::before {
+        background: rgb(0, 0, 0);
+        box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+        content: '';
+        height: 16px;
+        margin-top: -8px;
+        position: absolute;
+        opacity: 0.3;
+        transition: all 0.4s ease-in-out;
+        width: 40px;
+    }
+
+    .material-switch>label::after {
+        background: #6c757d;
+        border-radius: 16px;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+        content: '';
+        height: 24px;
+        left: -4px;
+        margin-top: -8px;
+        position: absolute;
+        top: -4px;
+        transition: all 0.3s ease-in-out;
+        width: 24px;
+    }
+
+    .material-switch>input[type="checkbox"]:checked+label::before {
+        background: inherit;
+        opacity: 0.5;
+    }
+
+    .material-switch>input[type="checkbox"]:checked+label::after {
+        background: orangered;
+        left: 20px;
+    }
+
+    .btn-secondary:not(:disabled):not(.disabled):active,
+    .btn-secondary:not(:disabled):not(.disabled).active,
+    .show>.btn-secondary.dropdown-toggle {
+        background-color: orangered !important;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script>
+    const printUrl = '@Url.Action("Print","Manifest")';
+    const cnData = @Html.Raw(Json.Encode(Model));
+    const saveUrl = '@Url.Action("Save","MegaVerification")';
+</script>
+<script type="text/babel">
+
+    const { Fragment, createContext, useContext, useEffect, useState } = React;
+    const Context = createContext(null);
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const MainForm = () => {
+
+        const { data, setData, loading, setLoading } = useContext(Context);
+
+        const updateData = (key, val) => setData({ ...data, [key]: val });
+
+        const save = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(saveUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: data })
+                });
+
+                setLoading(false);
+
+                if (response.status === 200) {
+                    const rs = await response.json();
+                    alert(rs.msg);
+                    if (rs.sts == 0) {
+                        setData(rs.data);
+                    }
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            }
+        }
+
+        return <Fragment>
+            <div className="row">
+                <div className="col-lg-3 col-sm-12">
+                    <label>Consignment Number</label>
+                    <input type="text" readOnly={true} className="form-control" value={data.CN} />
+                </div>
+                <div className="col-lg-3 col-sm-12">
+                    <label>Shipper Name</label>
+                    <input type="text" readOnly={true} className="form-control" value={data.Shipper} />
+                </div>
+                <div className="col-lg-3 col-sm-12">
+                    <label>Consignee Name</label>
+                    <input type="text" readOnly={true} className="form-control" value={data.Consignee} />
+                </div>
+                <div className="col-lg-3 col-sm-12">
+                    <label>Receiver Name</label>
+                    <input type="text" readOnly={true} className="form-control" value={data.Receiver} />
+                </div>
+            </div>
+            <div className="row mt-2">
+                <div className="col-lg-3 col-sm-12">
+                    <label>Receiver Number</label>
+                    <input type="text" readOnly={true} className="form-control" value={data.ReceiverNumber} />
+                </div>
+                <div className="col-lg-6 col-sm-12">
+                    <label>Call Status</label><br />
+                    <div className="btn-group btn-group-toggle" data-toggle="buttons">
+                        <label className={`btn btn-secondary ${(data.CallStatus == 'Answered') ? 'active' : ''}`}>
+                            <input type="radio" name="CallStatus" defaultChecked={true} autoComplete="off" onClick={(e) => updateData('CallStatus', 'Answered')} />Answered</label>
+                        <label className={`btn btn-secondary ${(data.CallStatus == 'Not Responding') ? 'active' : ''}`}>
+                            <input type="radio" name="CallStatus" autoComplete="off" onClick={(e) => updateData('CallStatus', 'Not Responding')} />Not Responding</label>
+                        <label className={`btn btn-secondary ${(data.CallStatus == 'Powered Off') ? 'active' : ''}`}>
+                            <input type="radio" name="CallStatus" autoComplete="off" onClick={(e) => updateData('CallStatus', 'Powered Off')} />Powered Off</label>
+                        <label className={`btn btn-secondary ${(data.CallStatus == 'Out of Reach') ? 'active' : ''}`}>
+                            <input type="radio" name="CallStatus" autoComplete="off" onClick={(e) => updateData('CallStatus', 'Out of Reach')} />Out of Reach</label>
+                        <label className={`btn btn-secondary ${(data.CallStatus == 'Busy') ? 'active' : ''}`}>
+                            <input type="radio" name="CallStatus" autoComplete="off" onClick={(e) => updateData('CallStatus', 'Busy')} />Busy</label>
+                    </div>
+                </div>
+                <div className="col-lg-3 col-sm-12">
+                    <label>Delivery Verified</label><br />
+                    <div className="material-switch pull-left">
+                        <input id="TaxExcemption" type="checkbox" checked={data.DeliveryVerified} onChange={(e) => updateData('DeliveryVerified', e.target.checked)} />
+                        <label htmlFor="TaxExcemption" className="label-primary"></label>
+                    </div>
+                </div>
+            </div>
+            <div className="row mt-2">
+                <div className="col-lg-3 col-sm-12">
+                    <label>Customer Remarks</label>
+                    <textarea type="text" className="form-control" value={data.CustomerRemarks} onChange={(e) => updateData('CustomerRemarks', e.target.value)}></textarea>
+                </div>
+                <div className="col-lg-3 col-sm-12">
+                    <label>Staff Remarks</label>
+                    <textarea type="text" className="form-control" value={data.StaffRemarks} onChange={(e) => updateData('StaffRemarks', e.target.value)}></textarea>
+                </div>
+                <div className="col text-right">
+                    <button type="button" className="btn btn-secondary" style={{ marginTop: '3rem' }} onClick={save}>Save</button>
+                </div>
+            </div>
+        </Fragment>
+    }
+
+    const App = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData
+        } = useContext(Context);
+
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(10px)'
+            }
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>Mega Verification</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+                            </div>
+                        </div>
+                        <MainForm />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+
+        const [loading, setLoading] = useState(false);
+        const [data, setData] = useState(cnData);
+
+        return (
+            <Context.Provider value={{
+                loading,
+                setLoading,
+                data,
+                setData
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

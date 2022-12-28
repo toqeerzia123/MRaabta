@@ -1,0 +1,255 @@
+﻿@model IEnumerable<MRaabta.Models.DebreifingAllModel>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Edit Consignment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" value="" id="hdnId" />
+                <label>Select Reason</label><br>
+                <select class="form-control" id="ddlReason" style="width:100%">
+                    @foreach (var item in ViewBag.Reasons as List<MRaabta.Models.DropDownModel>)
+                    {
+                        <option value="@item.Text">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnUpdate">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="exampleModalCenter2" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Consignment Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="tableView">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<main class="app-content">
+    <div class="row pt-3" style="background:rgba(255,255,255,.5)">
+        <div class="col-12 text-center">
+            <h2>Undelivered Shipments</h2>
+        </div>
+
+        <div class="col-12 mt-4" style="overflow-x:scroll; height:85vh !important; overflow-y:scroll">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Rider Code</th>
+                        <th>Rider Name</th>
+                        <th>Runsheet Number</th>
+                        <th>Consignment No.</th>
+                        <th>Delivered Date & Time</th>
+                        <th>Consignee</th>
+                        <th>Consignee Number</th>
+                        <th>Consignee Address</th>
+                        <th>Verify</th>
+                        <th>Comments</th>
+                        <th>Submit</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var i = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td style="vertical-align:middle" class="text-center">@i</td>
+                                <td style="vertical-align: middle" class="text-center">@item.RiderCode</td>
+                                <td style="vertical-align: middle" class="text-center">@item.RiderFName.Trim() @item.RiderLName.Trim()</td>
+                                <td style="vertical-align: middle" class="text-center">@item.RunsheetNo</td>
+                                <td style="vertical-align: middle" class="text-center"><a href="#" class="btnView" data-view="@Json.Encode(item)">@item.CN</a></td>
+                                <td style="vertical-align: middle" class="text-center">@(item.PerformedOn.HasValue ? item.PerformedOn.Value.ToString("dd-MMM-yyyy HH:mm") : "")</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneeName</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneePhone</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneeAddress</td>
+                                <td style="vertical-align: middle" class="text-center"><input type="checkbox" class="chkvrfy checkbox"></td>
+                                <td style="vertical-align: middle" class="text-center"><textarea class="form-control" style="width:200px;height:100px"></textarea></td>
+                                <td style="vertical-align: middle" class="text-center"><button class="btnSubmit btn btn-sm btn-outline-success" data-id="@item.ConsignId" disabled>Submit</button></td>
+                                <td style="vertical-align: middle" class="text-center"><button class="btnEdit btn btn-sm btn-outline-success" data-id="@item.ConsignId" data-reason="@item.Reason">Edit</button></td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</main>
+
+@section styles{
+    <style>
+        table thead tr th {
+            position: sticky !important;
+            top: 0px !important;
+            background: rgba(255,255,255,.5);
+        }
+    </style>
+}
+
+@section scripts{
+    <script>
+
+        var cnreason = [];
+
+        var submitVerification = (data) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("SubmitVerification", "AllCNDebriefing")',
+                dataType: 'json',
+                data: JSON.stringify({ Id: parseInt(data.el.data('id')), IsVerify: data.isverify, Comment: data.comment }),
+                contentType:'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        data.el.parent().parent().remove();
+                    }
+                }
+            });
+        };
+
+
+        var updateReason = (data,el) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("UpdateCN", "AllCNDebriefing")',
+                dataType: 'json',
+                data: JSON.stringify({ Id: parseInt(data.id), Reason: data.reason }),
+                contentType:'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        alert('Consignment Updated');
+                        el.data('reason', data.reason);
+                        $('#exampleModalCenter').modal('hide');
+                    }
+                }
+            });
+        };
+
+        $(function () {
+
+
+            $('.btnEdit').click(function () {
+                var id = $(this).data('id');
+                var reason = $(this).data('reason');
+                $('#hdnId').val(id);
+                $('#ddlReason').val(reason).trigger('change');
+                $('#exampleModalCenter').modal('show');
+                $('#btnUpdate').data('btnEditEl', $(this));
+            });
+
+            $('.chkvrfy').change(function () {
+                var isChecked = $(this).is(":checked");
+                var tr = $(this).parent().parent();
+                if (isChecked) {
+                    tr.find('td').eq(11).find('button').removeAttr('disabled');
+                } else {
+                    tr.find('td').eq(11).find('button').attr('disabled', 'disabled');
+                }
+            });
+
+            $('.btnSubmit').click(function () {
+                var tr = $(this).parent().parent();
+                var isverify = tr.find('td').eq(9).find('input[type=checkbox]').is(':checked');
+                var comment = tr.find('td').eq(10).find('textarea').val();
+                var data = {
+                    isverify,
+                    comment,
+                    el: $(this)
+                };
+                submitVerification(data);
+            });
+
+            $('#btnUpdate').click(function () {
+                var id = $('#hdnId').val();
+                var reason = $('#ddlReason').val();
+                var btnEdit = $(this).data('btnEditEl');
+                var data = {
+                    id, reason
+                };
+
+                updateReason(data, btnEdit);
+            });
+
+
+            $('.btnView').click(function () {
+                var data = $(this).data('view');
+                //console.log(data);
+
+                var table = `
+                        <table class="table table-bordered">
+                                <tr>
+                                    <th>NIC</th>
+                                    <td>${data.NicNo}</td>
+                                </tr>
+                                <tr>
+                                    <th>Rider Comments</th>
+                                    <td>${data.RiderComments}</td>
+                                </tr>
+                                <tr>
+                                    <th>COD</th>
+                                    <td>${data.CodAmount}</td>
+                                </tr>
+                                <tr>
+                                    <th>Weight</th>
+                                    <td>${data.Weight}</td>
+                                </tr>
+                                <tr>
+                                    <th>Pieces</th>
+                                    <td>${data.Pcs}</td>
+                                </tr>
+                                <tr>
+                                    <th>Origin</th>
+                                    <td>${data.Origin}</td>
+                                </tr>
+                                <tr>
+                                    <th>Destination</th>
+                                    <td>${data.Destination}</td>
+                                </tr>
+                                <tr>
+                                    <th>Reason</th>
+                                    <td>${data.Reason}</td>
+                                </tr>
+                                    <tr>
+                                    <th>CN Image</th>
+                                    <td><img src="${(`@Url.Content("http://20.46.47.21/mraabta/CnImage/")` + data.CN + `.jpg`)}" width="200px"/></td>
+                                </tr>
+                                <tr>
+                                    <th>View Map</th>
+                                    <td><a href="${`@Url.Action("Index", "DlvRoute")` + `?isCN=True&Id=` + data.CN}" target="_blank">View Map</a></td>
+                                </tr>
+                            </table>`;
+
+                $('#tableView').html(table);
+                $('#exampleModalCenter2').modal('show');
+            });
+        });
+    </script>
+}

@@ -1,0 +1,209 @@
+﻿@model MRaabta.Models.RetailCODCRFModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>COD CRF</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+
+</head>
+<body>
+    <style>
+        @@media print {
+            body {
+                 transform: scale(0.95, 0.95);
+                -webkit-print-color-adjust: exact; /*chrome & webkit browsers*/
+                color-adjust: exact; /*firefox & IE */
+            }
+
+
+            @@page {
+                size: auto;
+                margin: 2mm 0mm 2mm 0mm;
+            }
+        }
+
+        .wrapper {
+            overflow: auto;
+            border-radius: 8px;
+            border: 1px solid gray;
+        }
+
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            border-style: hidden;
+        }
+
+        .WhiteFont {
+            color: white;
+        }
+
+        .OrangeBg {
+            background-color: #f36523;
+        }
+
+        .TopTables {
+           
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .fontInnerTable {
+            color: #515151;
+        }
+    </style>
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <script type="text/javascript">
+                alert("@ViewBag.ErrorMessage");
+        </script>
+    }
+    <div>
+        @if (Model!=null) {
+        <div class="container" style=" ">
+            <div style="margin-bottom: 10px;padding-top:50px">
+
+                <div class="col-12">
+                    <div class="row">
+                        <img src="~/images/mnpLogo.png" alt="" width="139px" height="69px" style="margin-top:12px" />
+                        <div style="border:4px solid gray;border-radius:1em;margin-left: 18px;margin-right:18px"></div>
+                        <div style="color: #f36523;font-size:2.0em;font-weight:bold">
+                            Retail COD<br />
+                            Customer Registration Form
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="wrapper" style="width:23%;margin-right: 20px;">
+                    <table class="TopTables fontInnerTable" style="margin-right:20px;width:100%;margin-top: 0px;">
+                        <tr class="OrangeBg">
+                            <th style="padding-left: 33%;background-color:#f36523;" class="WhiteFont">Account #</th>
+                        </tr>
+                        <tr style="height:27px">
+                            <td style="text-align: center;">@Model.AccountNumber</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="wrapper" style="width:23%;margin-right:20px;">
+
+                    <table class="TopTables fontInnerTable" style="margin-right:20px;width:100%;margin-top: 0px;">
+                        <tr class="OrangeBg">
+                            <th style="padding-left: 21%;background-color:#f36523;" class="WhiteFont">Registration Date</th>
+                        </tr>
+                        <tr style="height: 27px">
+                            <td style="text-align: center;">@Model.RegistrationDate</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="wrapper" style="width:23%;margin-right:20px;">
+
+                    <table class="TopTables fontInnerTable" style="margin-right:20px;width:100%;margin-top: 0px;">
+                        <tr class="OrangeBg">
+                            <th style="padding-left: 39%;background-color:#f36523;" class="WhiteFont">Zone</th>
+                        </tr>
+                        <tr style="height:27px">
+                            <td style="text-align: center;">@Model.Zone</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="wrapper" style="width:23%">
+
+                    <table class="TopTables fontInnerTable" style="margin-right:20px;width:100%;margin-top: 0px;">
+                        <tr class="OrangeBg">
+                            <th style="padding-left: 25%;background-color:#f36523;" class="WhiteFont">Branch / Station</th>
+                        </tr>
+                        <tr style="height:27px">
+                            <td style="text-align: center;">@Model.Branch</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="wrapper" style="width:100%;margin-right: 20px;">
+                    <table id="PeronsalInformation" style="width:100%" class="fontInnerTable">
+                        <tr class="OrangeBg">
+                            <th class="WhiteFont" colspan="2" style="text-align: center;font-size:1.3em"> Personal Information</th>
+                        </tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;width:30%"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding:2px;margin-right:10px"><b>01</b></span><b> Customer Name :    </b>  </td><td> @Model.CustomerName</td></tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px"><b>02</b></span><b> NTN/CNIC No :       </b></td><td> @Model.CNIC</td></tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px"><b>03</b></span><b> Registered Address :</b></td><td> @Model.RegisteredAddress</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="row" style="margin-bottom: 10px;">
+
+                <div class="wrapper" style="width:100%;margin-right: 20px;">
+
+                    <table id="BankDetails" style="width:100%" class="fontInnerTable">
+                        <tr class="OrangeBg">
+                            <th class="WhiteFont" colspan="3" style="text-align: center;font-size:1.3em">Bank Details</th>
+                        </tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;padding-right: 41px !important;width:30%"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px"><b>01</b></span><b> Customer Name :</b></td><td style="width: 32%;"> @Model.CustomerName</td><td> <span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px;margin-left:10px"><b>02 </b></span><b> Contact No. :</b> @Model.BankContactNo</td></tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;padding-right: 41px !important;"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px"><b>03</b></span><b> Title of Account :</b></td><td colspan="2"> @Model.BankAccountTitle</td></tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;padding-right: 41px !important;"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px"><b>04</b></span><b> Bank Name :</b></td><td colspan="2"> @Model.BankName</td></tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;padding-right: 41px !important;"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px"><b>05</b></span><b> Bank A/C No. :</b></td><td colspan="2"> @Model.BankAccNo</td></tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;padding-right: 41px !important;"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px"><b>06</b></span><b> Branch Name :</b></td><td colspan="2"> @Model.BranchName</td></tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;padding-right: 41px !important;"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:10px"><b>07</b></span><b> Branch Code :</b></td><td colspan="2"> @Model.BankBranchCode</td></tr>
+
+                    </table>
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="wrapper" style="width:100%;margin-right: 20px;">
+                    <table id="PeronsalInformation" style="width:100%" class="fontInnerTable">
+                        <tr class="OrangeBg">
+                            <th class="WhiteFont" colspan="2" style="text-align: center;font-size:1.3em"> For Office Use Only</th>
+                        </tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;;width:30%"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:0px"><b>01</b></span> <b>RSE Name :</b></td><td> @Model.RSEName</td></tr>
+                        <tr><td style="padding:5px;padding-left: 30px;padding-right: 20px;font-size: 16px;"><span style="background-color:#f36523;color:white;border-radius: 1em !important;padding: 2px;margin-right:0px"><b>02</b></span><b> Courier Center Name :</b> </td><td> @Model.CourierCenterName</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="OrangeBg"><h3 class="WhiteFont" style="text-align: center;font-weight:bold;font-size:1.5em">Undertaking</h3></div>
+        <div class="container " style="padding-left:47px;padding-right:50px">
+
+            <p style="font-size:14px">
+                We, <b><u>@Model.CustomerName</u></b> having CNIC/NTN Number # <b><u> @Model.CNIC </u> </b>and registered office <b><u>@Model.RegisteredAddress</u></b>
+                hereby undertake and confirm that our shipments being stored AND/OR forwarded
+                through M&P Express Logistics, either regularly OR occasionally, are lawful and legalized and does not contain any contraband, explosives
+                commodities, goods fall under dangerous goods or any kind of prohibited and illegal material according to the Law of Islamic Republic of Pakistan.
+                We also undertake and confirm that all the government levies, taxes and duties of the shipments/goods being stored AND/OR forwarded through M&P
+                Express Logistics have paid in full and we undertake to provide all legal and valid documents, including but not limited to invoices, Bill of Entry/Lading
+                (in case of imported goods) etc, pertaining to the said shipments/goods whenever required by competent authorities or M&P Express Logistics on
+                behalf of the said authorities. In case of any incident involving legal proceeding including inspection, confiscation or detention of goods, taken by the
+                Government Authorities, we shall take full responsibility for the same and deal directly with the said Authorities to comply with all the legal and
+                procedural requirements for the said Authorities. We hereby confirm that M&P Express Logistics is not responsible to verify or check the relevant
+                documents of the goods in doing this business with us. M&P Express Logistics will also have no legal OR financial responsibility in such cases at any
+                given time to get such seized/ detained OR confiscated goods released.
+                We acknowledge that the role of M&P Express Logistics as service provider is limited to the storing of our shipments/goods at the Origin & Destination
+                warehouses and delivering the same at different places/locations as per our request/advice. We therefore indemnify M&P Express Logistics from any
+                incontinence, damage, cost, expense (including attorney’s fee) fines, penalties, liabilities, claims or loss of goods will and reputation suffered by M&P
+                Express Logistics OR any of its directions, officers OR employees due to our incorrect/untrue representation hereunder OR and violation of laws and
+                rules or due to initiation of above mention legal proceeding, if any.
+            </p>
+        </div>
+        <div style="margin-top:35px" class="col-12">
+            <div style="text-align:center">
+                <span style="border-top:1px solid black;margin-right:80px">Customer Signature</span>
+                <span style="border-top: 1px solid black">RSE Signature</span>
+            </div>
+        </div>
+        }
+    </div>
+
+    <script src="~/Scripts/bootstrap.min.js"></script>
+</body>
+</html>

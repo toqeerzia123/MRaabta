@@ -1,0 +1,182 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+
+<div class="row">
+    <div class="col-3">
+        <label>Select Date</label>
+        <input id="Date" name="Date" type="text" value="@DateTime.Now.ToString("dd-MMM-yyyy")" class="form-control">
+    </div>
+    <div class="col-3">
+        <label>Select Rider</label>
+        @Html.DropDownList("RiderId", ViewBag.Riders as List<SelectListItem>, new { @class = "form-control" })
+    </div>
+    <div class="col-2">
+        <button type="button" id="btnGetRoute" class="btn btn-outline-secondary" style="margin-top:28px">Get</button>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-12">
+        <div id="map"></div>
+    </div>
+</div>
+
+@section styles{
+    <style>
+        #map {
+            width: 95% !important;
+            height: 80vh !important;
+        }
+    </style>
+}
+
+@section scripts{
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMshEp_AWYSYxqN_GneLUtYx6KkoXlPDo&callback=init" async defer></script>
+    <script>
+        var map1 = null;
+        var gmarkers = [];
+        var routePath = null;
+
+        var removeMarkers = function () {
+            for (var i = 0; i < gmarkers.length; i++) {
+                gmarkers[i].setMap(null);
+            }
+        };
+
+        var init = () => {
+            var mapOptions = {
+                center: new google.maps.LatLng(24.835434, 67.069840),
+                zoom: 15,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+
+            map1 = new google.maps.Map(document.getElementById("map"),mapOptions);
+
+        };
+
+        var getRouteByRider = (rid, dt) => {
+            debugger;
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("GetRouteByRider","RouteNew")',
+                dataType: 'json',
+                data: JSON.stringify({ dt : dt, rid : rid}),
+                contentType: 'application/json; charset=utf-8',
+                beforeSend: () => {
+                    swal({
+                        closeOnClickOutside: false,
+                        text:'Please Wait'
+                    });
+                },
+                success: (rs) => {
+                    debugger;
+                    swal.close();
+                    if (rs.length > 0) {
+                        var latlongs = [];
+                        for (let x of rs) {
+                            latlongs.push({
+                                lat: x.Lat,
+                                lng: x.Long
+                            });
+                        }
+
+                        if (routePath) {
+                            routePath.setMap(null);
+                        }
+
+                        if (gmarkers.length > 0) {
+                            removeMarkers();
+                        }
+
+                        for (let x of rs.filter(x => x.IsMarker == true)) {
+                            //var contentString = '<div id="content">' +
+                            //    '<div id="siteNotice">' +
+                            //    '</div>' +
+                            //    '<h1 id="firstHeading" class="firstHeading">Uluru</h1>' +
+                            //    '<div id="bodyContent">' +
+                            //    '<p><b>Uluru</b>, also referred to as <b>Ayers Rock</b>, is a large ' +
+                            //    'sandstone rock formation in the southern part of the ' +
+                            //    'Northern Territory, central Australia. It lies 335&#160;km (208&#160;mi) ' +
+                            //    'south west of the nearest large town, Alice Springs; 450&#160;km ' +
+                            //    '(280&#160;mi) by road. Kata Tjuta and Uluru are the two major ' +
+                            //    'features of the Uluru - Kata Tjuta National Park. Uluru is ' +
+                            //    'sacred to the Pitjantjatjara and Yankunytjatjara, the ' +
+                            //    'Aboriginal people of the area. It has many springs, waterholes, ' +
+                            //    'rock caves and ancient paintings. Uluru is listed as a World ' +
+                            //    'Heritage Site.</p>' +
+                            //    '<p>Attribution: Uluru, <a href="https://en.wikipedia.org/w/index.php?title=Uluru&oldid=297882194">' +
+                            //    'https://en.wikipedia.org/w/index.php?title=Uluru</a> ' +
+                            //    '(last visited June 22, 2009).</p>' +
+                            //    '</div>' +
+                            //    '</div>';
+                            var contentString =
+                                '<div id="content">' +
+                                    '<div id="siteNotice"></div>' +
+                                '<h1 id="firstHeading" class="firstHeading">' + x.Details+'</h1>' +
+                                    '<div id="bodyContent">' +
+                                    '<p>' + x.Details +'</p>' +
+                                    '</div>' +
+                                '</div>';
+                            var pos = { lat: x.Lat, lng: x.Long };
+                            var infowindow = new google.maps.InfoWindow({
+                                content: contentString
+                            });
+                            var marker = new google.maps.Marker({
+                                position: pos,
+                                map: map1,
+                                animation: google.maps.Animation.DROP,
+                                title: x.Details
+                                //,icon: '../../images/blue-dot.png'
+                            });
+                            //marker.addListener('click', function () {
+                            //    infowindow.open(map1, marker);
+                            //});
+                            gmarkers.push(marker);
+                        }
+                        var ridv = $('#RiderId').val();
+                        debugger
+                        if (ridv != 0) {
+
+                            routePath = new google.maps.Polyline({
+                                path: latlongs,
+                                strokeColor: '#FF0000',
+                                strokeOpacity: 1.0,
+                                strokeWeight: 5
+                            });
+                            routePath.setMap(map1);
+
+                        }
+
+                        var latLng = new google.maps.LatLng(latlongs[0].lat, latlongs[0].lng);
+                        map1.panTo(latLng);
+
+                        var bounds = new google.maps.LatLngBounds();
+
+                        for (var i = 0; i < gmarkers.length; i++) {
+                            bounds.extend(gmarkers[i].getPosition());
+                        }
+
+                        map1.fitBounds(bounds);
+                    } else {
+                        swal('No Data found');
+                    }
+                }
+            });
+        };
+
+        $(function () {
+
+            $('#Date').datepicker({
+                format: 'dd-M-yyyy'
+            });
+
+            $('#btnGetRoute').click(function () {
+                var dt = $('#Date').val();
+                var rid = $('#RiderId').val();
+                getRouteByRider(rid,dt);
+            });
+        });
+    </script>
+}

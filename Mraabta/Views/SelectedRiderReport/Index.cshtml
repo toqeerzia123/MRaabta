@@ -1,0 +1,302 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+
+}
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+<link href="@Url.Content("../Content/themes/base/jquery-ui.min.css")" rel="stylesheet" />
+<!-- Required jQuery and jQuery UI Javascript references -->
+<script src="@Url.Content("../Scripts/jquery-3.4.1.min.js")"></script>
+<script src="@Url.Content("../Scripts/jquery-ui.min.js")"></script>
+<link href="~/Content/Site.css" rel="stylesheet" />
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        debugger;
+           $(document).on({
+                ajaxStart: function () { $("#wait").show() },
+                ajaxStop: function () { $("#wait").hide(); },
+           });
+
+        var dataexists = '@ViewBag.err';
+        if (dataexists != "") {
+            swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+            }, function () {
+                     window.location = "../Login";
+
+            });
+
+        }
+    });
+
+</script>
+<script type="text/javascript">
+    debugger;
+    var dataexists = '@ViewBag.err';
+    debugger;
+    var getRiders = (sDate, eDate) => {
+        debugger;
+            if (dataexists == "") {
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("ViewRiders","SelectedRiderReport")',
+                     data: {
+                         sDate: sDate,
+                         eDate: eDate
+                         },
+                    dataType: 'json',
+                    success: (rs) => {
+                        var html = ``;
+                        for (let x of rs) {
+                            html += `<option value="${x.Value}">${x.Value}-${x.Text}</option>`;
+                        }
+                        $('#ddl_rider').html(html);
+                    }
+                });
+            }
+        };
+    $(function () {
+        var sDate, eDate;
+         $('#StartDate').change(function () {
+            debugger;
+             sDate = $(this).val();
+             if(eDate != null && eDate != null && sDate <= eDate) {
+                 getRiders(sDate, eDate);
+             }
+             if(sDate > eDate) {
+                 swal('Select Correct Date');
+             }
+
+
+         });
+         $('#EndDate').change(function () {
+            debugger;
+              eDate = $(this).val();
+             //alert(eDate);
+              if(sDate != null && eDate !=null && sDate <= eDate) {
+                 getRiders(sDate, eDate);
+              }
+              else if(sDate == "" || eDate == "") {
+
+              }
+              else {
+                 swal('Select Correct Date');
+              }
+         });
+
+         $("#btn_search").click(function (e) {
+            debugger;
+            e.preventDefault();
+            var riderCode = $("#ddl_rider").val().toString();
+            var SDate = $("#StartDate").val().toString();
+            var EDate = $("#EndDate").val().toString();
+              if (!riderCode) {
+                swal('Select From Rider');
+                return;
+            }
+            if (!SDate) {
+                swal('Select From Date');
+                return;
+            }
+            if (!EDate) {
+                swal('Select To Date');
+                return;
+            }
+            else {
+                $.ajax({
+                    type: 'GET',
+                    url: '../SelectedRiderReport/getRecordsByRider',
+                    data: { riderCode: riderCode, SDate: SDate, EDate: EDate },
+                    contentType: 'application/html; charset=utf-8',
+                    dataType: "html",
+                    success: function (response) {
+                        debugger;
+                        $('#div_tbl_details').html(response);
+                        getreasonpoints(riderCode, SDate, EDate);
+                    },
+                    failure: function (response) {
+                        swal('Error! Something went wrong');
+                    },
+                    error: function (response) {
+                        swal('Error! Something went wrong');
+                    }
+                });
+            }
+
+         });
+
+        function getreasonpoints(riderCode, SDate, EDate) {
+            debugger;
+            $.ajax({
+                type: 'post',
+                url: '../SelectedRiderReport/GetReasonPoints',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                async: false,
+                //processData: false,
+                data: JSON.stringify({ riderCode: riderCode, SDate: SDate, EDate: EDate }),
+                success: function (rs) {
+                    debugger;
+                    //var TCN = rs.dataPoints[0].TotalCN;
+                    //var TCNDownloaded = rs.dataPoints[0].TCNDownloaded;
+                        var Performed = rs.dataPoints[0].delivered + rs.dataPoints[0].undelivered;
+                      //var UnPerformed = TCNDownloaded - Performed;
+                    if (rs.dataPoints[0].delivered == 0 && rs.dataPoints[0].undelivered == 0) {
+                        $("#chartContainer").empty();
+                        $("#MostReasons").empty();
+                        $("#Abc").empty();
+                    }
+                    else {
+                        var TotalR = rs.dataPoints[0].TotalRunsheet;
+                        var TCN = rs.dataPoints[0].TotalCN;
+                        var Performed = rs.dataPoints[0].delivered + rs.dataPoints[0].undelivered;
+                        TCNDownloaded = rs.dataPoints[0].TCNDownloaded;
+                        var UnPerformed = TCNDownloaded - Performed;
+                        //var City = rs.dataPoints[0].City;
+                        //var courier = rs.dataPoints[0].Courier;
+                        var touchpoints = rs.dataPoints[0].Touchpoints;
+                        var totaltime = rs.dataPoints[0].TotalTimeTaken;
+                        //var route = rs.dataPoints[0].Route;
+                        DownloadedRunsheet = rs.dataPoints[0].DownloadedRunsheet;
+
+                       $('#MostReasons').html("<div class='row col-md-12'><div class='col-md-4' style='color:black; font-weight: bold; font-size:14px;'><span>Total Runsheets: </span> <span>" + TotalR + "</span></div><div class='col-md-4' style='color:black; font-weight: bold; font-size:14px;'><span>Total Consignments: </span> <span>" + TCN + "</span></div><div class='col-md-4' style='color:green; font-weight: bold; font-size:14px;'><span>Attempted: </span> <span>" + Performed + "</span></div><br/><br/><div class='col-md-4' style='color:black; font-weight: bold; font-size:14px;'><span>Total Downloaded Runsheets: </span> <span>" + DownloadedRunsheet + "</span></div><div class='col-md-4' style='color:black; font-weight: bold; font-size:14px;'><span>Total Downloaded Consignments: </span><span>" + TCNDownloaded + "</span></div><div class='col-md-4' style='color:#009688; font-weight: bold; font-size:14px;'><span>UnAttempted: </span><span>" + UnPerformed + "</span></div> </div>");
+                        //    animationEnabled: true,
+                        //        title: {
+                        //        text: "Delivery Details",
+                        //        horizontalAlign: "left",
+                        //        fontSize: '16'
+                        //              },
+
+                        //    data: [{
+                        //        type: "doughnut",
+                        //        plot: {
+                        //            borderColor: "#2B313B",
+                        //            borderWidth: 5
+                        //        },
+                        //        valueBox: {
+                        //            placement: 'out',
+                        //            text: '%t\n%npv%',
+                        //            fontFamily: "Open Sans"
+                        //        },
+                        //        tooltip: {
+                        //            fontSize: '18',
+                        //            fontFamily: "Open Sans",
+                        //            padding: "5 10",
+                        //            text: "%npv%"
+                        //        },
+                        //        animation: {
+                        //            effect: 2,
+                        //            method: 5,
+                        //            speed: 900,
+                        //            sequence: 1,
+                        //            delay: 3000
+                        //        },
+                        //        source: {
+                        //            text: 'gs.statcounter.com',
+                        //            fontColor: "#8e99a9",
+                        //            fontFamily: "Open Sans"
+                        //        },
+                        //        plotarea: {
+                        //            margin: "20 0 0 0"
+                        //        },
+                        //        series: [{
+                        //            values: [11.38],
+                        //            text: "Internet Explorer",
+                        //            backgroundColor: '#50ADF5',
+                        //        },
+                        //        {
+                        //            values: [56.94],
+                        //            text: "Chrome",
+                        //            backgroundColor: '#FF7965',
+                        //            detached: true
+                        //        },
+                        //        {
+                        //            values: [14.52],
+                        //            text: 'Firefox',
+                        //            backgroundColor: '#FFCB45',
+                        //            detached: true
+                        //        },
+                        //        {
+                        //            text: 'Safari',
+                        //            values: [9.69],
+                        //            backgroundColor: '#6877e5'
+                        //        },
+                        //        {
+                        //            text: 'Other',
+                        //            values: [7.48],
+                        //            backgroundColor: '#6FB07F'
+                        //        }
+                        //        ],
+                        //        startAngle: 60,
+                        //        innerRadius: 60,
+                        //        indexLabelFontSize: 12,
+                        //        indexLabel: "{label} - {y}",
+                        //        toolTipContent: "<b>{label}:</b> {y}",
+                        //        dataPoints: [
+                        //            { y: rs.dataPoints[0].delivered, label: "Delivered", color: "#43a047" },
+                        //            { y: rs.dataPoints[0].undelivered, label: "UnDelivered", color: "#b71c1c" },
+                        //            { y: UnPerformed, label: "UnAttempted", color: "#009688"  }
+
+                        //        ]
+
+                        //              }]
+
+                        //});
+                        //chart.render();
+                         //$("#chartContainer").empty();
+                    }
+                }
+            });
+
+        }
+    });
+    $(document).ready(function() {
+$('.mdb-select').materialSelect();
+    });
+
+</script>
+
+<div style="border:1px solid red; height:3.5em; width:20em; float:right; margin-right:2em;">
+    <p style="margin-left:1em; margin-right:1em;  margin-top:1em; margin-bottom:1em; color:red;">Rider Report of Specific Riders</p>
+</div>
+<h2 style="text-align:center">Rider Report</h2>
+<br />
+
+<div class="row">
+    <div class="col-3 mt-3">
+        <label>From Date</label>
+        <input id="StartDate" name="StartDate" type="date" class="form-control" style="height:30px">
+    </div>
+    <div class="col-3 mt-3">
+        <label>To Date</label>
+        <input id="EndDate" name="EndDate" type="date" class="form-control" style="height:30px">
+    </div>
+    <div class="col-3 mt-3">
+        <label>Select Rider</label><br />
+        @if (ViewBag.err == null || ViewBag.err == "")
+        {
+            <select id="ddl_rider" class="mdb-select form-control dropdown-primary md-form" multiple searchable="Search here..">
+                <option value="" disabled selected>Choose Rider</option>
+            </select>
+        }
+    </div>
+
+    <div class="col-3 mt-3">
+        <input type="button" name="btn_search" value="Search" class="btn btn-onLine " id="btn_search" />
+    </div>
+
+</div>
+
+<div id="wait" style="display:none;width:69px;height:89px;border:1px solid black;position:absolute;top:50%;left:50%;padding:2px;">
+    <img src="~/images/loader.gif" width="64" height="64" /><br>Loading..
+</div>
+<div class="panel-body mainTable">
+    <div id="div_tbl_details" style="width:100%">
+    </div>
+</div>

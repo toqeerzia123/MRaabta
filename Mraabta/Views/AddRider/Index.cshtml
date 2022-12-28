@@ -1,0 +1,120 @@
+﻿@model MRaabta.Models.RiderFormModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center"> @(ViewBag.IsEdit ? "Update Rider" : "Add Rider")</h2>
+            </div>
+            <div style="justify-self:end;align-self:center">
+            </div>
+        </div>
+        <br />
+        @using (Html.BeginForm("Index", "AddRider", FormMethod.Post, new { id = "form1" }))
+        {
+            <input type="hidden" name="UserId" value="@Model.UserId" />
+            <div id="formDiv">
+                <div>
+                    <label>Rider Name</label><br>
+                    <input type="text" name="RiderName" class="form-control" required value="@Model.RiderName" />
+                </div>
+                <div>
+                    <label>Rider Code</label><br>
+                    <input type="text" name="RiderCode" class="form-control" required value="@Model.RiderCode" @(ViewBag.IsEdit ? "readonly" : "") />
+                </div>
+                <div>
+                    <label>Password</label><br>
+                    <input type="password" name="Password" id="pass" class="form-control" required value="@Model.Password" />
+                </div>
+                <div>
+                    <label>Confirm Password</label><br>
+                    <input type="password" name="CPassword" id="cpass" class="form-control" required value="@Model.Password" />
+                </div>
+                @if (ViewBag.HubId != null)
+                {
+                    <div>
+                        <label>Enter Hub</label><br>
+                        @Html.DropDownList("HubId", null, "Select Hub", new { @class = "form-control", @required = "required" })
+                    </div>
+                }
+                <div>
+                    <label>Enter IMEI 1</label><br>
+                    <input type="text" name="Imei1" class="form-control" maxlength="15" oninput="process(this)" value="@Model.Imei1" />
+                </div>
+                <div>
+                    <label>Enter IMEI 2</label><br>
+                    <input type="text" name="Imei2" class="form-control" maxlength="15" oninput="process(this)" value="@Model.Imei2" />
+                </div>
+                <div>
+                    <label>Enter Sim No</label><br>
+                    <input type="text" name="SimNO" class="form-control" maxlength="20" oninput="process(this)" value="@Model.SimNO" />
+                </div>
+                @if (ViewBag.HubId != null)
+                {
+                    <div></div>
+                }
+                <div class="">
+                    <button type="submit" class="btn btn-success float-right">Save</button>
+                </div>
+                @*<div style="display:flex;justify-content:flex-end;align-items:center">
+                        <button type="submit" class="btn btn-success">Save</button>
+                    </div>*@
+            </div>
+        }
+    </div>
+</div>
+
+
+
+@section styles{
+    <style>
+        #formDiv {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(450px,1fr));
+            grid-auto-rows: 100px;
+            column-gap: 5px;
+            grid-row-gap: 5px;
+        }
+    </style>
+}
+
+@section scripts{
+    <script>
+
+        function process(input) {
+            let value = input.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            input.value = numbers;
+        }
+
+            @if (IsPost)
+            {
+                <text>
+                    $(document).ready(function () {
+                        alert('@ViewBag.Msg');
+                    });
+                </text>
+            }
+            else
+            {
+                <text>
+                    $(document).ready(function () {
+                        $('#form1').submit(function (e) {
+                            if ($('#pass').val() != $('#cpass').val()) {
+                                alert('Enter Same Password');
+                                return false;
+                            }
+                        });
+                    });
+                </text>
+            }
+
+
+    </script>
+}

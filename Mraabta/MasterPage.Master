@@ -1,0 +1,92 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="MasterPage.master.cs" Inherits="MRaabta.MasterPage" %>
+<%@ Register TagPrefix="telerik" Namespace="Telerik.Web.UI" Assembly="Telerik.Web.UI" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head runat="server">
+        <title>MRaabta</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <link id="Link1" runat="server" href="~/Bts_Css/CssBts.css" rel="stylesheet" type="text/css" />
+	    <link id="Link2" runat="server" href="~/assets/css/bootstrap.min.css" rel="stylesheet"/>
+        <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
+
+        <style type="text/css">
+            .ec {
+                float: left;
+                padding-right: 40px;
+            }
+            .date {
+                float: left;
+                padding-right: 40px;
+            }
+            .user {
+                float: right;
+                width: 29%;
+            }
+            .button {
+            }
+        </style>
+        <script language="javascript" type="text/javascript">
+            window.onload = function () {
+                noBack();
+            }
+            function noBack() {
+                window.history.forward();
+            }
+        </script>
+    </head>
+    <body onload="noBack();">
+        <form id="form1" runat="server">
+            <div class="header">
+                <div class="logo">
+                    <img alt="." src="../images/146x90.png" />
+                </div>
+                <div class="user-login">
+                    <div class="headerdate">
+                        <asp:Label ID="lbl_expire_date" runat="server" CssClass="ec"></asp:Label>
+                        <br />
+                        <asp:Label ID="lbl_expresscenter" runat="server" CssClass="ec"></asp:Label>
+
+                        <asp:Label ID="lbl_working_date" runat="server" CssClass="date"></asp:Label>
+                    </div>
+                    <span class="user">
+                        <asp:Label ID="lbl_username" runat="server"></asp:Label>
+
+                        <asp:Button ID="Button1" runat="server" CssClass="button" Text="Logout" UseSubmitBehavior="false" CausesValidation="false"
+                            OnClick="lnk_logout_Click" />
+                    </span>
+                </div>
+            </div>
+
+            <asp:ScriptManager ID="ScriptManager1" runat="server" AsyncPostBackTimeout ="36000000" EnablePageMethods="true"></asp:ScriptManager>
+
+            <div style="height: 100%;">
+                <table style="width: 100%; height: 100%" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                        <td></td>
+                        <td>
+                            <asp:Label ID="Errorid" runat="server"></asp:Label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="bts-menus">
+                            <div id="Menu1" style="float: left; width: 92%;">
+                                <asp:Panel ID="Panel1" runat="server" Style="height: 30px;"></asp:Panel>
+                            </div>
+
+                        </td>
+                        <td style="width: 83%; vertical-align: top;">
+                            <asp:UpdatePanel ID="mainPanel" runat="server">
+                                <ContentTemplate>
+                                    <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                                    </asp:ContentPlaceHolder>
+                                </ContentTemplate>
+                            </asp:UpdatePanel>
+                            <asp:ContentPlaceHolder ID="ContentPlaceHolder2" runat="server">
+                            </asp:ContentPlaceHolder>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </form>
+    </body>
+</html>

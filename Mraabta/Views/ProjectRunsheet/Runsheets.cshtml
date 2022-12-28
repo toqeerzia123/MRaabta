@@ -1,0 +1,96 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewBag.Title = "Runsheets";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">Project Runsheets</h2>
+            </div>
+            <div style="justify-self:end;align-self:center">
+            </div>
+        </div>
+        @using (Html.BeginForm("Runsheets", "ProjectRunsheet", FormMethod.Post))
+        {
+            <div class="row mt-3">
+                <div class="col-lg-3 col-sm-12">
+                    <label>Date</label>
+                    <input type="date" class="form-control" name="date" value="@(ViewBag.Date != null ? ViewBag.Date.ToString() : DateTime.Now.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-lg-3 col-sm-12">
+                    <label>Routes</label>
+                    <select class="form-control" name="route">
+                        <option value="">Select Route</option>
+                        @foreach (var item in ViewBag.Routes as List<SelectListItem>)
+                        {
+                            <option value="@item.Value" selected="@(ViewBag.Route != null && ViewBag.Route == item.Value ? true : false)">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-3 col-sm-12">
+                    <button type="submit" class="btn btn-outline-secondary" style="margin-top:25px">Submit</button>
+                </div>
+            </div>
+        }
+
+        @if (IsPost && Model != null)
+        {
+            <div class="row mt-3">
+                <div class="col-12">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Runsheet Number</th>
+                                <th>Date</th>
+                                <th>Branch</th>
+                                <th>Route Code</th>
+                                <th>Route</th>
+                                <th>Rider Code</th>
+                                <th>Rider</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td><a href="@Url.Action("Print","ProjectRunsheet",new { rs = item.RunsheetNumber })" target="_blank">@item.RunsheetNumber</a></td>
+                                        <td>@item.Date.ToString("dd-MMM-yyyy")</td>
+                                        <td>@item.Branch</td>
+                                        <td>@item.RouteCode</td>
+                                        <td>@item.Route</td>
+                                        <td>@item.RiderCode</td>
+                                        <td>@item.Rider</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <h4>No Data Found</h4>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+@section styles{
+    <style>
+        a {
+            text-decoration:underline;
+            color: #115dae;
+        }
+    </style>
+}

@@ -1,0 +1,88 @@
+﻿Sms Job Started 3/29/2021 2:31:42 PM
+Sms Job Started 3/29/2021 2:32:28 PM
+Sms Job Started 3/29/2021 2:32:56 PM
+Email Job Started at 3/29/2021 3:37:07 PM
+Exception occured at 3/29/2021 3:37:33 PM Object reference not set to an instance of an object.
+Email Job Started at 3/29/2021 3:40:06 PM
+Exception occured at 3/29/2021 3:40:39 PM The connection was not closed. The connection's current state is open.
+Email Job Started at 3/29/2021 3:42:05 PM
+Exception occured at 3/29/2021 3:42:35 PM Value cannot be null.
+Parameter name: dataTable
+Email Job Started at 3/29/2021 3:45:06 PM
+Exception occured at 3/29/2021 3:46:20 PM 'System.Data.DataTable' does not contain a definition for 'GetAwaiter'
+Email Job Started at 3/29/2021 3:52:27 PM
+Exception occured at 3/29/2021 3:53:07 PM 'System.Data.DataTable' does not contain a definition for 'GetAwaiter'
+Email Job Started at 3/29/2021 4:02:03 PM
+Exception occured at 3/29/2021 4:02:52 PM Unable to cast object of type 'System.Int32' to type 'System.String'.
+Email Job Started at 3/29/2021 4:05:04 PM
+Email Job Started at 3/29/2021 4:27:31 PM
+Exception occured at 3/29/2021 4:28:21 PM The SMTP server requires a secure connection or the client was not authenticated. The server response was: 5.7.57 Client not authenticated to send mail. [ZR0P278CA0069.CHEP278.PROD.OUTLOOK.COM]
+Email Job Started at 3/29/2021 4:34:06 PM
+Exception occured at 3/29/2021 4:34:23 PM The SMTP server requires a secure connection or the client was not authenticated. The server response was: 5.7.57 Client not authenticated to send mail. [ZR0P278CA0021.CHEP278.PROD.OUTLOOK.COM]
+Email Job Started at 3/29/2021 4:37:03 PM
+Exception occured at 3/29/2021 4:37:20 PM One or more errors occurred.
+Email Job Started at 3/29/2021 4:41:36 PM
+Exception occured at 3/29/2021 4:42:23 PM The SMTP server requires a secure connection or the client was not authenticated. The server response was: 5.7.57 Client not authenticated to send mail. [ZR0P278CA0136.CHEP278.PROD.OUTLOOK.COM]
+Email Job Started at 3/29/2021 4:45:04 PM
+Exception occured at 3/29/2021 4:48:21 PM The SMTP server requires a secure connection or the client was not authenticated. The server response was: 5.7.57 Client not authenticated to send mail. [ZR0P278CA0120.CHEP278.PROD.OUTLOOK.COM]
+Email Job Started at 3/29/2021 5:02:04 PM
+Email Job Started at 3/29/2021 5:23:03 PM
+Exception occured at 3/29/2021 5:23:04 PM An invalid character was found in the mail header: ';'.
+Email Job Started at 3/30/2021 9:43:07 AM
+Email Job Started at 3/30/2021 9:45:06 AM
+Exception occured at 3/30/2021 9:45:43 AM An invalid character was found in the mail header: ';'.
+Email Job Started at 3/30/2021 9:47:02 AM
+Email Job Started at 3/30/2021 9:50:02 AM
+Email Job Started at 3/30/2021 9:57:00 AM
+Exception occured at 3/30/2021 9:57:00 AM Object reference not set to an instance of an object.
+Email Job Started at 3/30/2021 9:58:02 AM
+Exception occured at 3/30/2021 9:58:43 AM Object reference not set to an instance of an object.
+Email Job Started at 3/30/2021 10:00:07 AM
+Exception occured at 3/30/2021 10:31:10 AM Object reference not set to an instance of an object.
+Email Job Started at 3/30/2021 10:36:42 AM
+Exception occured at 3/30/2021 10:38:55 AM Object reference not set to an instance of an object.
+Email Job Started at 3/30/2021 10:41:37 AM
+Email Job Started at 3/30/2021 10:44:03 AM
+Email Job Started at 4/15/2021 12:20:00 PM
+Exception occured at 4/15/2021 12:21:41 PM Execution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+Email Job Started at 4/15/2021 12:25:24 PM
+SMS Job Started at 5/22/2021 9:31:27 AM
+SMS Job Started at 5/22/2021 9:35:59 AM
+SMS Job Started at 5/22/2021 9:42:32 AM
+SMS Job Started at 5/22/2021 9:57:32 AM
+SMS Job Started at 5/22/2021 10:08:07 AM
+SMS Job Started at 5/22/2021 10:13:13 AM
+Exception occured at 5/22/2021 10:13:48 AM A transport-level error has occurred when receiving results from the server. (provider: Session Provider, error: 19 - Physical connection is not usable)
+SMS Job Started at 5/22/2021 10:16:50 AM
+SMS Job Started at 5/22/2021 10:31:49 AM
+SMS Job Started at 5/22/2021 2:01:52 PM
+SMS Job Started at 5/22/2021 9:31:52 PM
+Exception occured at 5/24/2021 8:04:14 AM Thread was being aborted.
+SMS Job Started at 5/25/2021 10:23:55 AM
+SMS Job Started at 5/25/2021 10:26:58 AM
+SMS Job Started at 5/25/2021 10:41:58 AM
+SMS Job Started at 5/26/2021 1:02:45 PM
+SMS Job Started at 5/26/2021 1:17:45 PM
+SMS Job Started at 5/26/2021 5:04:01 PM
+SMS Job Started at 5/26/2021 5:06:46 PM
+SMS Job Started at 5/26/2021 5:21:45 PM
+SMS Job Started at 5/26/2021 5:26:05 PM
+SMS Job Started at 5/26/2021 5:41:05 PM
+SMS Job Started at 5/27/2021 4:00:21 PM
+SMS Job Started at 5/27/2021 4:30:21 PM
+SMS Job Started at 5/27/2021 4:45:21 PM
+SMS Job Started at 5/29/2021 10:16:14 AM
+SMS Job Started at 5/29/2021 10:31:14 AM
+SMS Job Started at 5/29/2021 10:46:14 AM
+SMS Job Started at 5/29/2021 11:01:14 AM
+SMS Job Started at 6/1/2021 10:54:51 AM
+SMS Job Started at 6/1/2021 11:10:17 AM
+SMS Job Started at 6/1/2021 11:24:51 AM
+SMS Job Started at 6/3/2021 2:01:29 PM
+SMS Job Started at 6/3/2021 2:16:29 PM
+SMS Job Started at 6/4/2021 6:16:19 PM
+Exception occured at 6/4/2021 6:16:20 PM Login failed for user 'talha'.
+SMS Job Started at 6/5/2021 10:39:12 AM
+Exception occured at 6/5/2021 10:39:12 AM Login failed for user 'talha'.
+SMS Job Started at 6/5/2021 10:41:19 AM
+SMS Job Started at 6/5/2021 10:51:19 AM

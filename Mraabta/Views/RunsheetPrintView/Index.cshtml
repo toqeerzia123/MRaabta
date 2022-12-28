@@ -1,0 +1,288 @@
+﻿@model IEnumerable<IEnumerable<MRaabta.Models.RunsheetPrintViewModel>>
+
+@{
+    Layout = null;
+    var headerInfo = Model.ElementAt(0).ElementAt(0);
+    var sno = 1;
+}
+
+<!doctype html>
+
+<html lang="en">
+<head>
+    <title>Runsheet Print Preview</title>
+    <style>
+        @@media print and (width: 21cm) and (height: 29.7cm) {
+            @@page {
+                margin: 3cm;
+            }
+        }
+        /* style sheet for "letter" printing */
+        @@media print and (width: 8.5in) and (height: 11in) {
+            @@page {
+                margin: 1in;
+            }
+        }
+
+        * {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        body {
+            padding: 20px;
+            font-family: Calibri;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            table td {
+                border: 1px solid black;
+            }
+
+        tr.hrow td {
+            height: 25px !important;
+            padding-left: 5px
+        }
+
+        #header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            #header div {
+                width: calc(100% / 3);
+            }
+
+
+        .snoCol {
+            width: 5% !important;
+        }
+
+        .addCol {
+            width: 20% !important;
+        }
+
+        .receiverReasonCol {
+            width: 10% !important;
+        }
+
+        .signCol {
+            width: 15% !important;
+        }
+
+        .signimg {
+            width: 100%;
+            object-fit: contain;
+        }
+
+        .signdiv {
+            display: flex;
+            flex-direction: row;
+            padding-top: 100px;
+            padding-bottom: 50px;
+            justify-content: space-evenly;
+            align-items: center
+        }
+
+            .signdiv p {
+                border-top: 2px solid black;
+                width: calc(70% / 3);
+                text-align: center;
+            }
+    </style>
+</head>
+<body>
+    @foreach (var item in Model)
+    {
+        <div>
+            <div id="header">
+                <div>
+                    <img src="~/images/mnpLogo.png" height="60" />
+                </div>
+                <div style="text-align:center">
+                    <h3>DELIVERY & POD SHEET (On Route)</h3>
+                </div>
+                <div style="text-align:right">
+                    <p style="font-family: IDAutomationHC39M">*@headerInfo.RS*</p>
+                </div>
+            </div>
+            <table>
+                <tr class="hrow">
+                    <td>Delivery Date</td>
+                    <td>@headerInfo.RunsheetDate.ToString("dd-MMM-yyyy")</td>
+                    <td>Branch</td>
+                    <td>@headerInfo.Branch</td>
+                    <td>Rider Name</td>
+                    <td>@headerInfo.RiderName</td>
+                    <td>Rider Code</td>
+                    <td>@headerInfo.RiderCode</td>
+                </tr>
+                <tr class="hrow">
+                    <td>Runsheet Number</td>
+                    <td>@headerInfo.RS</td>
+                    <td>R/M Route Code</td>
+                    <td colspan="5">@headerInfo.Route -- @headerInfo.RouteCode | @headerInfo.RouteTerritory -- @headerInfo.RouteTerritoryCode</td>
+                </tr>
+                <tr class="hrow">
+                    <td>Meter Start</td>
+                    <td>0</td>
+                    <td>Meter End</td>
+                    <td>0</td>
+                    <td>Vehicle Number</td>
+                    <td></td>
+                    <td>Vehicle Type</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="8" style="text-align:center">
+                        <b>S1: Serial Number | KHI: Origin | KHI: Destination | 1: Pieces | 0.5: Weight</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="8">
+                        <table>
+                            @{
+                                var i = 0;
+                                while (i < item.Count())
+                                {
+                                    <tr>
+                                        <td class="snoCol">
+                                            <div style="display:flex;flex-direction:column">
+                                                <p>@("S"+sno++)</p>
+                                                <p>@item.ElementAt(i).Origin</p>
+                                                <p>@item.ElementAt(i).Destination</p>
+                                                <p>@item.ElementAt(i).Pieces</p>
+                                                <p>@item.ElementAt(i).Weight</p>
+                                            </div>
+                                        </td>
+                                        <td class="addCol">
+                                            <div style="display:flex;flex-direction:column">
+                                                <p>@item.ElementAt(i).CN #</p>
+                                                @if (item.ElementAt(i).CodAmount.HasValue)
+                                                {
+                                                    <p>COD Rs. @item.ElementAt(i).CodAmount.Value</p>
+                                                }
+                                                <p>@item.ElementAt(i).Consignee</p>
+                                                <p>Ad: @item.ElementAt(i).ConsigneeAddress</p>
+                                                <p>CNIC# @item.ElementAt(i).ConsigneeCnicNo</p>
+                                                @{
+                                                    var comments = item.ElementAt(i).RiderComments;
+                                                    if (!string.IsNullOrEmpty(comments))
+                                                    {
+                                                        if (comments.Length > 35)
+                                                        {
+                                                            <p>@(comments.Take(35)+"...")</p>
+                                                        }
+                                                        else
+                                                        {
+                                                            <p>@comments</p>
+                                                        }
+                                                    }
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="receiverReasonCol">
+                                            <div style="display:flex;flex-direction:column">
+                                                @if (item.ElementAt(i).StatusId == 1 || item.ElementAt(i).StatusId == 3)
+                                                {
+                                                    <p>Receiver: @item.ElementAt(i).Receiver</p>
+                                                    <p>Relation: @item.ElementAt(i).Relation</p>
+                                                }
+                                                else if (item.ElementAt(i).StatusId == 2)
+                                                {
+                                                    <p>Reason: @item.ElementAt(i).Reason</p>
+                                                }
+                                                <p>Time: @(item.ElementAt(i).PerformedOn?.ToString("hh:mm tt"))</p>
+                                                <p>Lat: @(item.ElementAt(i).Lat?.ToString())</p>
+                                                <p>Long: @(item.ElementAt(i).Long?.ToString())</p>
+                                            </div>
+                                        </td>
+                                        <td class="signCol">
+                                            <img src="@Url.Content("~/SignImage/"+item.ElementAt(i++).CN + ".jpg")" onerror="this.onerror = null; this.remove();" class="signimg">
+                                        </td>
+                                        @if (i < item.Count())
+                                        {
+                                            <td class="snoCol">
+                                                <div style="display:flex;flex-direction:column">
+                                                    <p>@("S" + sno++)</p>
+                                                    <p>@item.ElementAt(i).Origin</p>
+                                                    <p>@item.ElementAt(i).Destination</p>
+                                                    <p>@item.ElementAt(i).Pieces</p>
+                                                    <p>@item.ElementAt(i).Weight</p>
+                                                </div>
+                                            </td>
+                                            <td class="addCol">
+                                                <div style="display:flex;flex-direction:column">
+                                                    <p>@item.ElementAt(i).CN #</p>
+                                                    @if (item.ElementAt(i).CodAmount.HasValue)
+                                                    {
+                                                        <p>COD Rs. @item.ElementAt(i).CodAmount.Value</p>
+                                                    }
+                                                    <p>@item.ElementAt(i).Consignee</p>
+                                                    <p>Ad: @item.ElementAt(i).ConsigneeAddress</p>
+                                                    <p>CNIC# @item.ElementAt(i).ConsigneeCnicNo</p>
+                                                    @{
+                                                        comments = item.ElementAt(i).RiderComments;
+                                                        if (!string.IsNullOrEmpty(comments))
+                                                        {
+                                                            if (comments.Length > 35)
+                                                            {
+                                                                <p>@(comments.Take(35)+"...")</p>
+                                                            }
+                                                            else
+                                                            {
+                                                                <p>@comments</p>
+                                                            }
+                                                        }
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td class="receiverReasonCol">
+                                                <div style="display:flex;flex-direction:column">
+                                                    @if (item.ElementAt(i).StatusId == 1 || item.ElementAt(i).StatusId == 3)
+                                                    {
+                                                        <p>Receiver: @item.ElementAt(i).Receiver</p>
+                                                        <p>Relation: @item.ElementAt(i).Relation</p>
+                                                    }
+                                                    else if (item.ElementAt(i).StatusId == 2)
+                                                    {
+                                                        <p>Reason: @item.ElementAt(i).Reason</p>
+                                                    }
+                                                    <p>Time: @(item.ElementAt(i).PerformedOn?.ToString("hh:mm tt"))</p>
+                                                    <p>Lat: @(item.ElementAt(i).Lat?.ToString())</p>
+                                                    <p>Long: @(item.ElementAt(i).Long?.ToString())</p>
+                                                </div>
+                                            </td>
+                                            <td class="signCol">
+                                                <img src="@Url.Content("~/SignImage/"+item.ElementAt(i++).CN + ".jpg")" onerror="this.onerror = null; this.remove();" class="signimg">
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td class="snoCol"></td>
+                                            <td class="addCol" colspan="2"></td>
+                                            <td class="signCol"></td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            <div class="signdiv">
+                <p>Courier/SDO Signature</p>
+                <p>OPS Incharge/Supervisor</p>
+                <p>Security Incharge/Supervisor</p>
+            </div>
+        </div>
+        <br>
+    }
+</body>
+</html>

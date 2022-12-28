@@ -1,0 +1,996 @@
+﻿@model List<MRaabta.Models.RetailCODConsignmentModel>
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Address Label</title>
+</head>
+<body>
+    <style>
+        @@media print {
+            body {
+                -webkit-print-color-adjust: exact; /*chrome & webkit browsers*/
+                color-adjust: exact; /*firefox & IE */
+            }
+
+
+            @@page {
+                size: auto;
+                margin-top: 4mm;
+                margin: 3mm 2mm 3mm 2mm;
+            }
+        }
+
+        body {
+            padding-top: 10px;
+            /*padding-bottom: 72px;*/
+        }
+
+        .InnerTables th, td {
+            border: 1px black solid;
+            border-spacing: 0;
+        }
+
+            td.label {
+                width: 130px;
+                border: 0;
+                float: left;
+            }
+
+            td.label_text {
+                text-align: center;
+                border: 0;
+                float: left;
+            }
+    </style>
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <script type="text/javascript">
+                alert("@ViewBag.ErrorMessage");
+        </script>
+    }
+
+    @if (Model != null)
+    {
+        foreach (var item in Model)
+        {
+            <div style="margin-bottom:0px">
+                <table border='1' cellpadding='0' cellspacing='0' width='100%' style='border: 1px solid black; height:208px;font-size:14px'>
+                    <tr>
+                        <td rowspan='2' style="width: 150px;padding-left: 20px;">
+                            <img src="~/images/mnpLogo.png" alt='M&PEX Logo' width='130' height='50' />
+                        </td>
+                        <td rowspan='2' style='text-align: center; width: 240px;'>
+                            <p style='font-family:IDAutomationHC39M'>*@item.ConsignmentNumber*</p>
+                            <h5>
+                            </h5>
+                        </td>
+                        <td style="padding-left: 5px;">
+                            <b>Booking Date</b>
+                        </td>
+                        <td style="padding-left:5px;">
+                            @item.BookingDate
+                        </td>
+                        <td style="padding-left:5px;">
+                            <b>Print Date & Time</b>
+                        </td>
+                        <td style="padding-left:5px;">
+                            @item.PrintDateTime
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:5px;padding-right:5px">
+                            <b>Service</b>
+                        </td>
+                        <td style="padding-left:5px;">
+                            @item.Service
+                        </td>
+                        <td style="padding-left:5px;padding-right:5px">
+                            <b>Location Name</b>
+                        </td>
+                        <td style="padding-left:5px;">
+                            @item.Origin
+                        </td>
+                    </tr>
+                    <tr style="height:25px">
+                        <td style="padding-left:5px;">
+                            <b>Origin</b>
+                        </td>
+                        <td style="padding-left:5px;padding-right:5px">
+                            @item.Origin
+                        </td>
+                        <td style="padding-left:5px;">
+                            <b>Destination</b>
+                        </td>
+                        <td style="padding-left:5px;padding-right:5px">
+                            @item.Destination
+                        </td>
+                        <td style="padding-left:5px;width: 118px;">
+                            <b>Consignee Contact</b>
+                        </td>
+                        <td style="padding-left:5px;">
+                            @item.ConsigneeContact
+                        </td>
+                    </tr>
+                    <tr style="height:25px">
+                        <td style='padding-left:5px;border-bottom: 2px solid black;'>
+                            <b>Shipper</b>
+                        </td>
+                        <td colspan='2' style='padding-left:5px;border-bottom: 1px;'>
+                            @item.Shipper
+                        </td>
+                        <td style='padding-left:5px;border-bottom: 2px solid black;'>
+                            <b>Consignee</b>
+                        </td>
+                        <td colspan='2' style='padding-left:5px;border-bottom: 0px;'>
+                            @item.Consignee
+                        </td>
+
+                    </tr>
+                    <tr style="height:25px">
+                        <td colspan='3' style='border-top: 0px;padding-left:5px;'>
+                            @item.ShipperAddress
+                        </td>
+                        <td colspan='3' style='border-top: 0px;height: 35px;padding-left: 5px;'>
+                            @item.ConsigneeAddress
+                        </td>
+                    </tr>
+                    <tr style="height:25px">
+                        <td colspan='3' style='border: 1px black; padding-left: 0px;'>
+                            <table border='0' cellpadding='0' cellspacing='0' width='100%' height="100%">
+                                <tr>
+                                    <td style='width: 165px; border: 1px solid black;padding-left: 5px;'>
+                                        <b>Pieces</b>
+                                    </td>
+                                    <td style='width: 100px; border: 1px solid black; text-align: right;padding-right: 5px;'>
+                                        @item.Pieces
+                                    </td>
+                                    <td style='width: 100px; border: 1px solid black;padding-left: 5px;'>
+                                        <b>Weight</b>
+                                    </td>
+                                    <td colspan="2" style='width: 80px; border: 1px solid black; text-align: right;padding-right: 5px;'>
+                                        @item.Weight
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="padding-left: 5px;width:134px">
+                            <b style='font-size: 12px'>COD AMOUNT</b>
+                        </td>
+
+                        <td colspan="2" style="padding-right: 5px;text-align:right">
+                            @item.CODAmount
+                        </td>
+
+                    </tr>
+                    <tr style="height:25px">
+                        <td colspan='3' style='border: 1px black; padding-left: 0px;'>
+                            <table border='0' cellpadding='0' cellspacing='0' width='100%' height="100%">
+                                <tr>
+                                    <td style='width: 165px; border: 1px solid black;padding-left: 5px;'>
+                                        <b>Declared Insurance Value</b>
+                                    </td>
+                                    <td style='width: 100px; border: 1px solid black; text-align: right;padding-right: 5px;'>
+                                        @item.DeclaredInsuranceValue
+                                    </td>
+                                    <td style='width: 100px; border: 1px solid black;padding-left: 5px;'>
+                                        <b>Fragile</b>
+                                    </td>
+                                    <td colspan="2" style='width: 80px; border: 1px solid black; text-align: left;padding-right: 5px;'>
+                                        Yes
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style='text-align: left;padding-left: 5px;'>
+                            <b>Product Detail</b>
+                        </td>
+                        <td colspan='2' style='text-align: left;padding-left: 5px;'>
+                            @item.ProductDetail
+                        </td>
+                    </tr>
+
+                    <tr style="height:25px">
+                        <td style='text-align: left;padding-left: 5px;'>
+                            <b>Remarks</b>
+                        </td>
+                        <td style='text-align: left;padding-left: 5px;' colspan='5'>
+                            <b>@item.Remarks</b>
+                        </td>
+                    </tr>
+                    <tr style="height:25px">
+                        <td style='text-align: left;padding-left: 5px;width: 173px;'>
+                            <b>Customer Ref. #</b>
+                        </td>
+                        <td style='text-align: left;padding-left: 5px;width: 160px;' colspan='5'>
+                            @item.CustomerRef
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td colspan='6' style='text-align: center'>
+                            <b>Please don't accept if shipment is not intact. Before paying the COD, shipment can't be opened. M&P is not responsible for Product, in case of any issue please contact shop/shipper.</b>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="" style="border: 1px dashed black;margin:8px 0px 8px 0px"></div>
+
+                <div class="customerCopy" style="font-size:14px">
+                    <table class="headerTables" cellspacing="0" cellpadding="0" border="0" style="width:100%;">
+                        <tr>
+                            <td colspan="2">
+                                <div style="float: left; width: 90px; padding-right: 20px">
+                                    <img src="~/images/mnpLogo.png" alt="." style="width: 75px; padding: 6px 0 6px 0px" />
+
+                                </div>
+                                <div style="float: left; line-height: 50px; font-weight: bold; font-size: 20px; margin-left: 0px">
+                                    M&P Express Logistics (Pvt) Ltd. (Sales Tax Invoice)
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                Accounts Copy
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="mainTables" cellspacing="0" cellpadding="0" style="        border: 0;        border: 0;        width: 100%;">
+                        <tr>
+                            <td style="vertical-align: top; width: 35%; border: 0;">
+                                <table class="InnerTables" cellspacing="0" cellpadding="0" style="width:100%">
+                                    <tr style="height: 20px;">
+                                        <td style="text-align: center; font-weight: bold; background: #eee;">
+                                            Shipment Information
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table border="0" style="width:100%" cellspacing="0" cellpadding="0">
+                                                <tr>
+                                                    <td style="width: 270px;" colspan="2">
+                                                        <b>
+                                                            Tracking / CN #
+                                                            @item.ConsignmentNumber
+                                                        </b>
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td>
+                                                        <b>Ref No:</b>
+                                                        @item.couponNumber
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <b>Service:</b>
+                                                        @item.Service
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <b>Origin:</b>
+                                                        @item.Origin
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <b>DST:</b>
+                                                        @item.Destination
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3">
+                                                        <b>Booking Date:</b>
+                                                        @item.BookingDate
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3">
+                                                        <b>User:</b>
+                                                        @item.BookingStaff
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td colspan="3">
+                                                        @if (item.Province == "Sindh")
+                                                        {
+                                                            <b>SNTN No:</b>
+                                                        }
+
+                                                        @if (item.Province == "Balochistan")
+                                                        {
+                                                            <b>BTN No:</b>
+                                                        }
+
+                                                        @if (item.Province == "Khyber Pakhtunkhwa")
+                                                        {
+                                                            <b>KNTN No:</b>
+                                                        }
+
+                                                        @if (item.Province == "Punjab")
+                                                        {
+                                                            <b>PNTN No:</b>
+                                                        }
+
+                                                        @if (item.Province == "ISLAMABAD")
+                                                        {
+                                                            <b>NTN No:</b>
+                                                        }
+                                                        0860540-8
+                                                        <b>Booking Code:</b> @item.BookingCode
+                                                    </td>
+                                                </tr>
+
+                                            </table>
+
+
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <td style="height: 33px;">
+                                            <b>Package Contents:</b>
+                                            @item.PackageContents
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td height="44">
+                                            <b>Signature:</b>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style="vertical-align: top; width: 40%; border: 0;">
+                                <table class="InnerTables" cellspacing="0" cellpadding="0" style="width:100%">
+                                    <tr style="height: 20px;">
+                                        <td style="text-align: center; font-weight: bold; background: #eee;">
+                                            Client Information
+                                        </td>
+                                    </tr>
+                                    <tr style="height: 70px">
+                                        <td style="        vertical-align: top;">
+                                            <b>To:</b>@item.Consignee<br />
+                                            <b>Address:</b>@item.ConsigneeAddress<br />
+                                            <b>Contact:</b>@item.ConsigneeContact
+                                        </td>
+                                    </tr>
+                                    <tr style="height: 70px">
+                                        <td style="vertical-align: top;">
+                                            <b>From:</b>
+                                            @item.Shipper<br />
+                                            <b>Address:</b>
+                                            @item.ShipperAddress<br />
+                                            <b>Contact:</b>
+                                            @item.ShipperContact<br />
+                                            <b>CNIC/NTN:</b>
+                                            @item.cnic
+
+                                        </td>
+                                    </tr>
+                                    <tr style="height: 45px;">
+                                        <td style="vertical-align: top;">
+                                            <b>Supplymentary:</b>
+                                            @item.SuppService
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <b>Special Instructions:</b>
+                                            @item.SpecialInstructions
+                                        </td>
+                                    </tr>
+                                    <tr>
+
+                                </table>
+                            </td>
+                            <td style="vertical-align: top; width: 25%; border: 0;">
+                                <table class="InnerTables" cellspacing="0" cellpadding="0" style="width: 100%;">
+                                    <tr style="height: 20px;">
+                                        <td style="text-align: center; font-weight: bold; background: #eee;">
+                                            Price Information
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Pieces:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.Pieces
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Charging Weight: </b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.Weight
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Dimension: </b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.DimensionWidth
+                                                        X
+                                                        @item.DimensionBreadth
+                                                        X
+                                                        @item.DimensionHeight
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Val. Declared:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @if (item.PriceModifierId == "98" || item.PriceModifierId == "100")
+                                                        {
+                                                            @item.ValDeclared
+                                                        }
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Insurance:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @if (item.PriceModifierId == "98" || item.PriceModifierId == "100")
+                                                        {
+                                                            @item.DeclaredInsuranceValue.ToString()
+                                                        } %
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Amount:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.totalAmount
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Discount:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.Discount
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        @if (item.Province == "Sindh")
+                                                        {
+                                                            <b>@("SST" + "@13%")</b>
+                                                        }
+
+                                                        @if (item.Province == "Balochistan")
+                                                        {
+                                                            <b>@("BST" + "@15%")</b>
+                                                        }
+
+                                                        @if (item.Province == "Khyber Pakhtunkhwa")
+                                                        {
+                                                            <b>@("KPST" + "@15%")</b>
+                                                        }
+
+                                                        @if (item.Province == "Punjab")
+                                                        {
+                                                            <b>@("PST" + "@16%")</b>
+                                                        }
+
+                                                        @if (item.Province == "ISLAMABAD")
+                                                        {
+                                                            <b>@("GST" + "@16%")</b>
+                                                        }
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.GST
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>COD Amount (Rs.):</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.CODAmount
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Net Amount (Rs.):</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.ChargedAmount
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <b>Description:</b> ON SHIPPER RISK
+                                        </td>
+                                    </tr>
+
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="font-weight: bold">Note: Please refer to our website for terms and conditions. <span style="padding-left: 70px">UAN:111-202-202 &nbsp;&nbsp; www.mulphilog.com</span></div>
+
+                </div>
+
+
+                <div class="" style="border: 1px dashed black;margin:5px 0px 5px 0px"></div>
+
+                <div class="customerCopy" style="font-size:14px">
+
+                    <table class="headerTables" cellspacing="0" cellpadding="0" border="0" style="width:100%;">
+                        <tr>
+                            <td colspan="2">
+                                <div style="float: left; width: 90px; padding-right: 20px">
+                                    <img src="~/images/mnpLogo.png" alt="." style="width: 75px;padding: 6px 0 6px 0px" />
+
+                                </div>
+                                <div style="float: left; line-height: 50px; font-weight: bold; font-size: 20px; margin-left: 0px">
+                                    M&P Express Logistics (Pvt) Ltd. (Sales Tax Invoice)
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                Customer Copy
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="mainTables" cellspacing="0" cellpadding="0" style="border: 0;width: 100%;">
+                        <tr>
+                            <td style="vertical-align: top; width: 35%; border: 0;">
+                                <table class="InnerTables" cellspacing="0" cellpadding="0" style="width:100%">
+                                    <tr style="height: 20px;">
+                                        <td style="text-align: center; font-weight: bold; background: #eee;">
+                                            Shipment Information
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table border="0" style="width:100%" cellspacing="0" cellpadding="0">
+                                                <tr>
+                                                    <td style="width: 270px;height:100%" colspan="2">
+                                                        <b>
+                                                            Tracking #
+                                                            @item.ConsignmentNumber
+                                                        </b>
+                                                    </td>
+                                                    @*<td rowspan="4">
+                                                            <div style="height:60px;width:60px"></div>
+                                                        </td>*@
+                                                </tr>
+
+                                                <tr>
+                                                    <td>
+                                                        <b>Ref No:</b>
+                                                        @item.couponNumber
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <b>Service:</b>
+                                                        @item.Service
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <b>Origin:</b>
+                                                        @item.Origin
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <b>DST:</b>
+                                                        @item.Destination
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3">
+                                                        <b>Booking Date:</b>
+                                                        @item.BookingDate
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3">
+                                                        <b>User:</b>
+                                                        @item.BookingStaff
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td colspan="3">
+
+                                                        @if (item.Province == "Sindh")
+                                                        {
+                                                            <b>SNTN No:</b>
+                                                        }
+
+                                                        @if (item.Province == "Balochistan")
+                                                        {
+                                                            <b>BTN No:</b>
+                                                        }
+
+                                                        @if (item.Province == "Khyber Pakhtunkhwa")
+                                                        {
+                                                            <b>KNTN No:</b>
+                                                        }
+
+                                                        @if (item.Province == "Punjab")
+                                                        {
+                                                            <b>PNTN No:</b>
+                                                        }
+
+                                                        @if (item.Province == "ISLAMABAD")
+                                                        {
+                                                            <b>NTN No:</b>
+                                                        }
+                                                        0860540-8
+                                                        <b>Booking Code:</b> @item.BookingCode
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="height: 33px;">
+                                            <b>Package Contents:</b>
+                                            @item.PackageContents
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td height="44">
+                                            <b>Signature:</b>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style="vertical-align: top; width: 40%; border: 0;">
+                                <table class="InnerTables" cellspacing="0" cellpadding="0" style="width:100%">
+                                    <tr style="height: 20px;">
+                                        <td style="text-align: center; font-weight: bold; background: #eee;">
+                                            Client Information
+                                        </td>
+                                    </tr>
+                                    <tr style="height: 70px">
+                                        <td style="vertical-align: top;">
+                                            <b>To:</b>
+                                            @item.Consignee<br />
+                                            <b>Address:</b>@item.ConsigneeAddress<br />
+                                            <b>Contact:</b>@item.ConsigneeContact
+                                        </td>
+                                    </tr>
+                                    <tr style="height: 70px">
+                                        <td style="vertical-align: top;">
+                                            <b>From:</b>
+                                            @item.Shipper<br />
+                                            <b>Address:</b>
+                                            @item.ShipperAddress<br />
+                                            <b>Contact:</b>
+                                            @item.ShipperContact<br />
+                                            <b>CNIC/NTN:</b>
+                                            @item.cnic
+
+                                        </td>
+                                    </tr>
+                                    <tr style="height: 45px;">
+                                        <td style="vertical-align: top;">
+                                            <b>Supplymentary:</b>
+                                            @item.SuppService
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <b>Special Instructions:</b>
+                                            @item.SpecialInstructions
+                                        </td>
+                                    </tr>
+
+                                </table>
+                            </td>
+                            <td style="vertical-align: top; width: 25%; border: 0;">
+                                <table class="InnerTables" cellspacing="0" cellpadding="0" style="width: 100%;">
+                                    <tr style="height: 20px;">
+                                        <td style="text-align: center; font-weight: bold; background: #eee;">
+                                            Price Information
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Pieces:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.Pieces
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Charging Weight: </b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.Weight
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Dimension: </b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.DimensionWidth
+                                                        X
+                                                        @item.DimensionBreadth
+                                                        X
+                                                        @item.DimensionHeight
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Val. Declared:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @if (item.PriceModifierId == "98" || item.PriceModifierId == "100")
+                                                        {
+                                                            @item.ValDeclared
+                                                        }
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Insurance:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @if (item.PriceModifierId == "98" || item.PriceModifierId == "100")
+                                                        {
+                                                            @item.DeclaredInsuranceValue.ToString()
+                                                        } %
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <table>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Amount:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.totalAmount
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Discount:</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.Discount
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        @if (item.Province == "Sindh")
+                                                        {
+                                                            <b>@("SST" + "@13%")</b>
+                                                        }
+
+                                                        @if (item.Province == "Balochistan")
+                                                        {
+                                                            <b>@("BST" + "@15%")</b>
+                                                        }
+
+                                                        @if (item.Province == "Khyber Pakhtunkhwa")
+                                                        {
+                                                            <b>@("KPST" + "@15%")</b>
+                                                        }
+
+                                                        @if (item.Province == "Punjab")
+                                                        {
+                                                            <b>@("PST" + "@16%")</b>
+                                                        }
+
+                                                        @if (item.Province == "ISLAMABAD")
+                                                        {
+                                                            <b>@("GST" + "@16%")</b>
+                                                        }
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.GST
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>COD Amount (Rs.):</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.CODAmount
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="label">
+                                                        <b>Net Amount (Rs.):</b>
+                                                    </td>
+                                                    <td class="label_text">
+                                                        @item.ChargedAmount
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <b>Description:</b> ON SHIPPER RISK
+                                        </td>
+                                    </tr>
+
+                                </table>
+                            </td>
+                            @*<td style="vertical-align: top; width: 25%; border: 0;">
+                                    <table class="InnerTables" cellspacing="0" cellpadding="0" style="width: 100%;">
+                                        <tr style="height: 20px;">
+                                            <td style="text-align: center; font-weight: bold; background: #eee;">
+                                                Price Information
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <b>Pieces:</b>
+                                                @item.Pieces
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <b>Charging Weight: </b>
+                                                    @item.Weight
+                                                </div>
+                                                <div>
+                                                    <b>Dimension: </b>
+                                                    @item.DimensionWidth
+                                                    X
+                                                    @item.DimensionBreadth
+                                                    X
+                                                    @item.DimensionHeight
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                @if (item.PriceModifierId == "98" || item.PriceModifierId == "100")
+                                                {
+                                                    <div>
+                                                        <b>Val. Declared:</b>
+                                                        @item.ValDeclared
+                                                    </div>
+                                                    <div>
+                                                        <b>Insurance:</b>
+                                                        @item.DeclaredInsuranceValue.ToString() %
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div>
+                                                        <b>Val. Declared:</b>
+
+                                                    </div>
+                                                    <div>
+                                                        <b>Insurance:</b>
+
+                                                    </div>
+                                                }
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <b>Amount:</b>
+                                                    @item.totalAmount
+                                                </div>
+                                                <div>
+                                                    <b>Discount:</b>
+                                                    @item.Discount
+                                                </div>
+                                                <div>
+                                                    @if (item.Province == "Sindh")
+                                                    {
+                                                        <b>SST:</b>
+                                                    }
+
+                                                    @if (item.Province == "Balochistan")
+                                                    {
+                                                        <b>BST:</b>
+                                                    }
+
+                                                    @if (item.Province == "Khyber Pakhtunkhwa")
+                                                    {
+                                                        <b>KPST:</b>
+                                                    }
+
+                                                    @if (item.Province == "Punjab")
+                                                    {
+                                                        <b>PST:</b>
+                                                    }
+
+                                                    @if (item.Province == "ISLAMABAD")
+                                                    {
+                                                        <b>GST:</b>
+                                                    }
+                                                    @item.GST
+
+                                                    <b>COD Amount:</b>
+                                                    @item.CODAmount
+                                                </div>
+                                                <div>
+                                                    <b>Net Amount:</b>
+                                                    @item.ChargedAmount
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <b>Description:</b> ON SHIPPER RISK
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>*@
+                        </tr>
+                    </table>
+                    <div style="font-weight: bold">Note: Please refer to our website for terms and conditions. <span style="padding-left: 70px">UAN:111-202-202 &nbsp;&nbsp; www.mulphilog.com</span></div>
+
+                </div>
+                <div class="" style="border: 1px dashed black;margin:4px 0px 4px 0px"></div>
+
+            </div>
+        }
+    }
+</body>
+</html>

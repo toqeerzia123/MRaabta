@@ -1,0 +1,364 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewBag.Title = "Index";
+}
+
+
+@*@DateTime.Now.ToString("dd-MMM-yyyy")*@
+<div class="row">
+    <div class="col-3">
+        <label>Select Date</label>
+        <input id="Date" name="Date" type="date" value="@DateTime.Now.ToString("dd-MMM-yyyy")" class="form-control">
+    </div>
+    <div class="col-3">
+        <label>Select Rider</label>
+        @if (ViewBag.err == null || ViewBag.err == "")
+        {
+            @Html.DropDownList("RiderId", ViewBag.Riders as List<SelectListItem>, "Select Rider", new { @class = "form-control", @style = "min-height:100px !important" })
+        }
+    </div>
+    <div class="col-3">
+        <label>Select Option</label> <br />
+        @if (ViewBag.err == null || ViewBag.err == "")
+        {
+
+            @Html.DropDownList("RiderOption", new List<SelectListItem>
+                {
+                new SelectListItem{ Text="Delivery", Value = "Delivery" },
+                new SelectListItem{ Text="Pickup", Value = "Pickup" }
+                }, new { @class = "form-control" })
+
+
+        }
+    </div>
+
+    <div class="col-2">
+        <button type="button" id="btnGetRoute" class="btn btn-outline-secondary" style="margin-top:28px">Get</button>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-12">
+        <div id="map"></div>
+    </div>
+</div>
+
+@section styles{
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <style>
+        #map {
+            width: 95% !important;
+            height: 80vh !important;
+        }
+
+        .select2-container .select2-selection--single {
+            height: 37px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 37px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            height: 37px !important;
+            line-height:37px !important;
+        }
+    </style>
+}
+
+@section scripts{
+
+    @*<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7OI7njs2-gN48jINCOjhU23TSKBFfMwQ&callback=init" async defer></script>*@
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMshEp_AWYSYxqN_GneLUtYx6KkoXlPDo"></script>
+
+    <script>
+
+        var dataexists = '@ViewBag.err';
+        if (dataexists != "") {
+            swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+            }, function () {
+                window.location = "../Login";
+            });
+        }
+        debugger;
+        var map1 = null;
+        var gmarkers = [];
+        var infowindows = [];
+        var routePath = null;
+        var idsOfMarker = [];
+            lastWindow = null;
+            debugger;
+        var removeMarkers = function () {
+            debugger;
+            for (let h = 0; h < idsOfMarker.length;h++) {
+
+                gmarkers[idsOfMarker[h].id].setMap(null);
+            }
+            //routePath.setMap(null);
+        };
+
+        //var removeMarkers = function () {
+        //    for (var i = 0; i < gmarkers.length; i++) {
+        //        gmarkers[i].setMap(map1);
+        //    }
+        //};
+
+        var init = () => {
+            var mapOptions = {
+                center: new google.maps.LatLng(24.835434, 67.069840),
+                zoom: 15,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+
+            map1 = new google.maps.Map(document.getElementById("map"),mapOptions);
+
+        };
+
+
+
+
+        $(function () {
+            //google.maps.event.trigger(map1, 'resize');
+                //this.options.mapElement.gmap('refresh');
+
+            init();
+
+                 var getRouteByRider = (rid, dt,rop) => {
+                $.ajax({
+                    type: 'post',
+                    url: '@Url.Action("GetRouteByRider","Route")',
+                    dataType: 'json',
+                    data: JSON.stringify({ dt: dt, rid: rid, rop: rop }),
+                    contentType:'application/json; charset=utf-8',
+                    success: (rs) => {
+                        debugger;
+                        if (rs.consignment.length > 0) {
+                             var latConsign ;
+                             var longConsign;
+                            if (gmarkers.length > 0) {
+                                    removeMarkers();
+                                    gmarkers = [];
+                            }
+                            idsOfMarker = [];
+                            for (let z of rs.consignment) {
+                                idsOfMarker.push({
+                                    id: z.Id
+                                })
+                            }
+                            //var latlongs = [];
+                            //var counter=2;
+                            //for (let x of rs.consignment) {
+                            //    counter++;
+                            //    var locationIncrement = counter / 100000;
+                            //    latlongs.push({
+                            //        lat: x.Lat+locationIncrement,
+                            //        lng: x.Long+locationIncrement
+                            //    });
+                            //}
+
+                            var latlongs = [];
+                            var counter = 2;
+                            if (rs.tracking != null) {
+                                    for (let x of rs.tracking) {
+                                        counter++;
+                                        var locationIncrement = counter / 90000;
+                                        latlongs.push({
+                                            lat: x.Latitude,
+                                            lng: x.Longitude
+                                        });
+                                    }
+
+                            }
+
+                            if (routePath) {
+
+                                routePath.setMap(null);
+                            }
+
+
+                            var ii = 0;
+                            var counter = 2;
+                            debugger;
+
+
+                   for (let x of rs.consignment.filter(x => x.IsMarker == true)) {
+                        debugger;
+                       ii++; counter++;
+
+                       var ridv = $('#RiderId').val();
+                       var locationIncrement2 = counter / 230000;
+                       if (ridv != 0 && [x.locationName] != '') {
+                           debugger;
+                           infowindows[x.Id] = new google.maps.InfoWindow({
+                               content: "<div style=\"width:360px;\"><h2 id=\"firstHeading\" class=\"firstHeading\"> " + x.name + " </h1><div id=\"bodyContent\"><p><b>" + x.locationName + "</b>, " + x.Details + " & <u><b> " + $("#RiderId option:selected").text() + "</b></u> picked them, Below is the list of CNs:" + x.pickupDetail + "</div></div>"
+                           });
+                       }
+                       else if (ridv != 0 && [x.locationName] == '' && [x.name]!='' && rop =='Delivery') {
+                           infowindows[x.Id] = new google.maps.InfoWindow({
+                               content: "<div style=\"width:360px;\"><h2 id=\"firstHeading\" class=\"firstHeading\"> " + x.name + " </h2><u><b> " + $("#RiderId option:selected").text() + "</b></u> Delivered them of Runsheet No:" + x.Runsheet + "<img src=\"http://20.46.47.21/mraabta/cnImage/" + x.ConsignmentNumber + ".jpg\" target=\"_blank\" style=\"width:100px; height:60px;\" alt=\"No Image Found\"> ,<br/>Below is the list of CNs:" + x.pickupDetail + "</div></div>"
+                           });
+                       }
+                       else if (ridv != 0 && [x.name] == '' && rop == 'Delivery') {
+                           infowindows[x.Id] = new google.maps.InfoWindow({
+                               content: "<div style=\"width:360px;\"><h2 id=\"firstHeading\" class=\"firstHeading\"> " + x.Reason + " </h2> <u><b> " + $("#RiderId option:selected").text() + "</b></u> Delivered them of Runsheet No:" + x.Runsheet + "<br/>Below is the list of CNs:" + x.pickupDetail + "</div></div>"
+                           });
+                       }
+                         else if (ridv != 0 && [x.locationName] == '' && rop =='Pickup') {
+                            infowindows[x.Id] = new google.maps.InfoWindow({
+                               content: "<div style=\"width:360px;\"><h2 id=\"firstHeading\" class=\"firstHeading\"> " + x.name + " </h2> " + x.Details + " & <u><b> " + $("#RiderId option:selected").text() + "</b></u>Delivered them of Runsheet No:" + x.Runsheet + ",Below is the list of CNs:" + x.pickupDetail + "</div></div>"
+                            });
+
+                       }
+
+                        //latConsign = x.Lat + locationIncrement2;
+                        //longConsign = x.Long + locationIncrement2;
+
+                        //gmarkers[x.Id] = new google.maps.Marker({
+                        //    label: ii.toString(),
+                        //    position: new google.maps.LatLng(x.Lat + locationIncrement2, x.Long+locationIncrement2),
+                        //    map: map1,
+                        //    animation: google.maps.Animation.DROP,
+                        //    title: x.Details
+                        //    //,icon: '../../images/blue-dot.png'
+                        //});
+
+                         // for (var j = 0; j <= rs.consignment.length - 1; j++) {
+                           if (rs.consignment[ii-1].cod_amount != "0") {
+                               latConsign = x.Lat + locationIncrement2;
+                               longConsign = x.Long + locationIncrement2;
+                               gmarkers[x.Id] = new google.maps.Marker({
+                                   label: ii.toString(),
+                                   position: new google.maps.LatLng(x.Lat + locationIncrement2, x.Long + locationIncrement2),
+                                   map: map1,
+                                  animation: google.maps.Animation.DROP,
+                                   title: x.Details,
+                                  // icon: '/images/icons8-marker-40.png',
+                                   //icon: '/images/placeholder_new.png',
+                                   icon: '@Url.Content("~/images/placeholder_new.png")',
+                                  //  icon:'/images/icons8-marker-48 (1).png'
+
+                                  //<img src="~/images/48.png" />
+                                  // icon: '/images/placeholder_golden.png',
+                                   //<img src="~/images/placeholder_yellow.png" />
+                                  //<img src="~/images/placeholder_golden.png" />
+                                  // backgroundColor: '#FFFFFF'
+                                  //,icon: '/images/google-maps-updated2.png'
+                                  // , icon: '/images/money.png'
+                                   //<img src="~/images/pin-updated.png" />
+                               });
+                           }
+                           else {
+                                    latConsign = x.Lat + locationIncrement2;
+                               longConsign = x.Long + locationIncrement2;
+                               gmarkers[x.Id] = new google.maps.Marker({
+                                   label: ii.toString(),
+                                   position: new google.maps.LatLng(x.Lat + locationIncrement2, x.Long + locationIncrement2),
+                                   map: map1,
+                                   animation: google.maps.Animation.DROP,
+                                   title: x.Details
+                                  // ,icon: '/images/google-maps-updated2.png'
+                                   //, icon: '/images/worldwide (1).png'
+                                   //<img src="~/images/pin-updated.png" />
+                               });
+                           }
+
+                        //google.maps.event.addListener(gmarkers[x.Id], 'click', function () {
+                        //     infowindows[x.Id].open(map1, gmarkers[x.Id]);
+
+                        //});
+
+                        google.maps.event.addListener(gmarkers[x.Id], 'click', function () {
+                            if (lastWindow) lastWindow.close();
+                            infowindows[x.Id].open(map1, gmarkers[x.Id]);
+                            lastWindow = infowindows[x.Id];
+                            event.stopPropagation();
+                        });
+                         google.maps.event.addListener(map1, 'click', function() {
+                             lastWindow.close();
+                             marker.open = false;
+                            });
+                        //marker.addListener('click', function () {
+                        //    infowindow.open(map1, marker);
+                        //});
+                        //gmarkers.push(marker);
+                        //gmarkers.inf
+                    }
+
+                            debugger
+                            if (ridv != 0) {
+                                //routePath = new google.maps.Polyline({
+                                //    path: latlongs,
+                                //    strokeColor: '#FF0000',
+                                //    strokeOpacity: 1.0,
+                                //    strokeWeight: 5,
+                                //    zoom: 15,
+                                //});
+                                //routePath.setMap(map1);
+                                 routePath = new google.maps.Polyline({
+                                    path: latlongs,
+                                    strokeColor: '#FF0000',
+                                    strokeOpacity: 0.8,
+                                    strokeWeight: 2.5
+                        });
+                                    routePath.setMap(map1);
+
+                            }
+
+                            var latLng = new google.maps.LatLng(latConsign, longConsign);
+                            map1.panTo(latLng);
+
+                            var bounds = new google.maps.LatLngBounds();
+
+                             for (let h = 0; h < idsOfMarker.length;h++) {
+
+                                 bounds.extend(gmarkers[idsOfMarker[h].id].getPosition());
+                             }
+
+                            //for (var i = 1; i < gmarkers.length; i++) {
+                            //    bounds.extend(gmarkers[i].getPosition());
+                            //}
+
+                            map1.fitBounds(bounds);
+
+
+                        }
+                        else {
+
+                            alert('No Data found');
+                             removeMarkers();
+                              routePath.setMap(null);
+
+
+
+                        }
+                    }
+                });
+            };
+                //$('#Date').datepicker({
+                //    format: 'dd-MM-yyyy'
+                //});
+
+            $('#btnGetRoute').click(function () {
+                debugger;
+                    var dt = $('#Date').val();
+                    var rid = $('#RiderId').val();
+                var rop = $('#RiderOption').val();
+                    //if (gmarkers.length > 0) {
+                    //           removeMarkers();
+                    //        }
+                if (rid == "") {
+                    alert("Please Select Rider")
+                }
+                else if (dt == "") {
+                    alert("Please Select Date")
+                }
+                else {
+                    getRouteByRider(rid, dt, rop);
+                     }
+                });
+            });
+    </script>
+}

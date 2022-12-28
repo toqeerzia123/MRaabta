@@ -1,0 +1,201 @@
+@charset "UTF-8";
+
+body {
+  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background:url(../images/login-bg/11.jpg) no-repeat fixed;
+  background-size:cover;
+}
+
+pre,
+code,
+kbd,
+samp {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+
+input,
+button,
+select,
+optgroup,
+textarea {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+  font-weight: bold;
+  line-height: 1.2;
+  color: inherit;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 1070;
+  display: block;
+  margin: 0;
+  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+  text-align: start;
+  text-decoration: none;
+  text-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  word-break: normal;
+  word-spacing: normal;
+  white-space: normal;
+  line-break: auto;
+  font-size: 0.765625rem;
+  word-wrap: break-word;
+  opacity: 0;
+}
+
+.popover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1060;
+  display: block;
+  max-width: 276px;
+  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+  text-align: start;
+  text-decoration: none;
+  text-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  word-break: normal;
+  word-spacing: normal;
+  white-space: normal;
+  line-break: auto;
+  font-size: 0.765625rem;
+  word-wrap: break-word;
+  background-color: #FFF;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 0.3rem;
+}
+
+.jqvmap-label {
+  background: #292929;
+  color: white;
+  font-family: sans-serif, Verdana;
+  font-size: smaller;
+}
+
+.fc-icon {
+  line-height: 1em;
+  font-size: 1em;
+  text-align: center;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.fc-time-grid-event .fc-resizer {
+  line-height: 8px;
+  font-size: 11px;
+  font-family: monospace;
+  text-align: center;
+}
+
+.app-header__logo {
+  color: #fff;
+  text-align: center;
+  font-family: 'Niconne';
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 50px;
+}
+
+.app-sidebar__toggle {
+  font-family: fontAwesome;
+  color: #000;
+  line-height: 2.4;
+}
+
+.animated-checkbox input[type="checkbox"] + .label-text:before {
+  font-family: "FontAwesome";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  font-size: 18px;
+}
+
+.animated-checkbox input[type="checkbox"]:checked + .label-text:before {
+  color: #666666;
+}
+
+.animated-checkbox input[type="checkbox"]:disabled + .label-text:before {
+  color: #ccc;
+}
+
+.animated-radio-button input[type="radio"] + .label-text:before {
+  font-family: "FontAwesome";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  font-size: 18px;
+}
+
+.animated-radio-button input[type="radio"]:checked + .label-text:before {
+  color: #666666;
+}
+
+.animated-radio-button input[type="radio"]:disabled + .label-text:before {
+  color: #ccc;
+}
+
+.toggle input[type="checkbox"] + .button-indecator:before {
+  font-family: "FontAwesome";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  font-size: 25px;
+}
+
+.toggle input[type="checkbox"]:checked + .button-indecator:before {
+  color: #666666;
+}
+
+.login-content .logo {
+  font-family: "Century Gothic";
+  color: #000000;
+}
+
+.lockscreen-content .logo {
+  font-family: "Century Gothic";
+  color: #000000;
+}
+
+.lockscreen-content .logo h1 {
+  font-size: 52px;
+  font-weight: 400;
+}
+

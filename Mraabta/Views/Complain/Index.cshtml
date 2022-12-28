@@ -1,0 +1,404 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+@section styles{
+    <style>
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .confirmOverlayInput {
+            width: 100%;
+            height: 60px;
+            border: none !important;
+            border-bottom: 5px solid white !important;
+            background: none;
+            color: rgba(255, 255, 255, .8);
+            text-align: center;
+            font-size: 35px;
+        }
+
+            .confirmOverlayInput:active,
+            .confirmOverlayInput:focus {
+                outline: none;
+            }
+
+        .confirmOverlayButton {
+            background: none;
+            width: 200px;
+            height: 80px;
+            border: 5px solid white;
+            font-size: 35px;
+            color: rgba(255, 255, 255, .8)
+        }
+
+            .confirmOverlayButton:active {
+                outline: none;
+                background: rgba(255, 255, 255, .8);
+                color: rgba(0, 0, 0, .8)
+            }
+
+            .confirmOverlayButton:focus {
+                outline: none;
+            }
+    </style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center">
+                    <h3><b>Complain</b></h3>
+                </div>
+                <div id="root">
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+@section scripts{
+    <script>
+        const currentDate = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        const zones =  @Html.Raw(Json.Encode(ViewBag.Zones));
+        const branches =  @Html.Raw(Json.Encode(ViewBag.Branches));
+        //  const esclevel =  @Html.Raw(Json.Encode(ViewBag.EscLevel));
+        const complainData =  @Html.Raw(Json.Encode(ViewBag.ComplainData));
+        const getComplainUrl = '@Url.Action("GetComplainDetail", "Complain")';
+        const fetchBranchesUrl = '@Url.Action("GetBranch", "Complain")';
+        const complainUrl = '@Url.Action("Details", "Complain")';
+    </script>
+
+    <script type="text/babel">
+            const ComplainDetails = (props) =>
+            {
+                return  <table className="table table-responsive table-bordered">
+                        <thead>
+                            <tr>
+                                <th>S No.</th>
+                                <th>Ticket #</th>
+                                <th>Zone</th>
+                                <th>Branch</th>
+                                <th>Consignment #</th>
+                                <th>Assigned To </th>
+                                <th>Request Nature</th>
+                                <th>Request Type</th>
+                                <th>Description</th>
+                                <th>Request Status</th>
+                                <th>Esc Level</th>
+                                <th>Launch By</th>
+                                <th>Launch Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                props.data.map((x, index) =>
+                                <tr key={index} style={x.ColorStatus == 'Green' ? {backgroundColor: '#C9CC3F'} : x.ColorStatus == 'Yellow' ? {backgroundColor: '#FADA5E'} : {backgroundColor: 'transparent'}}>
+                                        <td>{++index}</td>
+                                        <td><a target="_blank"  href={complainUrl + '?CN=' + x.ConsignmentNum + "&ReqId="+x.TicketID} style={{ color: 'blue', textDecoration: 'underline' }}>{x.TicketID}</a></td>
+                                        <td>{x.Zone}</td>
+                                        <td>{x.Branch}</td>
+                                        <td><a href={'/Files/ManageConsignmentTracking.aspx?d='+x.ConsignmentNum} target='_blank' style={{color:'blue', textDecoration: 'underline'}}> {x.ConsignmentNum} </a> </td>
+                                        <td>{x.AssignedTo}</td>
+                                        <td>{x.RequestNature}</td>
+                                        <td>{x.RequestType}</td>
+                                        <td>{x.Description}</td>
+                                        <td>{x.RequestStatus}</td>
+                                        <td>{x.EscLevel}</td>
+                                        <td>{x.LaunchBy}</td>
+                                        <td>{x.LaunchDate}</td>
+                                  </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+            }
+
+            const App = () => {
+              const [formData, setFormData] = React.useState({
+                From : currentDate,
+                To : currentDate,
+                Zone : '000',
+                Weight : 0 ,
+                OPSStatus : 0,
+                Escalation : 8,
+                ConsignmentNo : '',
+                Status : 0
+        });
+
+            const [complainDetail, setComplainDetail] = React.useState(complainData.data);
+            const [loading, setLoading] = React.useState(false);
+            const [branch, setBranches] = React.useState([]);
+
+            const getComplainReport = () => {
+
+            if (formData.From > formData.To)
+            {
+                alert('Invalid Date');
+                return;
+            }
+            setLoading(true);
+            fetch(getComplainUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            setComplainDetail(rs.data);
+                        }
+                        else {
+                            alert('No data found');
+                            setComplainDetail(null);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+            const validateCN = (val) => {
+
+            if (val[0] == 5 && val.length != 15) {
+                alert('Invalid length of COD Consignment');
+                scanRef.current.value = '';
+                scanRef.current.focus();
+                return false;
+            }
+
+            const prefix = cnlength.filter(x => x.Prefix == val.substring(0, x.PrefixLength))[0];
+
+            if (prefix) {
+                if (prefix.Length == val.length) {
+                    return true;
+                } else {
+                    alert('Prefix length not found');
+                    scanRef.current.value = '';
+                    scanRef.current.focus();
+                    return false;
+                }
+            } else {
+                alert('Prefix not found');
+                scanRef.current.value = '';
+                scanRef.current.focus();
+                return false;
+            }
+        }
+
+         const keypressHandler = e => {
+            if (e.key === "Enter") {
+                scanRef.current.blur();
+            }
+        }
+
+        const fetchBranches = (Zone) => {
+            const url = `${fetchBranchesUrl}?Zone=${Zone}`
+            fetch(url)
+                .then(
+                    function (response) {
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' +
+                                response.status);
+                            return;
+                        }
+                        // Examine the text in the response
+                        response.json().then(function (data) {
+                                if(data.destdropdown.length > 0){
+                                var select = document.getElementById("arr");
+                                document.getElementById("arr").className = "form-control";
+
+                                $('#arr').html("")
+                                    var initval='000';
+                                    var inittext='-- Select --';
+                                    var el = document.createElement("option");
+                                    el.textContent = inittext;
+                                    el.value = initval;
+                                    el.selected = true
+                                    select.appendChild(el);
+
+                                for (var i = 0; i < data.destdropdown.length; i++) {
+                                    var val = data.destdropdown[i].Value;
+                                    var text = data.destdropdown[i].Text;
+                                    var el = document.createElement("option");
+                                    el.textContent = text;
+                                    el.value = val;
+                                    select.appendChild(el);
+                                }}
+
+                        });
+                    }
+                )
+                .catch(function (err) {
+                    console.log('Fetch Error :-S', err);
+                });
+        }
+
+        const onZoneChanged = (e) => {
+            const id = e.target.value;
+            if (id) {
+                changeFormData('Zone', e.target.value);
+                fetchBranches(id);
+            }
+        }
+
+            const process = (e) => {
+                let value = e.target.value;
+                let numbers = value.replace(/[^0-9]/g, "");
+                e.target.value = numbers;
+            }
+
+            const changeFormData = (key, val) => {
+                let x = { ...formData, [key]: val };
+                setFormData(x);
+            }
+
+            const overlayStyle = {
+                width: '100vw',
+                height: '100vh',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                zIndex: 10000,
+                background: 'rgba(0,0,0,.8)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'rgba(255,255,255,.8)'
+            }
+
+        return (
+            <div style={{ position: 'relative'}}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+
+                <React.Fragment>
+                    <div className="row">
+                        <div className="col-md-3 col-sm-12">
+                            <label>From</label>
+                            <input type="date" className="form-control" value={formData.From}  onChange={(x) => changeFormData('From', x.target.value)} />
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>To</label>
+                            <input type="date" value={formData.To} className="form-control" onChange={(x) => changeFormData('To', x.target.value)} />
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>Zone</label>
+                            <select className="form-control" value={formData.Zone} onChange={onZoneChanged}>
+                                <option value="000">-- Select --</option>
+                                {
+                                    zones.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>Branch</label>
+                            <select className="form-control" id="arr" value={formData.Branch} onChange={(x) => {
+                                changeFormData('Branch', x.target.value)
+                            }}>
+                                <option value="000">-- Select --</option>
+                                {
+                                    branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div className="row mt-4">
+                        <div className="col-md-3 col-sm-12">
+                            <label>Weight Slab</label>
+                            <select className="form-control" value={formData.Weight} onChange={(x) => {
+                                changeFormData('Weight', x.target.value)
+                            }}>
+                                <option value="0" defaultValue="selected">Select Weight</option>
+                                <option value="1">0.5 / 1</option>
+                                <option value="2">Greater than 1 KG</option>
+                            </select>
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>Status</label>
+                            <select className="form-control" value={formData.Status} onChange={(x) => {
+                                changeFormData('Status', x.target.value)
+                            }}>
+                                <option value="0" defaultValue="selected">Select All</option>
+                                <option value="1">Open</option>
+                                <option value="2">Close</option>
+                            </select>
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>Escalation</label>
+                            <select className="form-control" value={formData.Escalation} onChange={(x) => {
+                                changeFormData('Escalation', x.target.value)
+                            }}>
+                                <option value="8" defaultValue="selected">All</option>
+                                <option value="1">Level 1 - Assistant Manager - Branch Manager, Complaint Resolution</option>
+                                <option value="2">Level 2 - Operation Manager</option>
+                                <option value="3">Level 3 - Area Manager</option>
+                                <option value="4">Level 4 - RMO</option>
+                                <option value="5">Level 5 - GM</option>
+                                <option value="6">Level 6 - Director</option>
+                                <option value="7">Level 7 - COO</option>
+                            </select>
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>Consignment No</label>
+                            <input type="text" className="form-control" value={formData.ConsignmentNo} onInput={process} onKeyPress={keypressHandler} placeholder={"Consigment No"} onChange={(x) => changeFormData('ConsignmentNo', x.target.value)} />
+                        </div>
+                    </div>
+                    <div className="row mt-4">
+                        <div className="col-md-3 col-sm-12">
+                            <label>OPS Status</label>
+                            <select className="form-control" value={formData.OPSStatus} onChange={(x) => {
+                                changeFormData('OPSStatus', x.target.value)
+                            }}>
+                                <option value="0" defaultValue="selected">Select Status</option>
+                                <option value="1">No Response</option>
+                                <option value="2">Interim Response</option>
+                                <option value="3">Final Response</option>
+                            </select>
+                        </div>
+                        <div className="col-md-7 col-sm-12"> </div>
+                        <div className="col-md-2 col-sm-12">
+                            <button type="button" className="btn btn-primary" style={{ marginTop: 25, background: '#f46425', border: '#a53200', float:'right' }} onClick={getComplainReport}>Search</button>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+                    {
+                        complainDetail ? <ComplainDetails data={complainDetail} /> : ''
+                    }
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    ReactDOM.render(<App />,
+        document.querySelector('#root')
+    )
+    </script>
+}

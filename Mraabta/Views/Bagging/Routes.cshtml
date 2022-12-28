@@ -1,0 +1,319 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    table {
+        font-size: 12px;
+    }
+</style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <h2 class="text-center">Routes</h2>
+        <div id="root"></div>
+    </div>
+</main>
+
+
+@section scripts{
+<script>
+    const routes = @Html.Raw(Json.Encode(ViewBag.RoutesData));
+    const branches = @Html.Raw(Json.Encode(ViewBag.Branches));
+    const types = [{ Value: 'PR', Text: 'Proper' }, { Value: 'TR', Text: 'Transit' }]
+    var saveUrl = '@Url.Action("SaveRoute","Bagging")';
+    var deleteUrl = '@Url.Action("DeleteRoute","Bagging")';
+    var routesUrl = '@Url.Action("SearchBags","Bagging")';
+    var filterUrl = '@Url.Action("FilterBags","Bagging")';
+</script>
+<script type="text/babel">
+
+    function Grid(props) {
+
+        const onRemoveRow = (id) => {
+            props.onRemoveRow(id);
+        }
+
+        return (
+            <div style={{ overflowX: 'auto' }}>
+                {
+                    props.data.length == 0 ? '' :
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>S.No</th>
+                                    <th>Destination</th>
+                                    <th>Branch</th>
+                                    <th>Type</th>
+                                    <th>Created By</th>
+                                    <th>Created On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    props.data.map((x, index) =>
+                                        <tr key={index}>
+                                            <td className="text-center">
+                                                <button type="button" className="btn btn-sm btn-danger" onClick={() => onRemoveRow(x.Id)}>Remove</button>
+                                            </td>
+                                            <td>{index + 1}</td>
+                                            <td>{x.Destination}</td>
+                                            <td>{x.Branch}</td>
+                                            <td>{x.Type}</td>
+                                            <td>{x.CreatedBy}</td>
+                                            <td>{x.CreatedOn}</td>
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                }
+            </div>
+        );
+    }
+
+    function App() {
+
+        const [data, setData] = React.useState({
+            DestinationId: '',
+            BranchId: '',
+            Type: ''
+        });
+
+        const [gridData, setGridData] = React.useState([]);
+
+        const [loading, setLoading] = React.useState(false);
+
+        const updateData = (key, val) => {
+            let x = { ...data };
+            x[key] = val;
+            setData(x);
+        }
+
+        React.useEffect(() => {
+            setGridData(routes);
+        }, [])
+
+        const getRoutes = () => {
+            fetch(routesUrl).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 0) {
+                            if (rs.data.length > 0) {
+                                setGridData(rs.data);
+                            } else {
+                                alert('No data found');
+                            }
+                        } else {
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+
+        const onDestinationChanged = (e) => {
+                updateData('DestinationId', e.target.value);
+                filterRoutes(e.target.value, data.BranchId, data.Type);
+        }
+
+        const onBranchChanged = (e) => {          
+                updateData('BranchId', e.target.value);
+                filterRoutes(data.DestinationId, e.target.value, data.Type);
+        }
+
+        const onTypeChanged = (e) => {
+                updateData('Type', e.target.value);
+                filterRoutes(data.DestinationId, data.BranchId,e.target.value);
+        }
+
+        const filterRoutes = (DestinationId, BranchId, Type) => {
+            fetch(filterUrl+ '?Dest=' + DestinationId+ '&Branch=' + BranchId+ '&Type=' + Type).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 0) {
+                            if (rs.data.length > 0) {
+                                setGridData(rs.data);
+                            } else {
+                                alert('No data found');
+                            }
+                        } else {
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const overlayStyle = {
+            position: 'fixed',
+            top: '0px',
+            left: '0px',
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)',
+            zIndex: 10000,
+            backdropFilter: 'blur(15px)'
+        }
+
+        const onRemoveRow = (id) => {
+            remove(id);
+        }
+
+        const save = () => {
+            setLoading(true);
+            fetch(saveUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        alert(rs.msg);
+                        if (rs.sts == 0) {
+                            setGridData(rs.data);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const remove = (id) => {
+            setLoading(true);
+            fetch(deleteUrl + '?id=' + id).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        alert(rs.msg);
+                        if (rs.sts == 0) {
+                            setGridData(rs.data);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const onSave = () => {
+
+            if (!data.DestinationId) {
+                alert('Select Destination');
+                return;
+            }
+
+            if (!data.BranchId) {
+                alert('Select Branch');
+                return;
+            }
+
+            if (!data.Type) {
+                alert('Select Type');
+                return;
+            }
+
+            save();
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={overlayStyle}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="row">
+                    <div className="col-lg-3 col-sm-12">
+                        <label>Destination</label>
+                        <select className="form-control" value={data.DestinationId} onChange={onDestinationChanged}>
+                            <option value="">Select Destination</option>
+                            {
+                                branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg-3 col-sm-12">
+                        <label>Branch</label>
+                        <select className="form-control" value={data.BranchId} onChange={onBranchChanged}>
+                            <option value="">Select Branch</option>
+                            {
+                                branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg-3 col-sm-12">
+                        <label>Bag Type</label>
+                        <select className="form-control" value={data.Type} onChange={onTypeChanged}>
+                            <option value="">Select Type</option>
+                            {
+                                types.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg-3 col-sm-12">
+                        <button type="button" className="btn btn-secondary" style={{ marginTop: '1.6rem' }} onClick={onSave}>Save</button>
+                    </div>
+                </div>
+
+                <br />
+                <Grid data={gridData} onRemoveRow={onRemoveRow} />
+            </div>
+        );
+    }
+
+    ReactDOM.render(<App />, document.querySelector('#root'));
+</script>
+}

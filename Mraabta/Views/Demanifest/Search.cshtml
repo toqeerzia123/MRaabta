@@ -1,0 +1,178 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    table {
+        font-size: 12px;
+    }
+</style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <h2 class="text-center">Search Demanifests</h2>
+        <div id="root"></div>
+    </div>
+</main>
+
+
+@section scripts{
+<script>
+    var today = '@DateTime.Now.ToString("yyyy-MM-dd")';
+    var postUrl = '@Url.Action("GetDemanifests","Demanifest")';
+    var printUrl = '@Url.Action("Print","Demanifest")';
+</script>
+<script type="text/babel">
+
+    function Grid(props) {
+        return (
+            <div style={{ overflowX: 'auto' }}>
+                <table className="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>SNo</th>
+                            <th>Manifest No</th>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Date</th>
+                            <th>Total CNs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            props.data.map((x, index) =>
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td><a target="_blank" href={printUrl + '?id=' + x.ManifestNo} style={{ color: 'blue', textDecoration: 'underline' }}>{x.ManifestNo}</a></td>
+                                    <td>{x.Origin}</td>
+                                    <td>{x.Destination}</td>
+                                    <td>{x.Date}</td>
+                                    <td>{x.TotalCNs}</td>
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+
+    function App() {
+
+        const [date, setDate] = React.useState(today);
+        const [gridData, setGridData] = React.useState([]);
+        const [loading, setLoading] = React.useState(false);
+
+        const styles = {
+
+            mainDiv: {
+                width: '100%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))',
+                gridAutoRows: '65px',
+                columnGap: '5px',
+            }
+        }
+
+        const overlayStyle = {
+            position: 'fixed',
+            top: '0px',
+            left: '0px',
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)',
+            zIndex: 10000,
+            backdropFilter: 'blur(15px)'
+        }
+
+        const getData = async () => {
+
+            if (!date) {
+                alert('Select Date');
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                const response = await fetch(postUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ date: date })
+                });
+
+                setLoading(false);
+
+                if (response.status === 200) {
+
+                    const rs = await response.json();
+
+                    if (rs.sts == 0) {
+                        if (rs.data.length === 0)
+                            alert('No Data Found');
+                        setGridData(rs.data);
+                    } else {
+                        alert(rs.msg);
+                        setGridData([]);
+                    }
+
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+
+
+        return (
+
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={overlayStyle}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <React.Fragment>
+                    <div className="row">
+                        <div className="col-lg-3 col-sm-12">
+                            <label>Date</label>
+                            <input type="date" className="form-control" value={date} onChange={(x) => setDate(x.target.value)} />
+                        </div>
+                        <div className="col-lg-3 col-sm-12">
+                            <button type="text" className="btn btn-secondary" style={{ marginTop: '1.5rem' }} onClick={getData}>Submit</button>
+                        </div>
+                    </div>
+                    <br />
+                    {gridData.length > 0 ? <Grid data={gridData} /> : ''}
+                </React.Fragment>
+            </div>
+        );
+    }
+
+    ReactDOM.render(<App />, document.querySelector('#root'));
+</script>
+}

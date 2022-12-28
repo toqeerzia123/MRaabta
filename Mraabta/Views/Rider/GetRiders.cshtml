@@ -1,0 +1,23 @@
+﻿@model MRaabta.Models.RiderData
+
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-12">
+        <table>
+            <tr>
+                <td>
+                    <div class="panel-default" style="    float: left;width: 100%;">
+                        @Html.Label("lbl_SelectRider", "Select Rider")
+                    </div>
+                </td>
+
+                <td>
+                    <div class="panel-default1"> @Html.DropDownList("ddl_rider", Model.RiderList, "Select Rider", new { style = "width: 174px;height: 26px" })  </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

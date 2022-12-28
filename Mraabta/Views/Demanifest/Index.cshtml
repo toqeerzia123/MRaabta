@@ -1,0 +1,499 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script>
+    const cnlength =  @Html.Raw(Json.Encode(ViewBag.CNLengths));
+    const manifestDataUrl = '@Url.Action("ManifestData","Demanifest")';
+    const getCNUrl = '@Url.Action("GetCN","Demanifest")';
+    const saveUrl = '@Url.Action("Save","Demanifest")';
+    const searchUrl = '@Url.Action("Search","Demanifest")';
+    const printUrl = '@Url.Action("Print","Demanifest")';
+</script>
+<script type="text/babel">
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processDecimal = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9.]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlpha = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlphaWithSpace = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z ]/g, "");
+        e.target.value = numbers;
+    }
+
+    const Context = React.createContext(null);
+
+    const d = {
+        ManifestNo: '',
+        Origin: '',
+        Destination: '',
+        Date: ''
+    }
+
+    const DetailGrid = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const [scanned, setScanned] = React.useState(false);
+        const [lastScan, setLastScan] = React.useState('');
+        const cnRef = React.useRef(null);
+
+
+        const getExcessCN = async (cn) => {
+            try {
+                setScanned(true);
+                const response = await fetch(getCNUrl + '?cn=' + cn);
+                if (response.status === 200) {
+
+                    const json = await response.json();
+
+                    if (json.sts == 0) {
+                        let x = [...detailGrid];
+                        x.unshift(json.data);
+                        setDetailGrid(x);
+                    } else {
+                        alert(json.msg);
+                    }
+                    cnRef.current.value = '';
+                    cnRef.current.focus();
+
+                } else {
+
+                    alert('Looks like there was a problem. Status Code: ' + response.status);
+                    cnRef.current.value = '';
+                    cnRef.current.focus();
+
+                }
+
+                setScanned(false);
+
+            } catch (error) {
+
+                cnRef.current.value = '';
+                cnRef.current.focus();
+                setScanned(false);
+                console.log('Fetch Error :-S', error);
+
+            }
+        }
+
+        const validateCN = (val) => {
+
+            if (val[0] == 5 && val.length != 15) {
+                alert('Invalid length of COD Consignment');
+                cnRef.current.value = '';
+                cnRef.current.focus();
+                return false;
+            }
+
+            const prefix = cnlength.filter(x => x.Prefix == val.substring(0, x.PrefixLength))[0];
+
+            if (prefix) {
+                if (prefix.Length == val.length) {
+                    return true;
+                } else {
+                    alert('Prefix length not found');
+                    cnRef.current.value = '';
+                    cnRef.current.focus();
+                    return false;
+                }
+            } else {
+                alert('Prefix not found');
+                cnRef.current.value = '';
+                cnRef.current.focus();
+                return false;
+            }
+        }
+
+        const updateGrid = async (index, key, val) => {
+            let x = [...detailGrid];
+            x[index][key] = val;
+            setDetailGrid(x);
+        }
+
+        const detailSummaryStyle = {
+            display: 'flex',
+            alignItems: 'center'
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                cnRef.current.blur();
+            }
+        }
+
+        const onCNScanBlur = async e => {
+            const val = e.target.value;
+            if (val) {
+                const index = detailGrid.findIndex(x => x.CN == val);
+                if (index >= 0) {
+                    const z = [...detailGrid];
+                    if (z[index].Status == 6) {
+                        z[index].Status = 5;
+                        setDetailGrid(z);
+                        cnRef.current.value = '';
+                        cnRef.current.focus();
+                        setLastScan(val);
+                    } else {
+                        alert('Already Scanned');
+                        cnRef.current.value = '';
+                        cnRef.current.focus();
+                    }
+                } else {
+                    if (validateCN(val)) {
+                        await getExcessCN(val);
+                        setLastScan(val);
+                    }
+                }
+            }
+        }
+
+        const onRemove = async (index, sts) => {
+            if (sts == 5) {
+                updateGrid(index, 'Status', 6);
+            } else {
+                let x = [...detailGrid];
+                x.splice(index, 1);
+                setDetailGrid(x);
+            }
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-lg-6 col-sm-12 form-inline" style={detailSummaryStyle}>
+                        CN: <input type="text" ref={cnRef} onInput={process} onKeyPress={keypressHandler} onBlur={onCNScanBlur} className="form-control ml-2" readOnly={scanned} />
+                    </div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Short</b> : {detailGrid.filter((x) => x.Status == 6).length}</div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Recieved</b> : {detailGrid.filter((x) => x.Status == 5).length}</div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Excess</b> : {detailGrid.filter((x) => x.Status == 7).length}</div>
+                </div>
+                <div className="table-responsive mt-2">
+                    <table className="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>S.No</th>
+                                <th>CN</th>
+                                <th>Status</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Service Type</th>
+                                <th>CN Type</th>
+                                <th>Pcs</th>
+                                <th>Weight</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                detailGrid.map((x, index) =>
+                                    <tr key={index} style={lastScan == x.CN ? { background: 'rgba(0,128,0,.5)', color: 'white' } : null}>
+                                        <td>
+                                            {
+                                                [5, 7].includes(x.Status) ? <button type="button" className="btn btn-sm btn-danger" onClick={() => onRemove(index, x.Status)}>Remove</button> : ''
+                                            }
+                                        </td>
+                                        <td>{index + 1}</td>
+                                        <td>{x.CN}</td>
+                                        <td>{x.Status == 6 ? 'Short Received' : x.Status == 5 ? 'Received' : 'Excess Received'}</td>
+                                        <td>{x.Origin}</td>
+                                        <td>{x.Destination}</td>
+                                        <td>{x.ServiceType}</td>
+                                        <td>{x.CNType}</td>
+                                        <td>{x.Pcs}</td>
+                                        <td>{x.Weight}</td>
+                                        <td><textarea className="form-control" value={x.Remarks} onChange={(e) => updateGrid(index, 'Remarks', e.target.value)}></textarea></td>
+                                    </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    const MainForm = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const manRef = React.useRef(null);
+
+        const updateData = (key, val) => setData({ ...data, [key]: val });
+
+        const fetchManifest = async (no) => {
+            setLoading(true);
+            const url = `${manifestDataUrl}?manifestNo=${no}`;
+            try {
+                const response = await fetch(url);
+                setLoading(false);
+                if (response.status === 200) {
+                    const json = await response.json();
+                    if (json.sts == 0) {
+                        if (json.data) {
+                            if (!json.data.IsDemanifested) {
+                                const { ManifestDetail, ...data } = json.data;
+                                setData(data);
+                                setDetailGrid(ManifestDetail);
+                            } else {
+                                alert('Manifest Already Demanifested');
+                                manRef.current.value = '';
+                                manRef.current.focus();     
+                                window.open(`${printUrl}?id=${json.data.ManifestNo}`, '_blank');                           
+                            }
+                        } else {
+                            alert('No data found');
+                            manRef.current.value = '';
+                            manRef.current.focus();
+                        }
+                    } else {
+                        alert(json.msg);
+                        manRef.current.value = '';
+                        manRef.current.focus();
+                    }
+                } else {
+                    alert('Looks like there was a problem. Status Code: ' + response.status);
+                    manRef.current.value = '';
+                    manRef.current.focus();
+                }
+            } catch (error) {
+                setLoading(false);
+                manRef.current.value = '';
+                manRef.current.focus();
+                console.log('Fetch Error :-S', error);
+            }
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                manRef.current.blur();
+            }
+        };
+
+        const onManBlur = async (e) => {
+            const val = e.target.value;
+            if (val)
+                fetchManifest(val);
+        }
+
+        const save = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(saveUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: { ...data, ManifestDetail: detailGrid } })
+                });
+                setLoading(false);
+                if (response.status === 200) {
+                    const json = await response.json();
+                    if (json.sts == 0) {
+                        alert(`Demanifest# ${json.msg} saved successfully`);
+                        setData(d);
+                        setDetailGrid([]);
+                        window.open(`${printUrl}?id=${json.msg}`, '_blank');
+                    } else {
+                        alert(json.msg);
+                    }
+                } else {
+                    alert('Looks like there was a problem. Status Code: ' + response.status);
+                }
+
+            } catch (error) {
+                setLoading(false);
+                console.log('Fetch Error :-S', error);
+            }
+        }
+
+        const onSave = () => {
+            if (!data.ManifestNo) {
+                alert('Enter Manifest No');
+                return;
+            }
+
+            if (detailGrid.filter(x => x.Status == 6).length > 0) {
+                if (confirm('Short received Manifests/CNs found are you sure?')) {
+                    save();
+                }
+            } else {
+                save();
+            }
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-lg col-sm-12">
+                        <label>Manifest No</label>
+                        <input className="form-control" onInput={process} ref={manRef} onKeyPress={keypressHandler} onBlur={onManBlur} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Date</label>
+                        <input className="form-control" readOnly={true} value={data.Date} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Origin</label>
+                        <input className="form-control" readOnly={true} value={data.Origin} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Destination</label>
+                        <input className="form-control" readOnly={true} value={data.Destination} />
+                    </div>
+                </div>
+                <div className="row mt-3">
+                    <div className="col-lg col-sm-12 text-right">
+                        <button type="button" className="btn btn btn-secondary" onClick={onSave}>Save</button>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    function App() {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(10px)'
+            }
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>Demanifest</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+                                <a href={searchUrl} className="btn btn-sm btn-secondary" target="_blank">Search Demanifests</a>
+                            </div>
+                        </div>
+                        <MainForm />
+                        <br />
+                        <br />
+                        {
+                            detailGrid.length > 0 ? <DetailGrid /> : ''
+                        }
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+
+        const [loading, setLoading] = React.useState(false);
+        const [data, setData] = React.useState(d);
+        const [detailGrid, setDetailGrid] = React.useState([]);
+        return (
+            <Context.Provider value={{
+                loading,
+                setLoading,
+                data,
+                setData,
+                detailGrid,
+                setDetailGrid
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

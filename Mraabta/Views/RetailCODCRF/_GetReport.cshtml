@@ -1,0 +1,69 @@
+﻿@model IEnumerable<MRaabta.Models.RetailCODCRFNewModel>
+@{
+    string cons = "";
+    var i = 0;
+}
+
+<div class="panel-body mainTable">
+    @if (Model.Any() && Model != null)
+    {
+        <div style=" width:100%;">
+            <input type="hidden" id="hiddenAccountNo" />
+            <h2 style="text-align:center">Total Records: @Model.Count()</h2>
+            <table id="AccountDetails" class="table-bordered mt-4 table table_data" border="1" style="width:100%" nowrap>
+                <thead>
+                    <tr>
+                        <th class="text-center">S. No</th>
+                        <th class="text-center">Zone</th>
+                        <th class="text-center">Branch</th>
+                        <th class="text-center">Account No</th>
+                        <th class="text-center">Customer Name</th>
+                        <th class="text-center">ECName</th>
+                        <th class="text-center">RSEName</th>
+                        <th class="text-center">Date Of Opening</th>
+                        <th class="text-center" nowrap="nowrap">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr id="row_@item.AccountNumber" class="text-center">
+                            <td> @{ i++;}
+                            @i</td>
+                            <td>@item.Zone</td>
+                            <td>@item.Branch</td>
+                            <td>@item.AccountNumber</td>
+                            <td>@item.CustomerName</td>
+                            <td>@item.ECName</td>
+                            <td>@item.RSEName</td>
+                            <td>@item.DateOfOpening.ToString("dd-MM-yyyy")</td>
+                            <td hidden>@item.isApproved</td>
+                            <td nowrap="nowrap">
+                                @if (item.isApproved)
+                                {
+                                    <a class="btn btn-primary details" id="btnsubmit" style="background-color: #EA5B0C;">Dis-Approve</a>
+                                    @*<a class="btn btn-primary" style="background-color: #EA5B0C;" href="~/RetailCODCRF/ApproveCODCRF?accountno=@item.AccountNumber&approve=0">Dis-Approve</a>*@
+                                }
+                                else
+                                {
+                                    <a class="btn btn-primary" style="background-color: #EA5B0C;" target="_blank" href="~/RetailCOD/RetailCODCRF?Account=@item.AccountNumber">View</a>
+                                    <a class="btn btn-primary" style="background-color: #EA5B0C;" target="_blank" href="~/RetailCODCRF/EditDetails?accountno=@item.AccountNumber">Edit</a>
+                                    <a class="btn btn-primary details" id="btnsubmit" style="background-color: #EA5B0C;">Approve</a>
+                                }
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+
+    }
+    else
+    {
+        <br />
+        <h5 style="text-align: center;background-color: #EA5B0C;">No Records Found</h5>
+    }
+</div>
+

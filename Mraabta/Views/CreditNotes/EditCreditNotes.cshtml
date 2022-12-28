@@ -1,0 +1,210 @@
+﻿@model IEnumerable<MRaabta.Models.CreditNotesModel>
+@{
+    ViewBag.Title = "Edit Credit Notes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style>
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #formrow {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .rowitem {
+            width: calc(88% / 4) !important;
+            padding: 10px !important;
+        }
+
+        .rowitembtn {
+            /*display: flex;
+            flex-direction: row;
+            width: 12% !important;*/
+            padding-top: 35px !important;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .page-content {
+            /*          padding-left:10px !important;*/
+        }
+
+        #tbl_pickUp {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            #tbl_pickUp td, #tbl_pickUp th {
+                border: 1px solid #ddd;
+                text-align: center;
+                padding: 8px;
+            }
+
+            #tbl_pickUp tr:hover {
+                background-color: #ddd;
+            }
+
+            #tbl_pickUp th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: center;
+                background-color: #ddd;
+                color: black;
+            }
+
+        .cnlink {
+            text-decoration: underline;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            /*color: lightblue !important;*/
+        }
+
+        /* a:active {
+                text-decoration: underline;
+            }*/
+
+        .active {
+            background-color: #EA5B0C !important;
+        }
+
+        .active {
+            background-color: #fd7e14 !important;
+        }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loader">
+    </div>
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">@ViewBag.Title</h2>
+            </div>
+        </div>
+        @if (Model != null && Model.Any())
+        {
+            <table id="tbl_pickUp" class='table-bordered mt-4 table table_data' border='1' style='width:100%' nowrap>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Credit Client ID</th>
+                        <th>Account No</th>
+                        <th>Branch</th>
+                        <th>Name</th>
+                        <th>Total Amount</th>
+                        <th>Invoice</th>
+                        <th>Invoice Date</th>
+                        <th>Created By</th>
+                        <th>Created On</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tablediv">
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.type</td>
+                            <td>@item.creditnoteid</td>
+                            <td>@item.accountNo</td>
+                            <td>@item.branch</td>
+                            <td>@item.customername</td>
+                            <td>@item.totalAmount</td>
+                            <td>@item.invoiceNumber</td>
+                            <td>@item.invoiceDate.ToString("yyyy-MM-dd")</td>
+                            <td>@item.createdBy</td>
+                            <td>@item.createdOn</td>
+                            <td> <button type="button" class="btn btn-sm btn-primary" id="editbtn" style=" background-color: #EA5B0C" onclick="showmodal(@item.creditnoteid, @item.invoiceNumber);">Edit</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <label class=""><b>No Credit Notes found against this Invoice Number</b></label>
+        }
+    </div>
+
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+        function CheckAmount() {
+            $('#amounterror').text('');
+            document.getElementById('edtsubt').style.display = 'block';
+                document.getElementById('edtsubt').type = 'submit';
+                if (!(/^[-+]?\d*\.?\d*$/.test(document.getElementById('Amount').value))) {
+                    $('#amounterror').text('Please enter only numbers into amount textbox');
+                    document.getElementById('edtsubt').style.display = 'none';
+                    document.getElementById('edtsubt').value = 'button';
+                }
+            if (document.getElementById('IsCOD').value != "1") {
+                 if (parseFloat(document.getElementById('hiddentotalamount').value) < parseFloat(document.getElementById('Amount').value)) {
+                    $('#amounterror').text('Entered amount should be less than the sum of invoice amount minus credit note and redeem invoice amounts');
+                    document.getElementById('edtsubt').style.display = 'none';
+                    document.getElementById('edtsubt').type = 'button';
+                }
+            }
+            else {
+                $('#allowedamount').text('');
+            }
+        }
+        function CheckDate() {
+            $('#dateerror').text('');
+            document.getElementById('edtsubt').style.display = 'block';
+            document.getElementById('edtsubt').type = 'submit';
+            if (new Date(document.getElementById('VoucherDate').value) < new Date(document.getElementById('hiddendateend').value)) {
+                $('#dateerror').text('Voucher Date must be greater than Day End Date: ' + document.getElementById('hiddendateend').value);
+                document.getElementById('edtsubt').style.display = 'none';
+                document.getElementById('edtsubt').value = 'button';
+            }
+            else if (new Date(document.getElementById('VoucherDate').value) > new Date()) {
+                $('#dateerror').text('Voucher Date must be less than todays date');
+                document.getElementById('edtsubt').style.display = 'none';
+                document.getElementById('edtsubt').value = 'button';
+            }
+        }
+        function showmodal(creditnoteid, invoicenumber) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("EditDetail", "CreditNotes")',
+                    data: JSON.stringify({
+                        Id: creditnoteid,
+                        Invoice: invoicenumber
+                    }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "html",
+                    success: function (response) {
+                        $(response).modal();
+                         },
+                    failure: function (response) {
+                        alert("Failure");
+                    },
+                    error: function (response) {
+                        alert("Error");
+                    }
+                });
+        }
+    </script>
+}

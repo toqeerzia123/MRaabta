@@ -1,0 +1,65 @@
+﻿@model IEnumerable<MRaabta.Models.RecoveryLetterModel>
+@{
+    string cons = "";
+    var i = 0;
+}
+
+<div class="panel-body mainTable">
+    @if (Model.Any() && Model != null)
+    {
+        <div style=" width:100%;">
+            <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+                <div></div>
+                <div style="justify-self:center;align-self:center">
+                    <h4 style="justify-self:center;align-self:center">Total Records: @Model.Count().ToString("N0")</h4>
+                </div>
+            </div>
+            @* <button id="printbtn" class="btn btn-primary" style="background-color: #EA5B0C;" type="button" target="_blank">PDF</button>*@
+            <button id="allcons" class="btn btn-primary" style="background-color: #EA5B0C;" type="button" target="_blank">View All</button>
+            <table id="tbl_pickUp" class="table-bordered mt-4 table table_data" border="1" style="width:100%">
+                <thead>
+                    <tr>
+                        <th><input id="all_selected" type="checkbox" name="all_selected">&nbsp; S.No</th>
+                        <th>Client Account</th>
+                        <th>Client Name</th>
+                        <th>Client ID</th>
+                        <th>Phone No</th>
+                        <th>Invoice#</th>
+                        <th>Total Days</th>
+                        <th>Invoice Amount</th>
+                        <th>Outstanding</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                    <tr>
+                        @{
+                            cons = "'" + @item.ClientID + "'"; i += 1;
+                        }
+                        <td><input id="@item.Invoice" type="checkbox" name="multiple_selected" value="@item.Invoice">&nbsp; @i</td>
+                        <td>@item.ClientAccount</td>
+                        <td>@item.ClientName</td>
+                        <td>@item.ClientID</td>
+                        <td>@item.PhoneNo</td>
+                        <td>@item.Invoice</td>
+                        <td>@item.TotalDays</td>
+                        <td>@item.InvoiceAmount.ToString("N")</td>
+                        <td>@item.Outstanding.ToString("N")</td>
+                        <td><a target="_blank" class=" btn-primary" style="background-color: #EA5B0C;padding: 0.05rem 0.5rem; font-size: 0.8rem;" href="~/RecoveryLetter/ViewRecoveryLetter?Days=@ViewBag.Days&InvoiceNumber='@item.Invoice'">View</a></td>
+                    </tr>
+                    }
+
+                </tbody>
+            </table>
+            <div>&nbsp;<br /></div>
+        </div>
+    }
+    else
+    {
+        <br />
+        <h5 style="text-align: center;background-color: #EA5B0C;">No Records Found</h5>
+    }
+</div>
+

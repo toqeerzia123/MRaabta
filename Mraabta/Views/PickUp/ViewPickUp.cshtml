@@ -1,0 +1,350 @@
+﻿@model MRaabta.Models.PickupModel
+
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewBag.Title = "ViewPickUp";
+}
+@*<script src="~/Scripts/jquery-ui.min.js"></script>
+    <script src="~/Scripts/jquery-3.4.1.min.js"></script>*@
+@*<link href="@Url.Content("../Content/themes/base/jquery-ui.min.css")" rel="stylesheet" />*@
+<!-- Required jQuery and jQuery UI Javascript references -->
+<script src="@Url.Content("../Scripts/jquery-3.5.1.min.js")"></script>
+<script src="@Url.Content("../Scripts/jquery-ui.min.js")"></script>
+<script src="@Url.Content("../Scripts/canvasjs.min.js")"></script>
+<link href="~/Content/jquery-ui.min.css" rel="stylesheet" />
+<link href="~/Content/Site.css" rel="stylesheet" />
+@*<script type="text/javascript">
+        debugger;
+
+    </script*@
+
+
+<script type="text/javascript">
+    window.onload = function () {
+        debugger;
+
+
+    };
+
+    $(document).ready(function () {
+        debugger;
+
+        var dataexists = '@ViewBag.err';
+        var date = '@ViewBag.Date';
+        alert(date);
+        var riderId = '@ViewBag.RiderID';
+        if (date != "" && riderId != "") {
+            $("#ddl_rider").val(riderId);
+            $("#StartDate").val(date);
+            $("#EndDate").val(date)
+            search(riderId, date, date);
+             totalconsignment(riderId, date, date);
+        }
+    if (dataexists == "") {
+        $.ajax({
+            type: 'GET',
+            url: '../Rider/GetRiders',
+            contentType: 'application/html; charset=utf-8',
+            dataType: "html",
+            success: function (response) {
+                $('#div_ddlRiders').html(response);
+            },
+            failure: function (response) {
+                alert(response.responseText);
+            },
+            error: function (response) {
+                alert(response.responseText);
+            }
+        });
+    }
+    if (dataexists != "") {
+          swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+                }, function() {
+                    window.location = "../Login";
+                });
+    }
+        $("#btn_search").click(function (e) {
+            e.preventDefault();
+            $('#div_tbl_Child').empty();
+            var riderCode = $("#ddl_rider").val().toString();
+            var StartDate = $("#StartDate").val().toString();
+            var EndDate = $("#EndDate").val().toString();
+            if (riderCode == '') {
+                swal("Select Rider");
+                return;
+            }
+            if (!StartDate) {
+                swal('Select From Date');
+                return;
+            }
+
+            if (!EndDate) {
+                swal('Select To Date');
+                return;
+            }
+            else {
+                debugger;
+                search(riderCode, StartDate, EndDate);
+                totalconsignment(riderCode, StartDate, EndDate);
+            }
+
+        });
+    });
+    function search(riderCode, StartDate, EndDate) {
+         $.ajax({
+                    type: 'GET',
+                    url: '../PickUp/getPickUpByRider',
+                    data: { riderCode: riderCode, StartDate: StartDate, EndDate: EndDate },
+                    contentType: 'application/html; charset=utf-8',
+                    dataType: "html",
+                   success: function (response) {
+
+                        debugger;
+                       $('#div_tbl_details').html(response);
+                      
+                        debugger;
+
+                    },
+                   failure: function (response) {
+
+                        swal(response.responseText);
+                    },
+                    error: function (response) {
+                        swal(response.responseText);
+                    }
+         });
+        debugger;
+
+    }
+    function totalconsignment(riderCode, StartDate, EndDate) {
+        debugger;
+        $.ajax({
+
+                           type: 'post',
+                            url: '../PickUp/getTotalConsignment',
+                            contentType: "application/json; charset=utf-8",
+                            dataType: "json",
+                            async: false,
+                            //processData: false,
+                            data: JSON.stringify({ riderCode: riderCode, StartDate: StartDate, EndDate: EndDate }),
+            success: function (rs) {
+                debugger;
+                if (rs.dataPoints.length > 0) {
+                    var dataPoints = [];
+                    var y = 0;
+                    var maximum = rs.dataPoints[0].Y;
+                    var minimum = rs.dataPoints[0].Y;
+                    var indexmax = 0;
+                    var indexmin = 0;
+                    var cust = rs.dataPoints.length;
+                    var interval = 1;
+                    if (rs.dataPoints.length > 12) {
+                        interval = 3;
+                    }
+                    for (x in rs.dataPoints) {
+                        dataPoints.push({ y: rs.dataPoints[x].Y, label: rs.dataPoints[x].Label });
+                        if (rs.dataPoints[x].Y > maximum) {
+                            maximum = rs.dataPoints[x].Y;
+                            indexmax = x;
+                        }
+
+                        else if (rs.dataPoints[x].Y < minimum) {
+                            minimum = rs.dataPoints[x].Y;
+                            indexmin = x;
+                        }
+
+                        y += rs.dataPoints[x].Y;
+                    }
+
+                    var chart = new CanvasJS.Chart("chartContainer", {
+                        animationEnabled: true,
+                        theme: "light2", // "light1", "dark1", "dark2"
+                        exportEnabled: true,
+                        title: {
+                            horizontalAlign: "left",
+                            text: "Total Consigments"
+                        },
+                        subtitles: [
+                            {
+                                horizontalAlign: "left",
+                                text: y + " consignments against " + cust + " customers"
+
+                            },
+                            {
+                                horizontalAlign: "right",
+                                text: rs.dataPoints[indexmax].Label + " sent " + rs.dataPoints[indexmax].Y + " consignments.",
+                                fontColor: "green"
+                            },
+                            {
+
+                                horizontalAlign: "right",
+                                text: rs.dataPoints[indexmin].Label + " sent " + rs.dataPoints[indexmin].Y + " consignments.",
+                                fontColor: "red"
+
+                            }
+                        ],
+                        axisY: {
+                            title: "Number Of Consigments",
+                            titleFontSize: 14,
+                            includeZero: false,
+                            titleFontColor: "black",
+                            labelFontColor: "black",
+                            crosshair: {
+                                enabled: true,
+                                snapToDataPoint: true
+                            }
+                        },
+                        axisX: {
+                            interval: interval,
+                            labelAutoFit: true,
+                            labelWrap: true,
+                            labelMaxWidth: 100,
+                            labelAngle: 0,
+                            labelFontSize: 12,
+                            labelFontColor: "black",
+                            title: "Customers",
+                            titleFontSize: 14,
+                            titleFontColor: "black",
+                            crosshair: {
+                                enabled: true,
+                                snapToDataPoint: true
+                            }
+                        },
+                        data: [
+                            {
+                                type: "line",
+                                exportEnabled: true,
+                                indexLabelFontSize: 12,
+                                indexLabel: "{y}",
+                                toolTipContent: "<b>{label}:</b> {y}",
+                                dataPoints: dataPoints
+
+                            }
+                        ]
+                    });
+                    debugger;
+
+                    chart.render();
+                }
+                else {
+                    $("#chartContainer").empty();
+                }
+                }
+
+
+
+                            });
+
+    }
+</script>
+@*<script type="text/javascript">
+        $(function () {
+            // This will make every element with the class "date-picker" into a DatePicker element
+            $('.date-picker').datepicker();
+            $('.date-picker').datepicker();
+        })
+    </script>*@
+
+<script type="text/javascript">
+    $.fn.scrollView = function () {
+        return this.each(function () {
+            $('html, body').animate({
+                scrollTop: $(this).offset().top
+            }, 1000);
+        });
+    }
+
+    function getDtails(ID) {
+        //var $row = $(this).parent().parent();
+        //var LocationID = $(this).parents('tr').find('.hd_locationID input[type="hidden"]').val();// Moves up from <button> to <td>
+        //var hd_PickUpTime = $(this).parents('tr').find('.hd_PickUpTime input[type="hidden"]').val();// Moves up from <button> to <td>
+
+        // var LocationID = $(this).data('LocationID');
+        debugger;
+        $.ajax({
+            type: 'GET',
+            url: '../PickUp/GetPickUpChildByLocations',
+            data: { PickUpID: ID },
+            contentType: 'application/html; charset=utf-8',
+            dataType: "html",
+            success: function (response) {
+                $('#div_tbl_Child').html(response);
+                $('html, body').animate({
+                    scrollTop: $("#div_tbl_Child").offset().top
+                }, 1000);
+            },
+            failure: function (response) {
+                swal(response.responseText);
+            },
+            error: function (response) {
+                swal(response.responseText);
+            }
+        });
+    };
+
+</script>
+
+<div class="row" id="listdiv">
+    <div class="col-12">
+        <h3 class="text-center">View Pick Up</h3>
+    </div>
+    <div class="col-12 mt-3" id="tblreq">
+    </div>
+</div>
+
+<div class="row">
+
+</div>
+<div class="row ml-1">
+    <div class="col-3 mt-2">
+        <label>From Date</label>
+        @*<input id="date" name="date" type="date" class="form-control" value="@DateTime.Now.ToString("dd-MMM-yyyy")" required>*@
+        @Html.TextBox("date", DateTime.Now.ToString(), new { @class = "form-control", @id = "StartDate", @name = "StartDate", @type = "date" })
+        @*<input id="StartDate" name="StartDate" type="date" class="form-control">*@
+    </div>
+    <div class="col-3 mt-2">
+        <label>To Date</label>
+        @if (ViewBag.Date == null)
+        {
+            @Html.TextBox("date", DateTime.Now.ToString(), new { @class = "form-control", @id = "EndDate", @name = "EndDate", @type = "date" })
+        }
+        else
+        {
+            DateTime date = Convert.ToDateTime(ViewBag.Date);
+            @Html.TextBox("date", date, new { @class = "form-control", @id = "EndDate", @name = "EndDate", @type = "date" })
+            //<input id="StartDate" type="date" style="width: 100%;" value="@ViewBag.Date" />
+            //@*@Html.TextBox("date", ekVariable , new { @class = "form-control", @id = "EndDate", @name = "EndDate", @type = "date" })*@
+            @*@Html.TextBox("date", date, new { @class = "form-control", @id = "StartDate", @name = "StartDate", @type = "date" })*@
+            @*@Html.TextBox("date",  , new { @class = "form-control", @id = "EndDate", @name = "EndDate", @type = "date" })*@
+        }
+
+        @*<input id="EndDate" name="EndDate" type="date" class="form-control">*@
+    </div>
+    <div class="col-3 mt-2">
+        <label>Select Rider</label>
+        @if (ViewBag.err == null || ViewBag.err == "")
+        {
+            @Html.DropDownList("ddl_rider", ViewBag.Riders as List<SelectListItem>, "Select Rider", new { @class = "form-control" })
+        }
+    </div>
+    <div class="col-3 mt-2">
+        <input type="button" name="btn_search" value="Search" class="btn btn-onLine" id="btn_search" />
+    </div>
+    <div class="center col-10 mt-3 ml-3" style="height: 300px; width: 78%;">
+        <div id="chartContainer" style="height:300px"></div>
+    </div>
+
+    <div class="panel-body" style="float:left; width:99%;">
+        <div id="div_tbl_details" style="width:98%;height:60px;text-align:center;">
+        </div>
+        <br />
+    </div>
+    <div class="childTable mt-5">
+        <div id="div_tbl_Child" style="width:98%;height:60px">
+        </div>
+    </div>
+
+</div>

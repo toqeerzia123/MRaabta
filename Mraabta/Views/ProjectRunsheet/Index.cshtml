@@ -1,0 +1,249 @@
+﻿@{
+ViewBag.Title = "Index";
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<div class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">Project Runsheet</h2>
+            </div>
+            <div style="justify-self:end;align-self:center">
+                <a href="@Url.Action("Runsheets","ProjectRunsheet")" class="btn btn-sm btn-secondary" target="_blank">Search
+                    Runsheets</a>
+            </div>
+        </div>
+        <div id="root"></div>
+    </div>
+</div>
+
+
+@section scripts{
+<script>
+    const now = '@DateTime.Now.ToString("yyyy-MM-dd")';
+    const tommorrow = '@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")';
+    const yesterday = '@DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd")';
+    const routes = @Html.Raw(Json.Encode(ViewBag.Routes));
+    const riderAndCountUrl = '@Url.Action("Get","ProjectRunsheet")';
+    const saveUrl = '@Url.Action("Save","ProjectRunsheet")';
+    const printUrl = '@Url.Action("Print","ProjectRunsheet")';
+</script>
+<script type="text/babel">
+
+    const App = () => {
+
+        const [loading, setLoading] = React.useState(false);
+
+        const [data, setData] = React.useState({
+            Date: now,
+            RouteCode: '',
+            RiderCode: '',
+            Used: '',
+            Remaining: '',
+            Assign: ''
+        });
+
+        const [riders, setRiders] = React.useState([]);
+
+        const updateData = (key, val) => {
+            let x = { ...data, [key]: val };
+            setData(x);
+        }
+
+        const processNum = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+        const processAlpha = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9a-zA-z]/g, "");
+            e.target.value = numbers;
+        }
+
+
+        const validate = () => {
+            if (!data.RouteCode) {
+                alert('Enter Route Code');
+                return false;
+            }
+            if (!data.RiderCode) {
+                alert('Select Rider');
+                return false;
+            }
+            if (!data.Assign) {
+                alert('Enter Assign CNs');
+                return false;
+            } else {
+                if (parseInt(data.Assign) > 200) {
+                    alert('Max 200 CNs Allowed on Runsheet');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        const riderAndCount = (rc) => {
+            fetch(riderAndCountUrl + '?rc=' + rc).then(
+                function (response) {
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            let x = {
+                                ...data,
+                                RouteCode: rc,
+                                Used: rs.Used,
+                                Remaining: rs.Remaining
+                            };
+                            setData(x);
+                            setRiders(rs.riders);
+                        }
+                        else {
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const save = () => {
+
+            if (!validate()) {
+                return;
+            }
+
+            setLoading(true);
+
+            fetch(saveUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            setData({
+                                Date: now,
+                                RouteCode: '',
+                                RiderCode: '',
+                                Used: '',
+                                Remaining: '',
+                                Assign: ''
+                            });
+                            setRiders([]);
+                            alert(rs.msg);
+                            window.open(`${printUrl}?rs=${rs.rsno}`, '_blank');
+                        } else {
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        React.useEffect(() => {
+            if (riders.length > 0) {
+                const rc = data.RouteCode;
+                const routeRider = riders.filter((x) => x.RouteCode == rc).map((x) => x.Value)[0];
+                updateData('RiderCode', routeRider ? routeRider : '');
+            }
+        }, [riders]);
+
+        const overlayStyle = {
+            width: '100vw',
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 10000,
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)'
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+
+                <React.Fragment>
+                    <div className="row mt-4">
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Date</label>
+                            <input type="date" min={yesterday} max={tommorrow} value={data.Date} className="form-control" onChange={(x) => updateData('Date', x.target.value)} />
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Route</label>
+                            <select className="form-control" value={data.RouteCode} onChange={(x) => {
+                                riderAndCount(x.target.value);
+                            }}>
+                                <option value="">Select Route</option>
+                                {
+                                    routes.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Rider</label>
+                            <select className="form-control" value={data.RiderCode} onChange={(x) => updateData('RiderCode', x.target.value)}>
+                                <option value="">Select Rider</option>
+                                {
+                                    riders.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Used CNs</label>
+                            <input type="text" className="form-control" value={data.Used} readOnly={true} />
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Available CNs</label>
+                            <input type="text" className="form-control" value={data.Remaining} readOnly={true} />
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Assign CNs</label>
+                            <input type="text" className="form-control" onInput={processNum} value={data.Assign} onChange={(x) => updateData('Assign', x.target.value)} />
+                        </div>
+                    </div>
+                    <div className="row mt-4">
+                        <div className="col-lg-12 col-sm-12 text-right">
+                            <button type="button" className="btn btn-secondary" style={{ marginTop: '2rem' }} onClick={save}>Save</button>
+                        </div>
+                    </div>
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    ReactDOM.render(
+        <App />,
+        document.querySelector('#root')
+    );
+</script>
+}

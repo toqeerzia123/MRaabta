@@ -1,0 +1,290 @@
+﻿@model  MRaabta.Models.PettyCashModel
+
+@{
+    Layout = null;
+}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Petty Cash Summary Detail</title>
+
+</head>
+<body>
+
+    <style type="text/css">
+        .style1 {
+            font-size: small;
+            font-weight: bold;
+        }
+
+        .style2 {
+            font-size: x-small;
+        }
+
+        .style3 {
+            font-size: x-small;
+            width: 45%;
+        }
+
+        .style4 {
+            width: 35%;
+        }
+
+        .style5 {
+            font-size: x-small;
+            width: 28%;
+        }
+
+        .PettyDetailTable, th, tbody {
+            border-collapse: collapse;
+            border: 1px black solid;
+        }
+    </style>
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <script type="text/javascript">
+                alert("@ViewBag.ErrorMessage");
+        </script>
+    }
+    @if (Model != null)
+    { 
+        <div>
+            <table border="0" width="100%">
+                <tr>
+                    <td width="25%">
+                        <img src="../images/OCS_Transparent.png" style="width: 103px; height: 47px" />
+                    </td>
+                    <td align="center" colspan="2" class="style4">
+                        <font color="#000000" face="verdana" size="1">
+                            Print Date &amp; Time: @DateTime.Now.ToString()
+                        </font>
+                    </td>
+                    <td align="right" width="25%">
+                        <font color="#000000" face="verdana" size="1">
+                            Created User: @ViewBag.CreatedUser
+                        </font>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        &nbsp;
+                    </td>
+                    <td align="center" colspan="2" class="style4">
+                        &nbsp;
+                    </td>
+                    <td align="right" width="25%">
+                        &nbsp;
+                    </td>
+                </tr>
+            </table>
+            <table border="0" width="100%">
+                <tr>
+                    <td width="25%">
+                        &nbsp;
+                    </td>
+                    <td align="center" colspan="2" width="50%">
+                        <font color="#000000" face="verdana" size="1">
+                            <b style="font-size: small">
+                                <label ID="lbl_company">@ViewBag.CompanyName</label>
+
+                            </b>
+                        </font>
+                    </td>
+                    <td align="right" width="25%">
+                        <font color="#000000" face="verdana" size="1"></font>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%">
+                        &nbsp;
+                    </td>
+                    <td align="center" colspan="2" width="50%">
+                        <font color="#000000" face="verdana"><span class="style1">Petty Cash Ledger</span></font>
+                    </td>
+                    <td align="right" width="25%">
+                        &nbsp;
+                    </td>
+                </tr>
+            </table>
+            <table border="0" width="100%">
+                <tr>
+                    <td width="25%" class="style2">
+                        <font color="#000000" face="verdana" size="1" class="style2">
+                            <b>From Date :  </b>@Model.StartDate.ToString("dd-MM-yyyy")
+                        </font>
+                    </td>
+                    <td align="center" colspan="2" class="style5">
+                        &nbsp;
+                    </td>
+                    <td align="right" width="25%">
+                        <font color="#000000" face="verdana" size="1" class="style2">
+                            <b>To Date : </b>@Model.EndDate.ToString("dd-MM-yyyy")
+                        </font>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="25%" class="style2">
+                        <font color="#000000" face="verdana" size="1" class="style2">
+                            <b>Branch : </b>@Model.BranchName
+                        </font>
+                    </td>
+                    <td align="center" colspan="2" class="style5">
+                        &nbsp;
+                    </td>
+                    <td align="right" width="25%">
+                        <font color="#000000" face="verdana" size="1" class="style2">
+                            @*<b id="opening">Opening Balance : </b>@Model.OpeningBalance*@
+                        </font>
+                    </td>
+                </tr>
+
+            </table>
+            <br />
+            <hr style="color: Black; background-color: Black;" />
+            <div id="Span1" class="tbl-large">
+                <table class="PettyDetailTable" style="font-family: Verdana;width:100%">
+                    <thead style=" color: #000000; background-color: #cccccc; ">
+                        <tr style="font-size:13px">
+                            <th>S.No</th>
+                            <th>Zone</th>
+                            <th>Branch</th>
+                            <th>Date</th>
+                            <th>Head Of Account</th>
+                            @if (Model.Status == "2")
+                            {
+                                 <th>Cheque No.</th>
+                                <th>Debit</th>
+                            }
+                            @if (Model.Status == "1")
+                            {
+                                <th>Credit</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{int serial = 0;
+                            foreach (var item in Model.DataList)
+                            {
+                                serial++;
+                                <tr style="font-size:10px">
+                                    <td style="border:1px solid black;text-align:center">@serial</td>
+                                    <td style="border:1px solid black;text-align:center">@item.zone</td>
+                                    <td style="border:1px solid black;text-align:center">@item.branch</td> 
+                                    <td style="border:1px solid black;text-align:center">@item.Date</td>
+                                    <td style="border:1px solid black">@item.description</td>
+                                    
+                                    @if (Model.Status == "2")
+                                    {
+                                        <td style="border:1px solid black;text-align:right">@item.chque_no</td>
+                                        <td style="border:1px solid black;text-align:right">@item.dnoteComma</td>
+                                    }
+                                    @if (Model.Status == "1")
+                                    {
+                                        <td style="border:1px solid black;text-align:right">@item.cnoteComma</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    <tr style="font-size:10px">
+                        @if (Model.Status == "1")
+                        {
+                            <td style="border:1px solid black;text-align:center" colspan="4"><b>Total</b></td>
+                        }
+                        else
+                        {
+                            <td style="border:1px solid black;text-align:center" colspan="5"><b>Total</b></td>
+                        }
+                        <td style="border:1px solid black"></td>
+                        @if (Model.Status == "2")
+                        {
+                            <td style="border:1px solid black;text-align:right"><b>@Model.TotalDebit</b></td>
+                        }
+                        @if (Model.Status == "1")
+                        {
+                            <td style="border:1px solid black;text-align:right"><b>@Model.TotalCredit</b></td>
+                        }
+
+                    </tr>
+                    </tbody>
+                </table>
+
+                <table border="0" width="100%">
+                </table><br />
+                <table border="0" width="100%">
+                    <tr>
+                        <td width="25%" class="style2">
+                            <font color="#000000" face="verdana" size="1" class="style2"><b></b></font>
+                        </td>
+                        <td align="center" colspan="2" class="style3">
+                            &nbsp;
+                        </td>
+                        <td align="right" width="25%">
+                            <font color="#000000" face="verdana" size="1" class="style2">
+                                <b>
+                                </b>
+                            </font><br />
+                            <font color="#000000" face="verdana" size="1" class="style2">
+                                <b>
+                                </b>
+                            </font>
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="25%" class="style2" colspan="2">
+                            <font color="#000000" face="verdana" size="1" class="style2">
+                                <b>
+                                </b>
+                                <asp:Label ID="lbl_amount_eng" Style="font-size: x-small"></asp:Label>
+                            </font>
+                        </td>
+                        <td align="right" width="25%">
+                            <b></b>
+                        </td>
+                    </tr>
+                </table>
+                <table border="0" width="100%">
+                    <tr>
+                        <td>
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="50%" class="style2">
+                            <font color="#000000" face="verdana" size="1" class="style2">
+                                <b style="text-align: left">
+                                </b>
+                            </font>
+                        </td>
+                        <td>
+                        </td>
+                        <td align="right" width="50%">
+                            <font color="#000000" face="verdana" size="1" class="style2">
+                                <b>
+                                    Checked By:_______________________
+                                </b>
+                            </font>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page" style="page-break-before: always;">
+            </div>
+            <table border="0" width="100%">
+                <tr>
+                    <td align="center" width="100%">
+                        &nbsp;
+                    </td>
+                </tr>
+            </table>
+        </div>
+    }
+</body>
+</html>

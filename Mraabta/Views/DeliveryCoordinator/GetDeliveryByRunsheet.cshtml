@@ -1,0 +1,319 @@
+﻿@model MRaabta.Models.GetDeliveryChildDataDistance
+
+
+@{
+    Layout = null;
+}
+
+<div class="line-btn">
+    <input type="submit" value="Print Without Images" onclick="PrintOnlyTable()" class="btn fl btn-print" style="border:1px solid black;">
+    <input type="submit" value="Print With Images" onclick="PrintOnlyTableWithImages()" class="btn fl btn-print" style="border:1px solid black;">
+</div>
+<br />
+@*<hr style="border:1px solid black;"/>*@
+<div>
+    <div style="font-size:20px;"><b>Runsheet: </b> @ViewBag.RunsheetID</div>
+    <div style="font-size:20px;"><b>Distance: </b>@Model.distanceKm km </div>
+</div>
+@if (Model.list.Count() > 0 && Model.list != null)
+{
+<div style="overflow-x:scroll; height:400px;margin-bottom:100px;">
+    <table id="tbl_pickUp1" border="1">
+        <thead>
+            <tr>
+                <th>S No.</th>
+                <th>Consignment No</th>
+                <th>Delivered Date & Time</th>
+                @*<th>Delivered Time</th>*@
+                <th>Weight</th>
+                <th>Pieces</th>
+                <th>Origin</th>
+                <th>Dest</th>
+                <th>Consignee</th>
+                <th>COD</th>
+                @*<th>Rider</th>*@
+                <th>Receiver</th>
+                <th>Relation</th>
+                <th>Reason</th>
+                <th>NIC</th>
+                <th>Rider Comments</th>
+                @*<th>Pending</th>
+                    <th>Delivered</th>*@
+                <th>Sign</th>
+                <th>CN Image</th>
+                <th>Map</th>
+
+            </tr>
+        </thead>
+
+        @{ int i = 0;
+        }
+        @foreach (var item in Model.list)
+        {
+            if (item.Consign_id == 0)
+            {
+                <tr style="background-color:#e0f2f1">
+                    <td> @{ i++; }   @i.ToString() </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.consignmentNumber)
+                    </td>
+                    <td>@item.DeliveredDate.ToString() @item.DeliveredTime.ToString()</td>
+                    @*<td></td>*@
+                    <td>
+                        @Html.DisplayFor(modelItem => item.weight)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.pieces)
+                    </td>
+                    <td>@Html.DisplayFor(modelItem => item.OriginCity)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Destination)</td>
+                    <td>@Html.DisplayFor(modelItem => item.ConsigneeName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.codAmount)</td>
+                    @*<td>@Html.DisplayFor(modelItem => item.Rider)</td>*@
+                    <td>@Html.DisplayFor(modelItem => item.Receiver)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Relation)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Reason)</td>
+                    <td>@Html.DisplayFor(modelItem => item.nic_number)</td>
+                    <td>@Html.DisplayFor(modelItem => item.rider_comments)</td>
+                    @*<td>@Html.DisplayFor(modelItem => item.riderComments)</td>
+                        <td>@Html.DisplayFor(modelItem => item.imei)</td>*@
+                    @*<td>@Html.DisplayFor(modelItem => item.nic_number)</td>*@
+                    @*<td>@Html.DisplayFor(modelItem => item.isPending)</td>
+
+                        <td>@Html.DisplayFor(modelItem => item.isDelivered)</td>*@
+
+
+                    <td>
+                        <div class="zoom" style="width:80px; height:80px; padding:1px;">
+                            @*<img src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/dlvsignimg/" + @item.consignmentNumber + ".jpg")" onerror='onImgError(this);' alt="No Image Available" height="65" width="65" />*@
+                            @*<img src="@Url.Content("http://192.168.200.50"+"/dlvsignimg/" + @item.consignmentNumber +".jpg")" onerror="this.onerror=null;this.src='../images/noimage.jpg';" alt="No Image Available" height="65" width="65" />*@
+                            <img src="@Url.Content("http://20.46.47.21/mraabta"+"/SignImage/" + @item.consignmentNumber +".jpg")" alt="N/A" height="65" width="65" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="zoom" style="width:80px; height:80px; padding:1px;">
+                            @*<img src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/dlvcnimage/" + @item.consignmentNumber + ".jpg")" onerror='onImgError(this);' alt="No Image Available" height="65" width="65" />*@
+                            @*<img src="@Url.Content("http://192.168.200.50"+"/dlvcnimg/" + @item.consignmentNumber +".jpg")" onerror="this.onerror=null;this.src='../images/noimage.jpg';" alt="No Image Available" height="65" width="65" />*@
+                            <img src="@Url.Content("http://20.46.47.21/mraabta"+"/CnImage/" + @item.consignmentNumber +".jpg")" alt="N/A" height="65" width="65" />
+                        </div>
+                    </td>
+                    <td>
+                        <a target="_blank" href="@Url.Action("Index", "DlvRoute", new { isCN = true, Id = item.consignmentNumber })">View Map</a>
+                    </td>
+                </tr>
+            }
+            else if (item.Reason != "")
+            {
+                <tr style="background-color:#ffcdd2" class="alert alert-danger" role="alert" @*style="background-color:#ffcdd2"*@>
+                    <td> @{ i++; }   @i.ToString() </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.consignmentNumber)
+                    </td>
+                    <td>@item.DeliveredDate.ToString() @item.DeliveredTime.ToString()</td>
+                    @*<td></td>*@
+                    <td>
+                        @Html.DisplayFor(modelItem => item.weight)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.pieces)
+                    </td>
+                    <td>@Html.DisplayFor(modelItem => item.OriginCity)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Destination)</td>
+                    <td>@Html.DisplayFor(modelItem => item.ConsigneeName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.codAmount)</td>
+                    @*<td>@Html.DisplayFor(modelItem => item.Rider)</td>*@
+                    <td>@Html.DisplayFor(modelItem => item.Receiver)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Relation)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Reason)</td>
+                    <td>@Html.DisplayFor(modelItem => item.nic_number)</td>
+                    <td>@Html.DisplayFor(modelItem => item.rider_comments)</td>
+                    @*<td>@Html.DisplayFor(modelItem => item.riderComments)</td>
+                        <td>@Html.DisplayFor(modelItem => item.imei)</td>*@
+                    @*<td>@Html.DisplayFor(modelItem => item.nic_number)</td>*@
+                    @*<td>@Html.DisplayFor(modelItem => item.isPending)</td>
+
+                        <td>@Html.DisplayFor(modelItem => item.isDelivered)</td>*@
+
+
+                    <td>
+                        <div class="zoom" style="width:80px; height:80px; padding:1px;">
+                            @*<img src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/dlvsignimg/" + @item.consignmentNumber + ".jpg")" onerror='onImgError(this);' alt="No Image Available" height="65" width="65" />*@
+                            @*<img src="@Url.Content("http://192.168.200.50"+"/dlvsignimg/" + @item.consignmentNumber +".jpg")" onerror="this.onerror=null;this.src='../images/noimage.jpg';" alt="No Image Available" height="65" width="65" />*@
+                            <img src="@Url.Content("http://20.46.47.21/mraabta"+"/SignImage/" + @item.consignmentNumber +".jpg")" alt="N/A" height="65" width="65" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="zoom" style="width:80px; height:80px; padding:1px;">
+                            @*<img src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/dlvcnimage/" + @item.consignmentNumber + ".jpg")" onerror='onImgError(this);' alt="No Image Available" height="65" width="65" />*@
+                            @*<img src="@Url.Content("http://192.168.200.50"+"/dlvcnimg/" + @item.consignmentNumber +".jpg")" onerror="this.onerror=null;this.src='../images/noimage.jpg';" alt="No Image Available" height="65" width="65" />*@
+                            <img src="@Url.Content("http://20.46.47.21/mraabta"+"/CnImage/" + @item.consignmentNumber +".jpg")" alt="N/A" height="65" width="65" />
+                        </div>
+                    </td>
+                    <td>
+                        <a target="_blank" href="@Url.Action("Index", "DlvRoute", new { isCN = true, Id = item.consignmentNumber })">View Map</a>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    <td> @{ i++; }   @i.ToString() </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.consignmentNumber)
+                    </td>
+                    <td>@item.DeliveredDate.ToString() @item.DeliveredTime.ToString()</td>
+                    @*<td></td>*@
+                    <td>
+                        @Html.DisplayFor(modelItem => item.weight)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.pieces)
+                    </td>
+                    <td>@Html.DisplayFor(modelItem => item.OriginCity)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Destination)</td>
+                    <td>@Html.DisplayFor(modelItem => item.ConsigneeName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.codAmount)</td>
+                    @*<td>@Html.DisplayFor(modelItem => item.Rider)</td>*@
+                    <td>@Html.DisplayFor(modelItem => item.Receiver)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Relation)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Reason)</td>
+                    <td>@Html.DisplayFor(modelItem => item.nic_number)</td>
+                    <td>@Html.DisplayFor(modelItem => item.rider_comments)</td>
+                    @*<td>@Html.DisplayFor(modelItem => item.riderComments)</td>
+                        <td>@Html.DisplayFor(modelItem => item.imei)</td>*@
+                    @*<td>@Html.DisplayFor(modelItem => item.nic_number)</td>*@
+                    @*<td>@Html.DisplayFor(modelItem => item.isPending)</td>
+
+                        <td>@Html.DisplayFor(modelItem => item.isDelivered)</td>*@
+
+
+                    <td>
+                        <div class="zoom" style="width:80px; height:80px; padding:1px;">
+                            @*<img src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/dlvsignimg/" + @item.consignmentNumber + ".jpg")" onerror='onImgError(this);' alt="No Image Available" height="65" width="65" />*@
+                            @*<img src="@Url.Content("http://192.168.200.50"+"/dlvsignimg/" + @item.consignmentNumber +".jpg")" onerror="this.onerror=null;this.src='../images/noimage.jpg';" alt="No Image Available" height="65" width="65" />*@
+                            <img src="@Url.Content("http://20.46.47.21/mraabta"+"/SignImage/" + @item.consignmentNumber +".jpg")" alt="N/A" height="65" width="65" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="zoom" style="width:80px; height:80px; padding:1px;">
+                            @*<img src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/dlvcnimage/" + @item.consignmentNumber + ".jpg")" onerror='onImgError(this);' alt="No Image Available" height="65" width="65" />*@
+                            @*<img src="@Url.Content("http://192.168.200.50"+"/dlvcnimg/" + @item.consignmentNumber +".jpg")" onerror="this.onerror=null;this.src='../images/noimage.jpg';" alt="No Image Available" height="65" width="65" />*@
+                            <img src="@Url.Content("http://20.46.47.21/mraabta"+"/CnImage/" + @item.consignmentNumber +".jpg")" alt="N/A" height="65" width="65" />
+                        </div>
+                    </td>
+                    <td>
+                        <a target="_blank" href="@Url.Action("Index", "DlvRoute", new { isCN = true, Id = item.consignmentNumber })">View Map</a>
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+</div>
+}
+else
+{
+    <script>swal('No Record Found.');</script>
+}
+
+<script type="text/javascript">
+     function onImgError(source) {
+        debugger;
+        //$("div").removeClass("zoom");
+        source.src = "@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority  + "/images/no_image_found.png")"
+        //src = "~/images/no_image_found.png";
+        source.onerror = "";
+        return true;
+    }
+    //function PrintOnlyTable() {
+    //    debugger;
+    //    var HTML = $("html");
+    //    var printed = HTML.html($("table"));
+    //    //var printed = HTML.html($("table"));
+    // newWin= window.open("");
+    // newWin.document.write(printed);
+    // newWin.print();
+    // newWin.close(document.documentElement.innerHTML);
+    //}
+    function PrintOnlyTable() {
+        var divToPrint = document.getElementById("tbl_pickUp");
+        $('#tbl_pickUp').find('th:eq(9)').hide();
+        $('#tbl_pickUp tr').find('td:eq(9)').hide();
+
+        var divToPrint1 = document.getElementById("tbl_pickUp1");
+        $('#tbl_pickUp1 tr').find('th:eq(13)').hide();
+        $('#tbl_pickUp1 tr').find('td:eq(13)').hide();
+        $('#tbl_pickUp1 tr').find('th:eq(14)').hide();
+        $('#tbl_pickUp1 tr').find('td:eq(14)').hide();
+        $('#tbl_pickUp1 tr').find('th:eq(15)').hide();
+        $('#tbl_pickUp1 tr').find('td:eq(15)').hide();
+
+        newWin = window.open("");
+        newWin.document.write(divToPrint.outerHTML,"<br/>"+divToPrint1.outerHTML);
+        newWin.print();
+        $('table tr').find('th:eq(9)').show();
+        $('table tr').find('td:eq(9)').show();
+        $('#tbl_pickUp1').find('th:eq(13)').show();
+        $('#tbl_pickUp1 tr').find('td:eq(13)').show();
+        $('#tbl_pickUp1').find('th:eq(14)').show();
+        $('#tbl_pickUp1 tr').find('td:eq(14)').show();
+        $('#tbl_pickUp1').find('th:eq(15)').show();
+        $('#tbl_pickUp1 tr').find('td:eq(15)').show();
+
+        newWin.close();
+    }
+
+     function PrintOnlyTableWithImages() {
+        var divToPrint = document.getElementById("tbl_pickUp");
+        $('#tbl_pickUp').find('th:eq(10)').hide();
+        $('#tbl_pickUp tr').find('td:eq(10)').hide();
+
+        var divToPrint1 = document.getElementById("tbl_pickUp1");
+        $('#tbl_pickUp1 tr').find('th:eq(15)').hide();
+        $('#tbl_pickUp1 tr').find('td:eq(15)').hide();
+
+        newWin = window.open("");
+        newWin.document.write(divToPrint.outerHTML,"<br/>"+divToPrint1.outerHTML);
+        newWin.print();
+        $('#tbl_pickUp1').find('th:eq(15)').show();
+        $('#tbl_pickUp1 tr').find('td:eq(15)').show();
+
+        newWin.close();
+    }
+
+    //function PrintOnlyTable() {
+    //    var HTML = $("html");
+    //    var cln = document.documentElement.innerHTML;
+    //    HTML.html($("table"));
+    //    window.print();
+    //    document.documentElement.innerHTML = cln;
+    //    return false;
+    //}
+
+</script>
+<style>
+    .zoom:hover {
+        -ms-transform: scale(1.5); /* IE 9 */
+        -webkit-transform: scale(1.5); /* Safari 3-8 */
+        transform: scale(2.8);
+    }
+
+    /*#tbl_pickUp1 tbody {
+        display: block;
+        overflow-y: scroll;
+        height: 250px;
+        width: 110%;
+    }
+
+    #tbl_pickUp1 thead tr {
+        display: table;
+        width: 110%;
+    }
+
+    th, td {
+        width: 5em
+    }
+
+    #tbl_pickUp1 {
+        height: 345px;
+    }*/
+</style>

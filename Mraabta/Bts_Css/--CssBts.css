@@ -1,0 +1,351 @@
+﻿input:focus {
+    background-color: #ccc !important;
+    color: Red !important;
+}
+
+body
+{
+    margin:0;
+    padding:0;    
+    font-family: Calibri;
+    font-size: small;
+}
+
+.error_msg {
+    color: red;
+    float: left;
+    text-align: center;
+    width: 100%;
+}
+
+.head_column h3 {
+    background: #2e3b46 none repeat scroll 0 0;
+    color: #fff;
+    height: 40px;
+    line-height: 37px;
+    margin: 0;
+    text-shadow: 1px 1px 1px #000;
+}
+
+.logo
+{
+    background-image: url('../images/ocs-logo.jpg'); 
+    background-position: center center;
+    background-repeat: no-repeat;
+    float: left;
+    height: 56px;
+    left: 13px;
+    position: relative;
+    top: 9px;
+    width: 200px;          
+}
+
+.header
+{
+    background-color: #394A59;
+    height: 70px;
+    width: 100%;   
+}
+
+.user-login
+{
+    float: right;
+    color: #fff;
+    position: relative;
+    right: 25px;
+    top: 22px; 
+}
+
+.mainTable legend {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.cellNormal
+{
+    width: 120px;
+    font-family: Calibri;
+    font-size: small;
+    text-align: right;
+}
+.cellTextField
+{
+    width: 200px;
+    font-family: Calibri;
+    font-size: small;
+    text-align: left;
+    padding-left: 5px;
+}
+.textBox
+{
+    border-style: solid;
+    border-width: 1px;
+    border-color: #F1F1F1;
+    background-color: White;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    padding-left: 5px;
+    vertical-align: middle;
+}
+.mainTable
+{
+    width: 100%;
+    background: linear-gradient(270deg, #FFFFFF, #c7c7d5);
+    background: -webkit-linear-gradient(-180deg, #FFFFFF, #c7c7d5);
+    background: -moz-linear-gradient(-180deg, #FFFFFF, #c7c7d5);
+}
+
+.ddl
+{
+    border: 2px solid #7d6754;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    padding: 3px 1px 3px 3px;
+    background-image: url('../Images/dropdown.png');
+    background-position: 88px;
+    background-repeat: no-repeat;
+    text-indent: 0.01px; /*In Firefox*/
+    text-overflow: ''; /*In Firefox*/
+    -webkit-text-overflow: '';
+    width: 133px;
+}
+.dropdown
+{
+    width: 100%;
+    text-align: left;
+    padding-left: 5px;
+    font-family: Calibri;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+.checkBox
+{
+    vertical-align: middle;
+}
+.fieldsetSmall
+{
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    font-family: Calibri;
+    font-size: small;
+}
+
+.button
+{
+    background-color: #5f5a8d !important;
+    border: 0 none !important;
+    border-radius: 5px !important;
+    color: White !important;
+    font-family: Calibri !important;
+    font-size: small !important;
+    padding: 3px 20px !important;
+    cursor: pointer !important;
+}
+.button:hover
+{
+    background:#000;
+    color:#fff;
+}
+
+.cnbtn span {
+    background: rgba(0, 0, 0, 0) none repeat scroll 0 0 !important;
+}
+
+.cnbtn input {
+    background: #5f5a8d none repeat scroll 0 0 !important;
+    border-radius: 6px;
+    color: #fff !important;
+    height: auto !important;
+    padding: 4px 20px;
+}
+
+.cnbtn input:hover
+{
+    border:0 !important;
+    
+}
+
+.bts-menus
+{
+    background: #394a59 none repeat scroll 0 0;
+    height: auto;
+    vertical-align: top;
+}
+
+.bts-menus h3
+{
+    background: #2e3b46 none repeat scroll 0 0;
+    margin: 0;
+    padding: 10px;
+    text-shadow: 1px 1px 1px #000; 
+}
+
+
+/* dropdown_item */
+
+#ctl00_ContentPlaceHolder1_dd_city_DropDown, #ctl00_ContentPlaceHolder1_dd_item_DropDown, .rcbScroll   {
+    background: red none repeat scroll 0 0;
+    float: left !important;
+    width: 70% !important;
+}
+
+#ctl00_ContentPlaceHolder1_dd_city_DropDown li, #ctl00_ContentPlaceHolder1_dd_item_DropDown li, .rcbItem  {
+    float: left !important;
+    width: 222px !important;
+}
+
+#ctl00_ContentPlaceHolder1_dd_city_DropDown div, #ctl00_ContentPlaceHolder1_dd_item_DropDown div {
+    width: auto;
+}
+
+.rcbInput radPreventDecorate
+{
+    background: red none repeat scroll 0 0;
+    float: left;
+    width: 222px;
+    }
+    
+    
+    .rcbItem {
+    float: left !important;
+}
+
+
+
+.input-form {
+    border-radius: 10px;
+    box-shadow: 0 0 1px #000;
+    margin: 18px;
+    padding: 10px;
+    width: 80%;
+}
+
+
+.input-form tr {
+    float: left;
+    margin: 0 0 10px;
+    width: 100%;
+}
+
+.input-form .field {
+    float: left;
+    font-weight: bold;
+    width: 13%;
+}
+
+.input-field {
+    float: left;
+    width: 25%;
+}
+
+.input-field > input {
+    padding: 4px;
+    width: 100%;
+}
+
+.space {
+    float: left;
+    margin: 0 40px;
+}
+
+.button1 {
+    background-color: #000;
+    border: 0 none;
+    color: #fff;
+    cursor: pointer;
+    font-family: Tahoma;
+    font-size: 11px;
+    overflow: auto;
+    padding: 5px;
+}
+
+.tbl-large > div {
+    left: 0;
+    margin: 0 0 2%;
+    padding: 10px;
+    position: relative;
+    width: 93%;
+}
+
+.tbl-large > div > table {
+    border-radius: 4px;
+    box-shadow: 0 0 1px #000;
+    margin: 0 0 0 34px;
+    padding: 2px;
+    text-align: center;
+}
+.mGrid {
+    background-color: #fff;
+    border-collapse: collapse;
+    font-family: Tahoma;
+    font-size: 11px;
+    margin: 1px 5px 0;
+    width: 99%;
+}
+
+
+.tbl-large > div > .mGrid th {
+    background: #eee none repeat scroll 0 0 !important;
+    border: 0 none !important;
+    color: #000 !important;
+}
+.mGrid th {
+    background: #000 none repeat scroll 0 0;
+    border-left: 1px solid #525252;
+    color: #fff;
+    font-size: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    text-transform: uppercase !important;
+    white-space: nowrap;
+}
+
+.mGrid td {
+    border: 1px solid #c1c1c1;
+    padding: 5px;
+    white-space: nowrap;
+}
+
+.mGrid .alt {
+    background: #fcfcfc none repeat-x scroll center top;
+}
+
+.totalrecord {
+    float: left;
+    font-weight: bold !important;
+    left: 3% !important;
+    margin: 0 !important;
+    text-align: left;
+    width: 70% !important;
+}
+
+.dropdown {
+    background: #f7f9fa none repeat scroll 0 0;
+    border: 1px solid #ccc;
+    color: #333;
+    font-family: Tahoma;
+    font-size: 11px;
+    padding: 5px 20px 5px 5px;
+}
+
+#ContentPlaceHolder1_CalendarExtender3_daysBody > tr, 
+#ContentPlaceHolder1_CalendarExtender1_daysBody > tr
+{
+    margin:0 !important;    
+}
+
+#ContentPlaceHolder1_GridView input, #ContentPlaceHolder1_GridView1 input {
+    background: #ccc none repeat scroll 0 0;
+    border: 0 none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+#ContentPlaceHolder1_calendarExtender1_daysBody > tr {
+    margin: 0 !important;
+}
+
+
+
+/* ========================================= */

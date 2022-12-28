@@ -1,0 +1,234 @@
+﻿@model MRaabta.Models.DebagPrintModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <style>
+
+        * {
+            font-family: Calibri;
+        }
+
+        body {
+            margin: 0px !important;
+            margin-right: 5px !important
+        }
+
+        .page-header, .page-header-space {
+            height: 120px;
+        }
+
+        .page-footer, .page-footer-space {
+            height: 50px;
+        }
+
+        .page-footer {
+            background: white;
+            position: fixed;
+            bottom: 0;
+            width: 99.5vw !important;
+            border-top: 1px solid black; /* for demo */
+            font-size: 12px
+        }
+
+        .page-header {
+            background: white;
+            position: fixed;
+            top: 0mm;
+            width: 99.5vw !important;
+            border-bottom: 2px solid black; /* for demo */
+        }
+
+        .page {
+            width: 99.5vw !important;
+            page-break-after: always;
+        }
+
+            .page table {
+                text-align: left;
+                border: 2px solid black;
+                font-size: 13px;
+                border-collapse: collapse;
+            }
+
+                .page table td, .page table th {
+                    border: 1px solid black;
+                }
+
+        @@page {
+            margin: 20px;
+        }
+
+        @@media print {
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
+            }
+
+            button {
+                display: none;
+            }
+
+            body {
+                margin: 0px;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="page-header" style="text-align: center">
+        <div style="display:flex;flex-direction:row; justify-content:space-between;align-items:center;border-bottom:2px solid black">
+            <div>
+                <img src="@Url.Content("~/images/mnpLogo.png")" alt="Alternate Text" height="50" />
+            </div>
+            <div>
+                <h4>
+                    Debagging Details
+                </h4>
+            </div>
+            <div style="margin-right:10px">
+
+                <b>Print Date:</b> @DateTime.Now.ToString("dd-MMM-yyyy") <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@DateTime.Now.ToString("hh:mm tt")
+            </div>
+        </div>
+        <div>
+            <table style="width:100%;text-align:left; font-size:13px">
+                <tr>
+                    <th>Debag No</th>
+                    <td>@Model.Id</td>
+                    <th>Bag No</th>
+                    <td>@Model.BagNo</td>
+                    <th>Origin</th>
+                    <td>@Model.Origin</td>
+                </tr>
+                <tr>
+                    <th>Destination</th>
+                    <td>@Model.Destination</td>
+                    <th>Weight</th>
+                    <td>@Model.TotalWeight KG</td>
+                    <th>Date</th>
+                    <td>@Model.CreatedOn</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="page-footer">
+
+        <div style="display:flex; flex-direction:column;width:100%">
+            <div style="display:flex;flex-direction:row;justify-content:center;align-items:center">
+                <h4>Created By</h4>
+                <div style="min-width:10%; border-bottom:3px solid black;text-align:center;margin-left:10px"><b>@ViewBag.Name</b></div>
+            </div>
+        </div>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <td>
+                    <!--place holder for the fixed-position header-->
+                    <div class="page-header-space"></div>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <!--*** CONTENT GOES HERE ***-->
+                    <div class="page">
+                        <table style="width:100%">
+                            <tr>
+                                <td colspan="8" style="text-align:center;font-weight:900;font-size:15px">Manifest Details</td>
+                            </tr>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Manifest No</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Status</th>
+                                <th>Weight</th>
+                                <th>Pcs</th>
+                                <th>Remarks</th>
+                            </tr>
+                            @{
+                                int i = 1;
+                                foreach (var item in Model.Manifests)
+                                {
+                                    <tr>
+                                        <td style="width:2%">@i</td>
+                                        <td style="width:12%">@item.Manifest</td>
+                                        <td style="width:18%">@item.Origin</td>
+                                        <td style="width:18%">@item.Destination</td>
+                                        <td style="width:15%">@item.Status</td>
+                                        <td style="width:6%">@item.Weight</td>
+                                        <td style="width:6%">@item.Pcs</td>
+                                        <td>@item.Remarks</td>
+                                    </tr>
+                                    i++;
+                                }
+                            }
+                        </table>
+                        <br>
+                        <table style="width:100%">
+                            <tr>
+                                <td colspan="8" style="text-align:center;font-weight:900;font-size:15px">Outpiece Details</td>
+                            </tr>
+                            <tr>
+                                <th>S.No</th>
+                                <th>CN</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Status</th>
+                                <th>Weight</th>
+                                <th>Pcs</th>
+                                <th>Remarks</th>
+                            </tr>
+                            @{
+                                int j = 1;
+                                foreach (var item in Model.CNs)
+                                {
+                                    <tr>
+                                        <td style="width:2%">@j</td>
+                                        <td style="width:12%">@item.CN</td>
+                                        <td style="width:18%">@item.Origin</td>
+                                        <td style="width:18%">@item.Destination</td>
+                                        <td style="width:15%">@item.Status</td>
+                                        <td style="width:6%">@item.Weight</td>
+                                        <td style="width:6%">@item.Pcs</td>
+                                        <td>@item.Remarks</td>
+                                    </tr>
+                                    j++;
+                                }
+                            }
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <td>
+                    <!--place holder for the fixed-position footer-->
+                    <div class="page-footer-space"></div>
+                </td>
+            </tr>
+        </tfoot>
+
+    </table>
+
+</body>
+
+</html>

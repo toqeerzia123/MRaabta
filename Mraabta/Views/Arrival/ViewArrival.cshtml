@@ -1,0 +1,64 @@
+﻿@{
+    ViewBag.Title = "ViewArrival";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <h2 class="text-center">View Arrivals</h2>
+        <div class="row">
+            <div class="col-3">
+                <label>Date</label>
+                <input type="date" id="date" class="form-control">
+            </div>
+            <div class="col-3">
+                <label>Rider Code</label>
+                <input type="text" id="code" class="form-control" />
+            </div>
+            <div class="col-3">
+                <button type="button" id="btnGet" class="btn btn-secondary" style="margin-top:27px !important">Get Arrivals</button>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-12" id="tblDetails"></div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        var getData = (rc,dt) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("_GetArrivalByRider", "Arrival")',
+                data: JSON.stringify({rc,dt}),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'html',
+                success: (rs) => {
+                    $('#tblDetails').html(rs);
+                },
+                error: () => {
+
+                },
+            });
+        }
+        $(function () {
+            $('#btnGet').click(function () {
+                var dt = document.querySelector("#date").value;
+                var code = document.querySelector("#code").value;
+
+                if (!dt) {
+                    alert("Select Date");
+                    return;
+                }
+
+                if (!code) {
+                    alert("Select Code");
+                    return;
+                }
+
+                getData(code,dt);
+            });
+        });
+    </script>
+}

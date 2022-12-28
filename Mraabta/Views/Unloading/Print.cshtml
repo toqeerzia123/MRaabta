@@ -1,0 +1,241 @@
+﻿@model MRaabta.Models.UnloadingPrint
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+
+        * {
+            font-family: Calibri;
+        }
+
+        .page-header, .page-header-space {
+            height: 180px;
+        }
+
+        .page-footer, .page-footer-space {
+            height: 70px;
+        }
+
+        .page-footer {
+            background: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            border-top: 1px solid black; /* for demo */
+        }
+
+        .page-header {
+            background: white;
+            position: fixed;
+            top: 0mm;
+            width: 100%;
+            border-bottom: 2px solid black; /* for demo */
+        }
+
+        .page {
+            width: 100vw;
+            page-break-after: always;
+        }
+
+            .page table {
+                text-align: left;
+                border: 2px solid black;
+                font-size: 13px;
+                border-collapse: collapse;
+            }
+
+                .page table td, .page table th {
+                    border: 1px solid black;
+                }
+
+        @@page {
+            margin: 20px;
+        }
+
+        @@media print {
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
+            }
+
+            button {
+                display: none;
+            }
+
+            body {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="page-header" style="text-align: center">
+        <div style="display:flex;flex-direction:row; justify-content:space-between;align-items:center;border-bottom:2px solid black">
+            <div>
+                <img src="@Url.Content("~/images/mnpLogo.png")" alt="Alternate Text" height="50" />
+            </div>
+            <div>
+                <h4>
+                    UNLOADING DETAIL
+                </h4>
+                <p style="font-family: IDAutomationHC39M">*@Model.Id*</p>
+            </div>
+            <div style="margin-right:10px">
+
+                <b>Print Date:</b> @DateTime.Now.ToString("dd-MMM-yyyy") <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@DateTime.Now.ToString("hh:mm tt")
+            </div>
+        </div>
+        <div>
+            <table style="width:100%;text-align:left; font-size:13px">
+                <tr>
+                    <th>Unloading No</th>
+                    <td>@Model.Id</td>
+                    <th>Branch</th>
+                    <td>@Model.Destination</td>
+                    <th>Unloading Date</th>
+                    <td>@Model.Date.ToString("dd-MMM-yyyy")</td>
+                </tr>
+                <tr>
+                    <th>Total Bags</th>
+                    <td>@Model.LoadingInfoDetails.Count(x => x.IsBag)</td>
+                    <th>Total Outpiece</th>
+                    <td>@Model.LoadingInfoDetails.Count(x => !x.IsBag)</td>
+                    <th></th>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="page-footer">
+        <div>
+            Document Printed By: <b>@ViewBag.Name</b>
+        </div>
+        <br>
+        <div style="display:flex;flex-direction:row">
+            Signature: <p style="width:250px; border-bottom:2px solid black"></p>
+        </div>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <td>
+                    <!--place holder for the fixed-position header-->
+                    <div class="page-header-space"></div>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <!--*** CONTENT GOES HERE ***-->
+                    <div class="page">
+                        <table style="width:100%">
+                            <tr>
+                                <td colspan="9" style="text-align:center;font-weight:900;font-size:15px">Loading Details</td>
+                            </tr>
+                            <tr>
+                                <th>Sr#</th>
+                                <th>Loading No</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Transportation Type</th>
+                                <th>Vehicle</th>
+                                <th>Seal No</th>
+                                <th>Flight No</th>
+                                <th>Courier Name</th>
+                            </tr>
+                            @{
+                                int i = 1;
+                                foreach (var item in Model.LoadingsInfo)
+                                {
+                                    <tr>
+                                        <td>@i</td>
+                                        <td>@item.LoadingNo</td>
+                                        <td>@item.Origin</td>
+                                        <td>@item.Destination</td>
+                                        <td>@item.TransportType</td>
+                                        <td>@item.VehicleRegNo</td>
+                                        <td>@item.SealNo</td>
+                                        <td>@item.FlightNo</td>
+                                        <td>@item.Courier</td>
+                                    </tr>
+                                    i++;
+                                }
+                            }
+                        </table>
+                        <br>
+                        <table style="width:100%">
+                            <tr>
+                                <td colspan="9" style="text-align:center;font-weight:900;font-size:15px">Bag/Outpiece Details</td>
+                            </tr>
+                            <tr>
+                                <th>Sr#</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Bag #</th>
+                                <th>Outpiece#</th>
+                                <th>Status</th>
+                                <th>Weight</th>
+                                <th>Piece</th>
+                                <th>Remarks</th>
+                            </tr>
+                            @{
+                                int j = 1;
+                                foreach (var item in Model.LoadingInfoDetails)
+                                {
+                                    <tr>
+                                        <td>@j</td>
+                                        <td>@item.Origin</td>
+                                        <td>@item.Destination</td>
+                                        @if (item.IsBag)
+                                        {
+                                            <td>@item.BagCN</td>
+                                            <td></td>
+                                        }
+                                        else
+                                        {
+                                            <td></td>
+                                            <td>@item.BagCN</td>
+                                        }
+                                        <td>@(item.Status == 5 ? "Received" : item.Status == 6 ? "Short Received" : "Excess Received")</td>
+                                        <td>@item.Weight</td>
+                                        <td>@(item.IsBag ? "": item.Pcs.ToString())</td>
+                                        <td>@item.Remarks</td>
+                                    </tr>
+                                    j++;
+                                }
+                            }
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <td>
+                    <!--place holder for the fixed-position footer-->
+                    <div class="page-footer-space"></div>
+                </td>
+            </tr>
+        </tfoot>
+
+    </table>
+
+</body>
+
+</html>

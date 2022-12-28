@@ -1,0 +1,66 @@
+﻿@model IEnumerable<MRaabta.Models.PickupRequestModel>
+<style>
+    .delete-section {
+        display: inline;
+    }
+</style>
+<link href="~/Content/themes/Css/tableCss.css" rel="stylesheet" />
+@if (Model.Count() > 0)
+{
+    <table class="table table-bordered">
+
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Location</th>
+                @*<th>Pickup Type</th>*@
+                <th>Pickup Date/Days</th>
+                <th>Assigned Courier</th>
+                <th>Priority</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Customer</td>
+                    <td>@item.Location</td>
+                    @*<td>@item.PickupType</td>*@
+                    <td>
+                        @if (item.IsRoutine)
+                        {
+                            @item.DateOrDays
+                        }
+                        else
+                        {
+                            @item.PickupDate.ToString("dd-MMM-yyyy")
+                        }
+                    </td>
+                    <td>@item.Courier</td>
+                    <td>@item.PriorityName</td>
+                    <td><button type="button" value="@item.Id" id="btn_swtichCourier" class="link_button" onclick="openRiderDialog(@item.Id,@item.UserId);">Switch Courier</button></td>
+                    <td>
+                        <div class="delete-section">
+                            <button type="button" id="btn_Delete" value="@item.Id" class="link_button" onclick="confirmDelete(@item.Id);">Delete</button>
+                        </div>
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+}
+else
+{
+    //<p> No Records Found</p>
+    <script type="text/javascript">
+        swal("No Record Found.");
+       
+    </script>
+}
+

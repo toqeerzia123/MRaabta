@@ -1,0 +1,350 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style>
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .confirmOverlayInput {
+            width: 100%;
+            height: 60px;
+            border: none !important;
+            border-bottom: 5px solid white !important;
+            background: none;
+            color: rgba(255, 255, 255, .8);
+            text-align: center;
+            font-size: 35px;
+        }
+
+            .confirmOverlayInput:active,
+            .confirmOverlayInput:focus {
+                outline: none;
+            }
+
+        .confirmOverlayButton {
+            background: none;
+            width: 200px;
+            height: 80px;
+            border: 5px solid white;
+            font-size: 35px;
+            color: rgba(255, 255, 255, .8)
+        }
+
+            .confirmOverlayButton:active {
+                outline: none;
+                background: rgba(255, 255, 255, .8);
+                color: rgba(0, 0, 0, .8)
+            }
+
+            .confirmOverlayButton:focus {
+                outline: none;
+            }
+
+            .row{
+                border: 2px solid white;
+            }
+            .col-md-2{
+                border-right: 2px solid white;
+            }
+    </style>
+    <style>
+        /* The container */
+        .container-checkbox {
+            display: block;
+            position: relative;
+            padding-left: 35px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+            /* Hide the browser's default checkbox */
+            .container-checkbox input {
+                position: absolute;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+            /* Create a custom checkbox */
+            .container-checkbox .checkmark {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 25px;
+                width: 25px;
+                background-color: #eee;
+            }
+
+            /* On mouse-over, add a grey background color */
+            .container-checkbox:hover input ~ .checkmark {
+                background-color: #eee;
+            }
+
+            /* When the checkbox is checked, add a blue background */
+            .container-checkbox input:checked ~ .checkmark {
+                background: rgb(244, 100, 37);
+            }
+
+            /* Create the checkmark/indicator (hidden when not checked) */
+            .container-checkbox .checkmark:after {
+                content: "";
+                position: absolute;
+                display: none;
+            }
+
+            /* Show the checkmark when checked */
+            .container-checkbox input:checked ~ .checkmark:after {
+                display: block;
+            }
+
+            /* Style the checkmark/indicator */
+            .container-checkbox .checkmark:after {
+                left: 9px;
+                top: 5px;
+                width: 5px;
+                height: 12px;
+                border: solid white;
+                border-width: 0 3px 3px 0;
+                -webkit-transform: rotate(45deg);
+                -ms-transform: rotate(45deg);
+                transform: rotate(45deg);
+            }
+    </style>
+}
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div id="root">
+        </div>
+    </div>
+</main>
+
+@section scripts{
+    <script>
+        const weightData =  @Html.Raw(Json.Encode(ViewBag.WeightData));
+        const url = '@Url.Action("Update", "ModifyWeight")';
+    </script>
+    <script type="text/babel">
+
+      const CNInfo = (props) => {
+        return (
+        <div>
+            <div>
+                <h4>CONSIGNMENT WEIGHT INFO</h4>
+            </div>
+            <div  className="row">
+                <div className="col-md-2 col-sm-12 p-2"><b>Consignment Number</b></div>
+                <div className="col-md-2 col-sm-12 p-2">
+                  <b> <a href={'/Files/ManageConsignmentTracking.aspx?d='+props.data.consignmentNumber} target='_blank' style={{color:'blue', textDecoration: 'underline'}}> {props.data.consignmentNumber} </a> </b>
+                </div>
+                <div className="col-md-2 col-sm-12 p-2"><b>Origin Zone</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.orignZone}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>Origin Branch</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.orignBranch}</b></div>
+            </div>
+            <div className="row">
+                <div className="col-md-2 col-sm-12 p-2"><b>Booking Date</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b> {props.data.BOOKINGDATE}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>Destination Zone</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.destinationZone}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>Destination Branch</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.destinationBranch}</b></div>
+            </div>
+            <div className="row">
+                <div className="col-md-2 col-sm-12 p-2"><b>COD Status</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.CODStatus}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>Client Name</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.clientname}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>Account No</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.accountNo}</b></div>
+            </div>
+            <div className="row">
+                <div className="col-md-2 col-sm-12 p-2"><b>ServiceType Name</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.serviceTypeName}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>CN Pieces</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.CNpieces}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>OPS Pieces</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.Ops_Pieces}</b></div>
+            </div>
+            <div className="row">
+                <div className="col-md-2 col-sm-12 p-2"><b>CN Weight</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.CNWeight}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>OPS Weight</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.Ops_weight}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>Weight Diff</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.Weight_diff}</b></div>
+            </div>
+            <div className="row">
+                <div className="col-md-2 col-sm-12 p-2"><b>OPS</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.ops}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>OPS Number</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.Ops_Number}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>OPS LOCATION</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.LOCATION}</b></div>
+            </div>
+            <div className="row">
+                <div className="col-md-2 col-sm-12 p-2"><b>isApproved</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.isApproved}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>isPriceComputed</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.isPriceComputed}</b></div>
+
+                <div className="col-md-2 col-sm-12 p-2"><b>IsInvoiced</b></div>
+                <div className="col-md-2 col-sm-12 p-2"><b>{props.data.IsInvoiced}</b></div>
+            </div>
+        </div>
+        )
+    }
+
+    const App = () => {
+        const [formData, setFormData] = React.useState({
+            Remarks: '',
+            IsCorrect:0
+        });
+        const [loading, setLoading] = React.useState(false);
+        const [data, setData] = React.useState(null);
+        const [isOpen, setIsOpen] = React.useState(weightData.Status);
+        const [cnInfo, setCnInfo] = React.useState(weightData.data);
+
+        const UpdateRemarks = () => {
+            setLoading(true);
+            var detailurl = new URL(window.location.href);
+            var CN = detailurl.searchParams.get("CN");
+            var Remarks = formData.Remarks;
+            var IsCorrect = formData.IsCorrect;
+
+            fetch(`${url}?CN=${CN}&Remarks=${Remarks}&IsCorrect=${IsCorrect}`).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            alert('Remarks Updated');
+                            setFormData(
+                                {
+                                    Remarks: '',
+                                    IsCorrect: 0
+                                });
+                        } else {
+                            setFormData(
+                                {
+                                    Remarks: '',
+                                    IsCorrect: 0
+                                });
+                            alert('No data found');
+                        }
+                        location.reload();
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const changeFormData = (key, val) => {
+                let x = { ...formData, [key]: val };
+                setFormData(x);
+        }
+
+        const overlayStyle = {
+            width: '100vw',
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 10000,
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)'
+        }
+
+        return (
+            <div style={{ position: 'relative', padding:6 }}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+                <React.Fragment>
+
+                <div id="loader"></div>
+
+                <div className="row p-4">
+                   <div className="col-12 text-center">
+                    {
+                        cnInfo ? <CNInfo data={cnInfo} /> : ''
+                    }
+                   </div>
+                </div>
+        { isOpen != 'Close' ?
+                <div className="row p-4">
+                    <div className="col-2">
+                        <label>IS OPERATIONS WEIGHT CORRECT </label>
+                        <select className="form-control" value={formData.IsCorrect} onChange={(x) => {
+                                changeFormData('IsCorrect', x.target.value)
+                            }}>
+                            <option value="0" defaultValue="selected">-- Select --</option>
+                            <option value="1" >YES</option>
+                            <option value="2">NO</option>
+                        </select>
+                    </div>
+                    <div className="col-8">
+                        <label>Remarks</label>
+                        <textarea className="form-control" value={formData.Remarks} onChange={(x) => changeFormData('Remarks', x.target.value)}></textarea>
+                    </div>
+                    <div className="col-2 p-2 text-center">
+                    <br/>
+                        <button type="button" className="btn btn-primary"  style={{ marginTop: 25, background: '#f46425', border: '#a53200' }} onClick={(x) => {
+                                if (formData.IsCorrect != 0 && formData.Remarks !='') {
+                                    UpdateRemarks(formData);
+                                } else
+                                {
+                                    alert('Kindly Fill All the Required Fields !!');
+                                }
+                            }}>Save
+                        </button>
+
+                    </div>
+                </div> : ''
+        }
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    ReactDOM.render(<App />,
+        document.querySelector('#root')
+    )
+    </script>
+}

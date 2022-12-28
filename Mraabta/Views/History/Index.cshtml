@@ -1,0 +1,80 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<div>
+    <h2 style="text-align:center">
+        Consignment or Runsheet Record
+    </h2>
+    <br />
+    <form>
+        <div class="form-row align-items-center">
+            <div class="col-sm-5 my-1">
+                <label class="sr-only" for="inlineFormInputGroupUsername">Username</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text" style="font-size:12px;">Consignment or Runsheet No.</div>
+                    </div>
+                    <input type="text" class="form-control" id="consignment_number" placeholder="Search..">
+                </div>
+            </div>
+            <div class="col-auto my-1">
+                <button type="submit" class="btn btn-primary" id="btn_search">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <div id="wait" style="display:none;width:69px;height:89px;border:1px solid black;position:absolute;top:50%;left:50%;padding:2px;">
+        <img src="~/images/loader.gif" width="64" height="64" /><br>Loading..
+    </div>
+    <div class="panel-body mainTable">
+        <div id="div_tbl_details" style="width:100%">
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+        $(function () {
+            debugger;
+            $("#btn_search").click(function (e) {
+                debugger;
+                e.preventDefault();
+                var ConsignmentNumber = $("#consignment_number").val().toString();
+                if (!ConsignmentNumber) {
+                    swal('Input Consignment Number');
+                    return;
+                }
+                else {
+                    $.ajax({
+                        type: 'GET',
+                        url: '../History/GetConsignmentRecords',
+                        data: { ConsignmentNumber: ConsignmentNumber },
+                        contentType: 'application/html; charset=utf-8',
+                        dataType: "html",
+                        success: function (response) {
+                            debugger;
+                            $('#div_tbl_details').html(response);
+                        },
+                        failure: function (response) {
+                            swal('Error! Something went wrong');
+                        },
+                        error: function (response) {
+                            swal('Error! Something went wrong');
+                        }
+                    });
+                }
+
+            });
+
+
+            $('body').on('click', '#btnExportCSV', function () {
+                exportTableToCSV('#tbl_pickUp', 'data.csv')
+            });
+        });
+    </script>
+}
+
+@section styles{
+    <link href="~/Content/Site.css" rel="stylesheet" />
+}

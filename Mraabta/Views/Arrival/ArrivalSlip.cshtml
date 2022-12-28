@@ -1,0 +1,137 @@
+﻿@model IEnumerable<MRaabta.Models.PrintArrivalModel>
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Arrival Slip</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: Arial;
+        }
+
+        body {
+            padding: 20px;
+        }
+
+        #cont {
+            width: 100%;
+            margin: 10px auto;
+        }
+
+            #cont table {
+                width: 100%;
+            }
+
+                #cont table th, #cont table td {
+                    text-align: left;
+                    padding: 5px;
+                    font-size: 14px;
+                }
+
+        #header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            min-width: 100% !important;
+            align-items: center;
+        }
+
+        #detail {
+            border: 2px solid black;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+            #detail th, #detail td {
+                border: 1px solid black;
+            }
+    </style>
+</head>
+<body onload="window.print()">
+    <div id="cont">
+        <table>
+            <tr>
+                <td colspan="4">
+                    <div id="header">
+                        <div style="text-align:left">
+                            <img src="@Url.Content("~/images/mnpLogo.png")" alt="Alternate Text" height="50" />
+                        </div>
+                        <div style="text-align:center">
+                            <h3 style="font-weight:800">CONSIGNMENT RECEIVE REPORT</h3>
+                        </div>
+                        <div style="text-align:right">@DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt")</div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th>Arrival ID:</th>
+                <td>@Model.FirstOrDefault().ArrivalId</td>
+                <th>Arrival Date:</th>
+                <td>@Model.FirstOrDefault().ArrivaDate.ToString("dd-MMM-yyyy hh:mm tt")</td>
+            </tr>
+            <tr>
+                <th>Rider Code:</th>
+                <td>@Model.FirstOrDefault().RiderCode</td>
+                <th>Rider Name:</th>
+                <td>@Model.FirstOrDefault().RiderName</td>
+            </tr>
+            <tr>
+                <th>Consignment Count:</th>
+                <td>@Model.Count()</td>
+                <th>Total Weight:</th>
+                <td>@Model.Sum(x => x.Weight)</td>
+            </tr>
+        </table>
+        <table id="detail">
+            <thead>
+                <tr>
+                    <th>Consignment #</th>
+                    <th>Service Type</th>
+                    <th>Weight</th>
+                    <th>Pieces</th>
+                    <th>Consignment #</th>
+                    <th>Service Type</th>
+                    <th>Weight</th>
+                    <th>Pieces</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var i = 0;
+                    var total = Model.Count();
+                    while (i < total)
+                    {
+                        <tr>
+                            <td>@Model.ElementAt(i).CN</td>
+                            <td>@Model.ElementAt(i).ServiceType</td>
+                            <td>@Model.ElementAt(i).Weight</td>
+                            <td>@Model.ElementAt(i++).Pieces</td>
+                            @if (i < total)
+                            {
+                                <td>@Model.ElementAt(i).CN</td>
+                                <td>@Model.ElementAt(i).ServiceType</td>
+                                <td>@Model.ElementAt(i).Weight</td>
+                                <td>@Model.ElementAt(i).Pieces</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            }
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

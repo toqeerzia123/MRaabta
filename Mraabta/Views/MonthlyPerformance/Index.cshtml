@@ -1,0 +1,814 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    var year = DateTime.Now.Year;
+}
+
+@section scripts{
+    <script type="text/javascript">
+        var nanToZero = (val, round = true) => {
+        if (isNaN(val)) {
+        return 0;
+        } else {
+        return round ? Math.round(val) : val;
+        }
+        };
+
+        var getRiders = (Year, Month) => {
+        debugger;
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("ViewRiders","MonthlyPerformance")',
+                     data: {
+                         Year: Year,
+                         Month: Month
+                         },
+                    dataType: 'json',
+                    success: (rs) => {
+                        var html = ``;
+                        for (let x of rs) {
+                            html += `<option value="${x.Value}">${x.Value}-${x.Text}</option>`;
+                        }
+                        $('#ddl_rider_name').html(html);
+                    }
+                });
+        };
+
+    $(function () {
+        var dataexists = '@ViewBag.err';
+        if (dataexists != "") {
+            swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+            }, function () {
+                     window.location = "../Login";
+
+            });
+
+        }
+        $(document).on({
+                ajaxStart: function () { $("#wait").show() },
+                ajaxStop: function () { $("#wait").hide(); },
+           });
+        var Year, Month;
+        $('#ddl_month').change(function () {
+            debugger;
+            Month = $(this).val();
+            if (Year != null && Month != null) {
+                getRiders(Year, Month);
+            }
+
+        });
+        $('#ddl_year').change(function () {
+            debugger;
+            Year = $(this).val();
+            //alert(eDate);
+            if (Year != null && Month != null) {
+                getRiders(Year, Month);
+            }
+            else if (Year == "" || Month == "") {
+
+            }
+        });
+        $("#btn_search").click(function (e) {
+            debugger;
+
+            e.preventDefault();
+            var riderCode = $("#ddl_rider_name").val();
+            var Month = $("#ddl_month").val();
+            var Year = $("#ddl_year").val();
+            if (!Year) {
+                swal('Select Year');
+                return;
+            }
+            if (!Month) {
+                swal('Select Month');
+                return;
+            }
+            if (!riderCode) {
+                swal('Select Rider');
+                $('#container').empty();
+                $('#container1').empty();
+                $('#container2').empty();
+                $('#container3').empty();
+                $('#container4').empty();
+                $('#main_heading').empty();
+                $('#sub_sub_para').empty();
+                $('#sub_heading').empty();
+                $('#chartContainer').empty();
+
+                return;
+            }
+            else {
+                monthlyCount(riderCode, Month, Year);
+                monthlyStats(riderCode, Month, Year);
+
+            }
+            function monthlyStats(riderCode,Month, Year) {
+                     $.ajax({
+                    type: 'post',
+                    url: '../MonthlyPerformance/GetMonthlyStats',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    async: false,
+                    data: JSON.stringify({ riderCode: riderCode, Month: Month, Year: Year }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    cache: false,
+                    success: function (rs) {
+                        if (rs.dataPoints.length > 0) {
+                            var dataPoints = [];
+                            var y = 0;
+                            var z = 0;
+                            var charts = [];
+                            for (x in rs.dataPoints) {
+                                dataPoints.push({ y: rs.dataPoints[x].Y, label: rs.dataPoints[x].X });
+
+                                y += rs.dataPoints[x].Y;
+                                z += rs.dataPoints[x].X;
+                            }
+                           $('#sub_heading').html('<h3 style="text-align: center; border:1px solid black; margin:1px;">Monthly Delivered Statistic</h3>')
+                             var chart = new CanvasJS.Chart("chartContainer", {
+                                type: "line",
+                                checkVisibility: true,
+                                theme: "light1",
+                                 animationEnabled: true,
+                                 //interval:5,
+                                data: [
+                                    {
+                                        indexLabelFontWeight: "bold",
+                                       type: "line",
+                                        indexLabelFontSize: 10,
+                                        labelFontSize: 10,
+                                        indexLabel: "{y}",
+                                        legendText: "{label}",
+                                        toolTipContent: "{label} <b>{y}<b/>",
+                                        dataPoints: dataPoints
+
+                                    }],
+                                options: {
+                                    axisY: {
+                                        titleFontWeight: "bold",
+                                        title: "Delivered",
+                                        titleFontSize: 12,
+                                        includeZero: false,
+                                        titleFontColor: "black",
+                                        labelFontColor: "black",
+                                        autoWidth: true,
+                                        crosshair: {
+                                            enabled: true,
+                                            snapToDataPoint: true
+                                        }
+                                    },
+                                    axisX: {
+                                        interval: 2,
+                                        visibility: false,
+                                        type: 'date',
+                                        labelAutoFit: true,
+                                        labelWrap: true,
+                                        labelMaxWidth: 100,
+                                        labelAngle: 0,
+                                        labelFontSize: 12,
+                                        labelFontColor: "black",
+                                        title: "Date",
+                                        titleFontSize: 12,
+                                        titleFontColor: "black",
+                                        crosshair: {
+                                            enabled: true,
+                                            snapToDataPoint: true
+                                        }
+                                    }
+
+                                }
+                            });
+
+                            chart.render();
+
+
+                            //let masPopChart = new Chart(myChart, {
+                            //    type: 'horizontalBar',
+                            //    checkVisibility: true,
+                            //    theme: "light1",
+                            //    animationEnabled: true,
+                            //    data: [
+                            //        {
+                            //            indexLabelFontWeight: "bold",
+                            //            type: "line",
+                            //            indexLabelFontSize: 10,
+                            //            labelFontSize: 10,
+                            //            indexLabel: "{y}",
+                            //            legendText: "{X}",
+                            //            toolTipContent: "{X}<b>{y}",
+                            //            dataPoints: dataPoints
+
+                            //        }],
+                            //    options: {
+
+                            //    axisY: {
+                            //            titleFontWeight: "bold",
+                            //            title: "Delivered",
+                            //            titleFontSize: 12,
+                            //            includeZero: false,
+                            //            titleFontColor: "black",
+                            //            labelFontColor: "black",
+                            //            autoWidth: true,
+                            //            crosshair: {
+                            //                enabled: true,
+                            //                snapToDataPoint: true
+                            //            }
+                            //        },
+                            //    axisX: {
+                            //            interval: 5,
+                            //            visibility: false,
+                            //            type: 'date',
+                            //            labelAutoFit: true,
+                            //            labelWrap: true,
+                            //            labelMaxWidth: 100,
+                            //            labelAngle: 0,
+                            //            labelFontSize: 12,
+                            //            labelFontColor: "black",
+                            //            title: "Date",
+                            //            titleFontSize: 12,
+                            //            titleFontColor: "black",
+                            //            crosshair: {
+                            //                enabled: true,
+                            //                snapToDataPoint: true
+                            //            }
+                            //        }
+                            //    }
+                            //});
+
+                        }
+                    }
+
+                });
+            }
+
+            function monthlyCount(riderCode, Month, Year) {
+                     $.ajax({
+                    type: 'post',
+                    url: '../MonthlyPerformance/GetMonthlyCount',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify({ riderCode: riderCode, Month: Month, Year: Year }),
+                    success: function (rs) {
+                        if (rs.dataPoints.length == 0) {
+
+                        }
+                        else {
+                            debugger;
+                        var Delivered = rs.dataPoints[0].delivered;
+                        var Undelivered = rs.dataPoints[0].undelivered;
+                        var deliveredrts = rs.dataPoints[0].deliveredrts;
+                        var TCNDownloaded = rs.dataPoints[0].TCNDownloaded;
+                        var Performed = rs.dataPoints[0].delivered + rs.dataPoints[0].deliveredrts + rs.dataPoints[0].undelivered;
+                        var UnPerformed = TCNDownloaded - Performed;
+                            //Values for Percentages
+                            var del_per_pointsan = nanToZero((Delivered / TCNDownloaded), false); //Delivered
+                            var undel_per_pointsan = nanToZero((Undelivered / TCNDownloaded),false); //Undelivered
+                            var delrts_per_pointsan = nanToZero((deliveredrts / TCNDownloaded), false); //Delie=veredRts
+                        var performed_pointsan = nanToZero((Performed / TCNDownloaded),false); //Performed
+                        var unper_pointsan = nanToZero((UnPerformed / TCNDownloaded),false); //UnPerformed
+                        var DownloadedRunsheet = rs.dataPoints[0].DownloadedRunsheet;
+
+                        if (Delivered == null) {
+
+                            }
+                        if (Undelivered == null) {
+
+                        }
+                        if (Delivered == null && Undelivered == null) {
+
+                        }
+                        else {
+                        //Progress JS
+
+                        $('#container').empty(); //Delivered
+                        $('#container1').empty(); //Undelivered
+                        $('#container2').empty(); //Delivered RTS
+                        $('#container3').empty(); //Performed
+                        $('#container4').empty(); // UnPerformed
+                        $('#container').html("<span id='pro_chart_del'></span>"); //Delivered
+                        $('#container1').html("<span id='pro_chart_undel'></span>"); //Undelivered
+                        $('#container2').html("<span id='pro_chart_delrts'></span>"); //Delivered RTS
+                        $('#container3').html("<span id='pro_chart_per'></span>"); //Performed
+                        $('#container4').html("<span id='pro_chart_unper'></span>"); //UnPerformed
+                        $('#main_heading').html('<h3 style="text-align: center; border:1px solid black; margin:1px;">Consignment Statistic</h3>')
+                        $('#sub_sub_para').html("<span class='col-md-12'><span class='col-md-6'><input type='radio' style='margin-top:10px; -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;' checked></input><b style='margin-left: 5px;'>    Total CN Downloaded:  </b> " + TCNDownloaded + "  </span><span class='col-md-6'><input type='radio' style='margin-left:5px; -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;' checked></input><b style='margin-left: 5px;'>    Total Downloaded Runsheet:</b> " + DownloadedRunsheet + "</span></span>")
+                        var bar = new ProgressBar.Circle(container, {
+                             color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                             },
+                              svgStyle: {
+                                display: 'block',
+
+                                // Important: make sure that your container has same
+                                // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                width: '85%'
+                             },
+
+                          from: { color: '#00897b', width: 12 },
+                          to: { color: '#00897b', width: 12 },
+                          // Set default step function for all animate calls
+                             step: function (state, circle) {
+
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                                 var value = (Math.round(del_per_pointsan * 100) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_del').html("<h6 style='text-align: center;width:10em;'>Delivered <span style='color:#00897b;'>" + Delivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar.text.style.fontSize = '2rem';
+                        bar.animate(del_per_pointsan);  // Number from 0.0 to 1.0
+
+                        //Undelivered
+
+                        var bar1 = new ProgressBar.Circle(container1, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                             style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                            },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                            width: '85%'
+                            },
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#c62828', width: 12 },
+                          to: { color: '#c62828', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(undel_per_pointsan * 100) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_undel').html("<h6 style='text-align: center;width:10em;'>Un-Delivered <span style='color:#c62828;'>" + Undelivered + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar1.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar1.text.style.fontSize = '2rem';
+                        bar1.animate(undel_per_pointsan);  // Number from 0.0 to 1.0
+
+
+                        //delivered RTS
+
+
+                        var bar2 = new ProgressBar.Circle(container2, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                             style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                            },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                            width: '85%'
+                            },
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#c62828', width: 12 },
+                          to: { color: '#c62828', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(delrts_per_pointsan * 100) + '%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_delrts').html("<h6 style='text-align: center;width:10em;'>Delivered RTS <span style='color:#c62828;'>" + deliveredrts + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar2.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                            bar2.text.style.fontSize = '2rem';
+                        bar2.animate(delrts_per_pointsan);  // Number from 0.0 to 1.0
+                        //UnPerformed
+
+                        var bar3 = new ProgressBar.Circle(container3, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                            autoStyleContainer: false,
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                            },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                             width: '85%'
+                            },
+                                 style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#e65100', width: 12 },
+                          to: { color: '#e65100', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                           circle.path.setAttribute('stroke', state.color);
+                           circle.path.setAttribute('stroke-width', state.width);
+
+                           var value = (Math.round(unper_pointsan * 100)+'%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+                                $('#pro_chart_per').html("<h6 style='text-align: center;width:10em;'>Un-Performed <span style='color:#e65100'>" + UnPerformed + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar3.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar3.text.style.fontSize = '2rem';
+
+                        bar3.animate(unper_pointsan);  // Number from 0.0 to 1.0
+
+                        //Performed
+                        var bar4 = new ProgressBar.Circle(container4, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                                      style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                              //bar3.text.style.left = '45%';
+                              //bar3.text.style.top = '45%';
+
+                              },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                            width: '85%'
+                              },
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#0277bd', width: 12 },
+                          to: { color: '#0277bd', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                           circle.path.setAttribute('stroke', state.color);
+                           circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = (Math.round(performed_pointsan * 100)+'%');
+                            if (value === 0) {
+                              circle.setText('');
+                            } else {
+
+                                $('#pro_chart_unper').html("<h6 style='text-align: center; width:10em;'>Performed <span style='color:#0277bd'>" + Performed + "</span></h6>")
+                              circle.setText(value);
+                            }
+
+                          }
+                        });
+
+
+                        bar4.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar4.text.style.fontSize = '2rem';
+
+
+                            bar4.animate(performed_pointsan);  // Number from 0.0 to 1.0
+
+                            }
+
+                        }
+
+                    }
+                });
+            }
+        });
+
+        });
+
+
+
+    </script>
+}
+
+
+@section styles{
+    <style>
+        #container {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        #container1 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        #container2 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        #container3 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        #container4 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+            margin-top: 10px;
+        }
+    </style>
+}
+
+
+<div class="">
+
+    <h2 style="text-align:center;">Monthly Performance Report</h2>
+
+    <div class="row">
+        <div class="col-3">
+            <label for="inputState">Month</label>
+            <select id="ddl_month" class="form-control">
+                <option selected value=''>Select Month</option>
+                <option value='01'>January</option>
+                <option value='02'>February</option>
+                <option value='03'>March</option>
+                <option value='04'>April</option>
+                <option value='05'>May</option>
+                <option value='06'>June</option>
+                <option value='07'>July</option>
+                <option value='08'>August</option>
+                <option value='09'>September</option>
+                <option value='10'>October</option>
+                <option value='11'>November</option>
+                <option value='12'>December</option>
+            </select>
+        </div>
+        <div class="col-3">
+            <label for="inputState">Year</label>
+            <select id="ddl_year" class="form-control">
+                <option selected value=''>Select Year</option>
+                @for (int i = 0; i < 3; i++)
+                {
+                    <option value='@year'>@year</option>
+                    year--;
+                }
+            </select>
+        </div>
+        <div class="col-3">
+            <label for="inputState">Rider Name</label>
+            @if (ViewBag.err == null || ViewBag.err == "")
+            {
+                <select id="ddl_rider_name" class="form-control">
+                    <option selected value=''>Rider Name</option>
+                </select>
+            }
+        </div>
+        <div class="col-3 mt-4">
+            <button type="button" class="btn btn-sm btn-light" style="border:1px solid black;margin-top:5px;height:28px; font-size:12px" id="btn_search">Search</button>
+        </div>
+
+
+    </div>
+    <br>
+    <div id="wait" style="display:none;width:69px;height:89px;border:1px solid black;position:absolute;top:50%;left:50%;padding:2px;">
+        <img src="~/images/loader.gif" width="64" height="64" /><br>Loading..
+    </div>
+
+    @* Progress Bar *@
+    <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600,800,900" rel="stylesheet" type="text/css">
+    <span id="main_heading"></span>
+    <span id="sub_sub_para"></span>
+    <div class="row col-md-12">
+        <div class="col-md-2" style="margin-top:5px;">
+            <div id="container">
+                <span id="pro_chart_del"></span>
+            </div>
+        </div>
+        <div class="col-md-2" style="margin-top:5px; margin-left:20px;">
+            <div id="container1">
+                <span id="pro_chart_undel"></span>
+            </div>
+        </div>
+        <div class="col-md-2" style="margin-top:5px; margin-left:20px;">
+            <div id="container2">
+                <span id="pro_chart_delrts"></span>
+            </div>
+        </div>
+        <div class="col-md-2" style="margin-top:5px; margin-left:20px;">
+            <div id="container3">
+                <span id="pro_chart_per"></span>
+            </div>
+        </div>
+        <div class="col-md-2" style="margin-top:5px; margin-left:20px;">
+            <div id="container4">
+                <span id="pro_chart_unper"></span>
+            </div>
+        </div>
+
+    </div>
+
+    @*<canvas id="myChart">
+        </canvas>*@
+    <div class="row col-md-12">
+        <div class="col-md-12">
+            <span id="sub_heading"></span>
+            <div id="chartContainer" style="position: relative; height:130px; width: 100%"></div>
+        </div>
+
+    </div>
+</div>

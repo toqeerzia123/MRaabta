@@ -1,0 +1,252 @@
+﻿@model  MRaabta.Models.PettyCashModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section styles{
+    <style>
+         /* Center the loader */
+        .outer_box {
+            background: gray none repeat scroll 0 0;
+            height: 100%;
+            opacity: 0.9;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            z-index:100000;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+        }
+
+        @@-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @@keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loaders" runat="server" class="outer_box" style="display: none;">
+        <div id="loader" runat="server" class="loader"></div>
+    </div>
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div class="row" style="height:40px">
+            <div class="col-12 text-center">
+                <h2>Petty Cash</h2><br>
+            </div>
+        </div>
+       
+
+    <div class="row ">
+        <div class="col-3">
+            <b><label>Zone</label></b>
+            @* @Html.DropDownListFor(Model => Model.Zone, ViewBag.Zones as List<SelectListItem>, optionLabel: "Select Zone", new { @class = "form-control", multiple = "multiple" })*@
+            @Html.ListBoxFor(model => model.Zone, new MultiSelectList(ViewBag.Zones, "Value", "Text"), new { @class = "form-control  js-example-basic-multiple" })
+        </div>
+        <div class="col-3">
+            <b> <label>Branch</label></b>
+            <div id="BranchDDLDiv">
+                @Html.ListBoxFor(model => model.Branch, new MultiSelectList(ViewBag.Branches, "Value", "Text"), new { @class = "form-control js-example-basic-multiple", required = "required" })
+                @*@Html.DropDownListFor(Model => Model.Branch, ViewBag.Branches as List<SelectListItem>, optionLabel: "Select Branch", new { @class = "form-control", multiple = "multiple"})*@
+            </div>
+        </div>
+        <div class="col-2">
+            <b>
+                <label>Start Date</label>
+            </b>
+            @*<input type="date" id="StartDate" name="StartDate" class="form-control" required="required" />*@
+            @Html.EditorFor(model => model.StartDate, new { htmlAttributes = new { @class = "form-control", required = "required", type = "date", @Value = Model.StartDate.ToString("yyyy/MM/dd") } })
+        </div>
+        <div class="col-2">
+            <b>
+                <label>End Date</label>
+            </b>
+            @*<input type="date" id="EndDate" name="EndDate" class="form-control" required="required" />*@
+            @Html.EditorFor(model => model.EndDate, new { htmlAttributes = new { @class = "form-control", required = "required", type = "date", @Value = Model.EndDate.ToString("yyyy/MM/dd") } })
+        </div>
+        <div class="col-2 text-right">
+            <button type="submit" class="btn btn-success" style="margin-top: 28px !important" id="btnSearch">Search</button>
+        </div>
+    </div>
+        <div class="row ">
+           
+        </div>
+        <div>
+            <h5 id="LblError" style="color:red">@ViewBag.ErrorMessage</h5><div id="LoaderGif" style="display:none"><img src="~/assets/images/loader-1.gif" alt="" /> Loading...</div>
+        </div>
+
+    </div>
+    <div class="mt-4" style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div class="row  ">
+            <div class="col-12" id="ReportSummaryData">
+
+                <h3 class="text-center">Petty Cash Summary Report</h3>
+                <table class="table table-bordered " id="PettyCashTable" style="font-size: 12px;">
+                    <thead >
+                        <tr>
+
+                            <th>MONTH</th>
+                            <th>ZONE</th>
+                            <th>BRANCH</th>
+                            <th>DEBIT</th>
+                            <th>CREDIT</th>
+                            <th>BALANCE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+ 
+
+@section scripts{
+
+    <script>
+        function showLoader() {
+                $("#btnSearch").attr("disabled", true); 
+            $('#loaders').show();
+
+        }
+        function hideLoader() {
+            setTimeout(function () {
+                
+                $('#loaders').hide();
+                $("#btnSearch").attr("disabled", false);
+               
+            }, 100);
+        }
+            $('#btnSearch').click(function () {
+                var ZoneSelected = $('#Zone').val();
+                var BranchSelected = $('#Branch').val();
+                var StartDateSelected = $('#StartDate').val();
+                var EndDateSelected = $('#EndDate').val();
+
+                if (StartDateSelected=='') {
+                    alert('Please select start date');return
+                }
+                if (EndDateSelected=='') {
+                    alert('Please select end date');return
+                }
+                if (ZoneSelected.length==0) {
+                    alert('Please select zone');return
+                }
+                if (BranchSelected.length==0) {
+                    alert('Please select branch');return
+                }
+                var dtStart = new Date(StartDateSelected);
+                var dtEnd = new Date(EndDateSelected);
+                $('#LblError').text('');
+                
+                 $.ajax({
+                    url: "@Url.Action("PettyCashSummaryReport","PettyCashSummary")",
+                     type: "POST",
+                      contentType: "application/json; charset=utf-8",
+                     data: JSON.stringify({ "Zone": ZoneSelected, "Branch": BranchSelected, "StartDate": dtStart, "EndDate": dtEnd }),
+                     async: false,
+                     
+                     beforeSend: function () { showLoader(); },
+                      
+                     success: function (response) {                    
+                          hideLoader();
+                         if (response.Status) {
+                          
+                            $("#PettyCashTable tbody tr").remove();
+                            $('#PettyCashTable').dataTable().fnClearTable();
+                            $('#PettyCashTable').dataTable().fnDestroy();
+                             var UrlPettyDetail = '@Url.Action("PettyCashSummaryDetail","PettyCashSummary")';
+                             for (let y = 0;y< response.Data.DataList.length; y++) {
+                                 $('#PettyCashTable').append(`<tr>
+                                                                <td>${response.Data.DataList[y].MONTH}</td>
+                                                                <td>${response.Data.DataList[y].zone}</td>
+                                                                <td>${response.Data.DataList[y].branch}</td>
+                                                                <td style="text-align:right "><a style="color:blue" href="${UrlPettyDetail}?StartDate=${response.Data.EncryptedStartDate}&EndDate=${response.Data.EncryptedEndDate}&zoneCode=${response.Data.DataList[y].EncryptedZoneCode}&branchCode=${response.Data.DataList[y].EncryptedBranchCode}&BranchName=${response.Data.DataList[y].EncryptedBranch}&Company=${response.Data.DataList[y].Company}&status=2" target="_blank">${response.Data.DataList[y].dnoteComma}</a></td>
+                                                                <td style="text-align:right "><a style="color:blue" href="${UrlPettyDetail}?StartDate=${response.Data.EncryptedStartDate}&EndDate=${response.Data.EncryptedEndDate}&zoneCode=${response.Data.DataList[y].EncryptedZoneCode}&branchCode=${response.Data.DataList[y].EncryptedBranchCode}&BranchName=${response.Data.DataList[y].EncryptedBranch}&Company=${response.Data.DataList[y].Company}&status=1" target="_blank">${response.Data.DataList[y].cnoteComma}</a></td>
+                                                                <td>${response.Data.DataList[y].Balance}</td>
+                                                            </tr>`);
+                             }
+                         
+                             if ($('#PettyCashTable')!=null) {
+                                 $('#PettyCashTable').DataTable({
+                                         "paging": true,
+                                        "ordering": false,
+                                        "info": false
+                                      
+                                    });
+                                }
+                         } else {
+                             $('#LblError').text(response.Message);
+                         }
+                   //  $("#btnSearch").attr("disabled", false);
+
+                        },
+                       error: function (xhr, status, errorThrown) {
+                           alert(xhr.status);
+                            alert(xhr.responseText);
+                         }
+                });
+            });
+
+        $(document).ready(function () {
+            $("#Zone").change(function(){
+                var ZoneSelected = $(this).val();
+                 $.ajax({
+                    url: "@Url.Action("GetBranchesJson","PettyCashSummary")",
+                    data: { "ZoneCode": ZoneSelected.toString() },
+                     type: "GET",
+                      contentType: "application/json; charset=utf-8",
+
+                     success: function (response) {
+                         debugger;
+                         var Data = response.Data;
+                         var result = ``;
+                         for (let y = 0; y < Data.length; y++) {
+                             result += `<option value='${Data[y].Value}'>${Data[y].Text}</option>`;
+                         }
+
+                         const parent = document.getElementById("Branch")
+                                while (parent.firstChild) {
+                                    parent.firstChild.remove()
+                                }
+                         //$("#BranchDDLDiv").text = result;
+                         $('#Branch').html(result);
+                     }
+                });
+            });
+ 
+    });
+    </script>
+}

@@ -1,0 +1,280 @@
+﻿@{
+ViewBag.Title = "Index";
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<div class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">Project Runsheet POD</h2>
+            </div>
+            <div style="justify-self:end;align-self:center">
+                <!-- <a href="@Url.Action(" ViewArrival","Arrival")" class="btn btn-sm btn-secondary" target="_blank">Search
+                    Arrivals</a> -->
+            </div>
+        </div>
+        <div id="root"></div>
+    </div>
+</div>
+
+
+@section scripts{
+<script>
+    const runsheetDataUrl = '@Url.Action("GetRunsheetData","ProjectRunsheet")';
+    const saveUrl = '@Url.Action("UpdatePOD","ProjectRunsheet")';
+</script>
+<script type="text/babel">
+
+    const App = () => {
+
+        const [loading, setLoading] = React.useState(false);
+
+        const [data, setData] = React.useState({
+            RunsheetSheetNo: '',
+            RunsheetSheetDate: '',
+            RouteCode: '',
+            Route: '',
+            RiderCode: '',
+            RiderName: ''
+        });
+
+        const [gridData, setGridData] = React.useState([]);
+
+
+        const updateData = (key, val) => {
+            let x = { ...data, [key]: val };
+            setData(x);
+        }
+
+        const processNum = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+        const processAlpha = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9a-zA-z\s]/g, "");
+            e.target.value = numbers;
+        }
+
+
+        const runsheetData = (rs) => {
+            setLoading(true);
+            fetch(runsheetDataUrl + '?rs=' + rs).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            const d = rs.data;
+                            if (d.length > 0) {
+                                let x = {
+                                    ...data,
+                                    RunsheetSheetDate: d[0].Date,
+                                    RouteCode: d[0].RouteCode,
+                                    Route: d[0].Route,
+                                    RiderCode: d[0].RiderCode,
+                                    RiderName: d[0].Rider
+                                };
+                                setData(x);
+                                setGridData(d);
+                            } else {
+                                alert('POD already updated');
+                            }
+                        }
+                        else {
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const save = () => {
+
+            const d = gridData;
+            if (d.length == 0) {
+                alert("Enter Runsheet");
+                return;
+            }
+
+            if (d.some((x) => x.Delivered && (!x.Receiver || !x.PhoneNo))) {
+                alert("Receiver Name and Phone No is Required");
+                return;
+            }
+
+            setLoading(true);
+
+            fetch(saveUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(gridData)
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        alert(rs.msg);
+                        if (rs.sts == 1) {
+                            setData({
+                                RunsheetSheetNo: '',
+                                RunsheetSheetDate: '',
+                                RouteCode: '',
+                                Route: '',
+                                RiderCode: '',
+                                RiderName: ''
+                            });
+                            setGridData([]);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const updateGridData = (index, key, val) => {
+            let x = [...gridData];
+            x[index][key] = val;
+            if (key == 'Delivered' && !val) {
+                x[index]['Receiver'] = '';
+                x[index]['PhoneNo'] = '';
+            }
+            setGridData(x);
+        }
+
+        const overlayStyle = {
+            width: '100vw',
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 10000,
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)'
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+
+                <React.Fragment>
+                    <div className="row mt-4">
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Runsheet Number</label>
+                            <input type="text" className="form-control" onInput={processNum} value={data.RunsheetSheetNo} onBlur={(x) => runsheetData(x.target.value)} onChange={(x) => updateData('RunsheetSheetNo', x.target.value)} />
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Route Code</label>
+                            <input type="text" className="form-control" value={data.RouteCode} readOnly={true} />
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Route</label>
+                            <input type="text" className="form-control" value={data.Route} readOnly={true} />
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Rider Code</label>
+                            <input type="text" className="form-control" value={data.RiderCode} readOnly={true} />
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Rider Name</label>
+                            <input type="text" className="form-control" value={data.RiderName} readOnly={true} />
+                        </div>
+                        <div className="col-lg-2 col-sm=12">
+                            <label>Runsheet Date</label>
+                            <input type="text" className="form-control" value={data.RunsheetSheetDate} readOnly={true} />
+                        </div>
+                    </div>
+                    <div className="row mt-4">
+                        <div className="col-lg-12 col-sm=12 text-right">
+                            <button type="button" className="btn btn-secondary" onClick={save}>Save</button>
+                        </div>
+                    </div>
+                    {
+                        gridData.length > 0 ?
+                            <div className="row mt-4">
+                                <div className="col-12">
+                                    <table className="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>SNo</th>
+                                                <th>CN</th>
+                                                <th>Receiver Name</th>
+                                                <th>Receiver Phone No</th>
+                                                <th className="text-center">Delivered</th>
+                                                <th className="text-center">Undelivered</th>
+                                            </tr>
+                                            {
+                                                gridData.map((x, index) =>
+                                                    <tr key={index}>
+                                                        <td>{x.Sno}</td>
+                                                        <td>{x.CN}</td>
+                                                        <td>
+                                                            <input type="text" onInput={processAlpha} placeholder="Receiver Name" className="form-control" maxLength={50} value={x.Receiver} onChange={(x) => updateGridData(index, 'Receiver', x.target.value)} onBlur={(x) => { updateGridData(index, 'Delivered', true); }} />
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" onInput={processNum} placeholder="Receiver Phone No (03xxxxxxxxx)" className="form-control" maxLength={11} value={x.PhoneNo} onChange={(x) => updateGridData(index, 'PhoneNo', x.target.value)} onBlur={() => {
+                                                                if (x.PhoneNo.startsWith('03') && x.PhoneNo.length != 11) {
+                                                                    alert('Invalid PhoneNo');
+                                                                    updateGridData(index, 'PhoneNo', '');
+                                                                } else if (x.PhoneNo.startsWith('02') && ![10, 11].includes(x.PhoneNo.length)) {
+                                                                    alert('Invalid PhoneNo');
+                                                                    updateGridData(index, 'PhoneNo', '');
+                                                                }
+                                                                else if (x.PhoneNo.startsWith('00')) {
+                                                                    alert('Invalid PhoneNo');
+                                                                    updateGridData(index, 'PhoneNo', '');
+                                                                }
+                                                                else if (x.PhoneNo[0] != '0') {
+                                                                    alert('Phone No must starts with 0');
+                                                                    updateGridData(index, 'PhoneNo', '');
+                                                                }
+                                                            }} />
+                                                        </td>
+                                                        <td className="text-center"><input type="radio" name={'status' + index} checked={x.Delivered} onChange={(x) => updateGridData(index, 'Delivered', x.target.checked)} /></td>
+                                                        <td className="text-center"><input type="radio" name={'status' + index} checked={!x.Delivered} onChange={(x) => updateGridData(index, 'Delivered', !x.target.checked)} /></td>
+                                                    </tr>
+                                                )
+                                            }
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                            : ''
+                    }
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    ReactDOM.render(
+        <App />,
+        document.querySelector('#root')
+    );
+</script>
+}

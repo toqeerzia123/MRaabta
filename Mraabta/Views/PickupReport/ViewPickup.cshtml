@@ -1,0 +1,658 @@
+﻿
+@model IEnumerable<MRaabta.Models.PickupReportModel>
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+
+<link href="~/Content/Site.css" rel="stylesheet" />
+<link href="@Url.Content("../Content/themes/base/jquery-ui.min.css")" rel="stylesheet" />
+<!-- Required jQuery and jQuery UI Javascript references -->
+<script src="@Url.Content("../Scripts/jquery-3.4.1.min.js")"></script>
+<script src="@Url.Content("../Scripts/jquery-ui.min.js")"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<style>
+    .modal-dialog {
+        height: 90%; /* = 90% of the .modal-backdrop block = %90 of the screen */
+    }
+
+    .modal-content {
+        height: 100%; /* = 100% of the .modal-dialog block */
+    }
+
+    td {
+        font-size: 12px;
+        text-align: center;
+    }
+
+    tr {
+        font-size: 12px;
+        text-align: center;
+    }
+
+    th {
+        font-size: 15px;
+        font-weight: bolder;
+    }
+
+    table {
+        font-family: Lato;
+    }
+
+    #myInput, #service, #destination {
+        background-image: url('/css/searchicon.png'); /* Add a search icon to input */
+        background-position: 10px 12px; /* Position the search icon */
+        background-repeat: no-repeat; /* Do not repeat the icon image */
+        width: 100%; /* Full-width */
+        font-size: 16px; /* Increase font-size */
+        padding: 12px 20px 12px 40px; /* Add some padding */
+        border: 1px solid #ddd; /* Add a grey border */
+        margin-bottom: 12px; /* Add some space below the input */
+    }
+</style>
+
+<div id="mainbody" style="  width:84%;">
+    <h2 style="text-align:center">Pick up Report</h2>
+
+    <div class="row">
+        <div class="col-md-5 mt-3">
+            <label>From Date</label>
+            <input id="StartDate" name="StartDate" type="date" class="form-control" style="height:30px">
+        </div>
+        <div class="col-md-5 mt-3">
+            <label>To Date</label>
+            <input id="EndDate" name="EndDate" type="date" class="form-control" style="height:30px">
+        </div>
+        <div class="col-md-2 mt-3">
+            <input type="button" name="btn_search" value="Search" class="btn btn-onLine " id="btn_search" />
+        </div>
+    </div>
+
+    <div id="wait" style="display:none;width:69px;height:89px;border:1px solid black;position:absolute;top:50%;left:50%;padding:2px;">
+        <img src="~/images/loader.gif" width="64" height="64" /><br>Loading..
+    </div>
+    <div id="div_body" style="visibility: hidden;">
+        <div class="card mt-2">
+            <div class="card ">
+                <div class="card-header" style=" font-size:20px; font-weight:bolder; font-family:'Cambria Math';background-color:#424242;">
+                    <span class="ml-1" style="color:white;">Pickup Statistics</span>
+                </div>
+                <div class="m-1 ">
+                    <div style="margin-left:1px; display: flex; flex-wrap: wrap;">
+                        <div class="col-md-2 ml-3" style="width:25%; margin-left: 10px;">
+                            <span style="font-size:1.5vw; font-weight:bolder; font-family:Lato; margin-left: 9px;">Requests</span><br /><div class="row"><img src="../images/reservation.png" style="height:auto;width:35%; margin-top:4px; object-fit: cover; margin-left: 10px;" /><span id="TodayRequest" style="font-size:2.5vw; text-align:center; font-family:Lato;margin-left: 12px;"></span></div>
+                        </div>
+                        <div class="col-md-2 ml-2" style="width:25% ; margin-left: 10px;">
+                            <span style="font-size:1.5vw; font-weight:bolder; font-family:Lato; margin-left: 9px;">Pending</span><br /><div class="row"><img src="../images/data-pending.png" style="height: auto;width:35%;  margin-top:4px; object-fit: cover; margin-left: 10px;" /><span id="TodayPending" style="font-size:2.5vw; text-align:center; font-family:Lato;margin-left: 12px;"></span></div>
+                        </div>
+                        <div class="col-md-2 ml-2" style="width:25%; margin-left: 10px;">
+                            <span style="font-size:1.5vw; font-weight:bolder; font-family:Lato; margin-left: 9px;">Process</span><br /><div class="row"><img src="../images/scooter.png" style="height:auto;width:35%; margin-top:4px; object-fit: cover; margin-left: 10px;" /><span id="TodayProcess" style="font-size:2.5vw; text-align:center; font-family:Lato;margin-left: 12px;"></span></div>
+                        </div>
+                        <div class="col-md-2 ml-2" style="width:25%; margin-left: 10px;">
+                            <span style="font-size:1.5vw; font-weight:bolder; font-family:Lato; margin-left: 7px;">Cancel</span><br /><div class="row"><img src="../images/close.png" style="height: auto;width:30%; margin-top:4px; object-fit: scale-down; margin-left: 10px;" /><span id="TodayCancel" style=" font-size:2.5vw; text-align:center; font-family:Lato;margin-left: 12px;"></span></div>
+                        </div>
+                        <div class="ml-2" style="width:25%; margin-left: 10px;">
+                            <span style="font-size:1.5vw; font-weight:bolder; font-family:Lato; margin-left: 7px;">Booked</span><br /><div class="row"><img src="../images/check-file.png" style="height: auto;width:24%; object-fit: cover; " /><span id="TodayPerformed" style=" font-size:2.5vw; text-align:center; font-family:Lato;margin-left: 12px;"></span></div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="panel-body mainTable mt-3">
+            <div id="div_tbl_details">
+
+                <table style="width: 100%; margin-bottom: 20px;" class="mt-2">
+                    <tr>
+                        <td style="font-size:18px;margin:0px; text-align:center;font-family:'Cambria Math';font-weight:bolder; ">Search:</td>
+                        @*<td><input type="text" id="service" onkeyup="myFunction2()" placeholder="Search for Service Type.." style=" width: 85%;"></td>*@
+                        <td>
+                            <span style="font-size:18px;margin:0px; text-align:center;font-family:'Cambria Math';font-weight:bolder; ">Service Type</span>
+                            <select class="target" id="service">
+                                <option value="-1"> Select </option>
+                                <option value="Overnight">Overnight</option>
+                                <option value="Second day">Second day</option>
+                                <option value="Same Day">Same Day</option>
+                                <option value="My Air Cargo">My Air Cargo</option>
+                                <option value="Express Cargo">Express Cargo</option>
+                                <option value="Flyer">Flyer</option>
+                                <option value="MyBox 2Kg">My Box 2Kg</option>
+                                <option value="MyBox 5Kg">My Box 5Kg</option>
+                                <option value="MyBox 10Kg">My Box 10Kg</option>
+                                <option value="MyBox 20Kg">My Box 20Kg</option>
+                                <option value="MyBox 30Kg">My Box 30Kg</option>
+
+                            </select>
+                        </td>
+                        @*<td><input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for Origin.." style=" width: 85%;"></td>*@
+                        <td>
+                            <span style="font-size:18px;margin:0px; text-align:center;font-family:'Cambria Math';font-weight:bolder; ">Origin</span>
+
+                            <select class="target" id="origin" style="max-width:85%; width:230px;">
+                            </select>
+                        </td>
+
+                        <td>
+                            @* <input type="text" id="destination" onkeyup="myFunction3()" placeholder="Search for Destination.." style=" width: 85%;">*@
+
+                            <span style="font-size:18px;margin:0px; text-align:center;font-family:'Cambria Math';font-weight:bolder; ">Destination</span>
+                            <select class="target" id="destination" style="max-width:85%; width:230px;">
+                                <option value="-1">Destination</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <table id="tbl_pickUphead" style="width: 100%" class=" mb-2">
+                    <thead style="background-color:#eeeeee; font-size:20px; font-weight:bolder; font-family:'Cambria Math';background-color:#424242;">
+                        <tr>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">SNO.</th>
+                            <th></th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Ticket Number</th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Service Type</th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Amount</th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Origin</th>
+                            <th style="font-size:18px;margin:0px; text-align:center;color:white;font-family:'Cambria Math'">Destination</th>
+                        </tr>
+
+                    </thead>
+                    <tbody id="tbl_pickup">
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="modal fade" id="ModalPopUp" role="dialog">
+    <div class="modal-dialog err-pop" style="">
+        <div class="modal-content">
+            <div class="modal-header" style=" font-size:20px; font-weight:bolder; font-family:'Cambria Math';background-color:#424242;">
+                <span id="ticketnumber" style="color:white;"></span>
+
+                @*<h5 class="modal-title" id="exampleModalLabel">Ticket Number</h5>*@
+
+                @*<h4 style="text-align: center"></h4>*@
+                <button id="DivClose" type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body" role="dialog">
+                <div>
+
+                    <div id="Staus">
+
+                        <table class="MainTbl table table-striped">
+                            <thead>
+                                <tr style="font-size:12px;">
+
+                                    <th>Status </th>
+                                    <th>Call Status </th>
+                                    <th>Reason </th>
+                                    <th>Consignment No</th>
+
+                                </tr>
+                            </thead>
+                            <tbody id="tblStatus" style="font-size:12px;">
+                            </tbody>
+                        </table>
+
+                    </div>
+                    <div id="consignment">
+                        <table class="MainTbl table table-striped">
+                            <thead>
+                                <tr style="font-size:12px;">
+
+
+                                    <th>Rider </th>
+                                    <th>Weight</th>
+                                    <th>Pieces</th>
+                                    <th>Pickup scheduled</th>
+
+
+                                </tr>
+                            </thead>
+                            <tbody id="reqDetailGrid" style="font-size:12px;">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="consigner">
+                        <table class="MainTbl table table-striped">
+                            <thead>
+                                <tr style="font-size:12px;">
+
+                                    <th>Consigner Name</th>
+                                    <th>Consigner Address</th>
+                                    <th>Consigner Cell Number</th>
+
+
+                                </tr>
+                            </thead>
+                            <tbody id="tblconsigner" style="font-size:12px;">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="consignee">
+                        <table class="MainTbl table table-striped">
+                            <thead>
+                                <tr style="font-size:12px;">
+
+                                    <th>Consignee Name</th>
+                                    <th>Consignee Address</th>
+                                    <th>Consignee Cell Number </th>
+
+
+                                </tr>
+                            </thead>
+                            <tbody id="tblconsignee" style="font-size:12px;">
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    debugger;
+     function myFunction() {
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("tbl_pickUphead");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[5];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+    }
+    function myFunction2() {
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("service");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("tbl_pickUphead");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[3];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+    }
+    function myFunction3() {
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("destination");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("tbl_pickUphead");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[6];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+}
+    $(function () {
+        var sDate, eDate;
+        $( document ).ready(function() {
+               $.ajax(
+                {
+
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: '@Url.Action("getcities", "PickupReport")',
+                       success: function (data) {
+                           debugger;
+                           var r = data.result;
+                           var s = '<option value="-1">Select</option>';
+                           for (let x of r) {
+
+                               s += '<option value="' + x.value + '">' + x.value + '</option>';
+                           }
+
+                           $("#origin").html(s);
+                           $("#destination").html(s);
+
+
+
+
+                    }
+
+                });
+        });
+         $('#StartDate').change(function () {
+            debugger;
+             sDate = $(this).val();
+             //if(eDate != null && eDate != null && sDate <= eDate) {
+             //    getRiders(sDate, eDate);
+             //}
+             if(sDate > eDate) {
+                 swal('Select Correct Date');
+             }
+
+
+         });
+        $("#service").change(function () {
+            debugger;
+            var input, filter, table, tr, td, i, txtValue;
+            input = $(this).children("option:selected").val();
+  filter = input.toUpperCase();
+  table = document.getElementById("tbl_pickUphead");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[3];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+        });
+        $("#destination").change(function () {
+            debugger;
+            var input, filter, table, tr, td, i, txtValue;
+            input = $(this).children("option:selected").val();
+  filter = input.toUpperCase();
+  table = document.getElementById("tbl_pickUphead");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[6];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+        });
+         $("#origin").change(function () {
+            debugger;
+            var input, filter, table, tr, td, i, txtValue;
+            input = $(this).children("option:selected").val();
+  filter = input.toUpperCase();
+  table = document.getElementById("tbl_pickUphead");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[5];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+});
+         $('#EndDate').change(function () {
+            debugger;
+              eDate = $(this).val();
+             //alert(eDate);
+              //if(sDate != null && eDate !=null && sDate <= eDate) {
+              //   getRiders(sDate, eDate);
+              //}
+             //else
+             if(sDate > eDate) {
+                 swal('Select Correct Date');
+             }
+         });
+          $('body').on('click', '.btnView', function () {
+              debugger;
+              var ticketNumber = $(this).val();
+              getRequestDetails(ticketNumber);
+               $('#ModalPopUp').modal('show');
+
+          });
+        var getRequestDetails = (ticketNumber) => {
+             var postData = { ticketNumber: ticketNumber};
+             $.ajax(
+                {
+
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: '@Url.Action("getRecordByTicket", "PickupReport")',
+                    data: JSON.stringify(postData),
+                     success: function (data) {
+                        var rs = data.result;
+                         var rows = '';
+                         var row2 = '';
+                         var row3 = '';
+                         var row4 = '';
+
+                         var text = '';
+                     var num = 'Ticket Number: '+ticketNumber;
+                     //$(".modal-header #reqId").val(id);
+                     $('#ticketnumber').text(num);
+                     //name += " Stock"
+                     //$('#zone').text(name); <td>${x.consignmentNumber == null}  ? `${x.consignmentNumber}` : `<i>not issued</i>`}</td>
+                     for (let x of rs) {
+                         debugger;
+                         if (x.Status == "Performed") {
+                             text = '<input type="radio" style="  -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;" checked></input>';
+                         }
+                         else if (x.Status == "Cancelled") {
+                             text = '<input type="radio" style="-webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #ef5350; border-radius:100%;" checked></input>';
+                         }
+                         else if (x.Status == "InProcess") {
+                             text = '<input type="radio" style="-webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #ffff00; border-radius:100%;" checked></input>';
+                         }
+                         else if (x.Status == "Pending") {
+                             text = '<input type="radio" style="-webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #ff8000; border-radius:100%;" checked></input>';
+                         }
+                         rows += `<tr>
+
+
+<td>${(x.rider != null) ? `${x.rider}` : `<i>not assigned</i>`}</td>
+                                    <td>${x.Weight}</td>
+                                    <td>${x.pieces}</td>
+<td>${(x.PickupDate != null && x.PickupTime == null) ? `${x.PickupDate + ' ' + x.PickupTime}` : `<i>not scheduled</i>`}</td>
+
+                                    </tr>`;
+                         row2 += `<tr>
+                                    <td>${text}</td>
+<td>${(x.CallStatus != null) ? `${x.CallStatus}` : `<i>not called</i>`}</td>
+<td>${(x.Reason != null) ? `${x.Reason}` : `<i>no reason</i>`}</td>
+ <td>${(x.consignmentNumber != null) ? `${x.consignmentNumber}` : `<i>not issued</i>`}</td>
+
+
+
+                                    </tr>`;
+                         row3 += `<tr>
+                                    <td>${x.consigner}</td>
+
+ <td>${(x.longitude != '0' && x.latitude != '0') ? `<a href = "https://www.google.com/maps/search/?api=1&query=${x.latitude},${x.longitude}" target="_blank">${x.consigneraddress}</a>` : `${x.consigneraddress}`}</td>
+
+                                    <td>${x.consignerCellNo}</td>
+                                    </tr>`;
+                         debugger;
+                         row4 += `<tr>
+                                    <td>${x.consignee}</td>
+                                <td>${x.consigneeAddress}</td>
+                            <td>${x.consigneeCellNo}</td>
+                            </tr>`;
+                         //$('#ticketnum').text(x.ticketNumber);
+                         //$('#callStatus').text(x.CallStatus);
+                         //$('#reason').text(x.Reason);
+
+
+                     }
+
+                         $('#reqDetailGrid').html(rows);
+                         $('#tblStatus').html(row2);
+                         $('#tblconsigner').html(row3);
+                         $('#tblconsignee').html(row4);
+
+
+
+                    }
+
+                });
+
+        };
+
+        var getstats = (Reason,SDate,EDate) => {
+              var postData = { Reason: Reason, SDate: SDate, EDate: EDate };
+
+                $.ajax(
+                {
+
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: '@Url.Action("getStats", "PickupReport")',
+                    data: JSON.stringify(postData),
+                     success: function (data) {
+
+                         var r = data.result;
+                         var TodayRequest   = null;
+                             var TodayPending = null ;
+                             var TodayProcess = null;
+                             var TodayCancel =null;
+
+                             var TodayPerformed = null;
+                    debugger;
+                         for (let x of r) {
+                            TodayRequest   =x.Request ;
+                            TodayPending = x.Pending ;
+                            TodayProcess = x.Process ;
+                            TodayCancel = x.Cancel ;
+
+                            TodayPerformed = x.Performed;
+                             //TodayPending = TodayRequest - TodayProcess - TodayCancel - TodayPerformed;
+
+                         }
+
+                             $('#TodayPending').html(TodayPending);
+                             $('#TodayProcess').html(TodayProcess);
+                             $('#TodayCancel').html(TodayCancel);
+                             $('#TodayRequest').html(TodayRequest);
+                             $('#TodayPerformed').html(TodayPerformed);
+
+                    }
+
+                });
+
+         };
+
+         $("#btn_search").click(function (e) {
+             debugger;
+           $('#service').val('-1');
+
+             e.preventDefault();
+             document.getElementById("div_body").removeAttribute("style");
+             var Reason = 0;// $("#ddl_rider").val().toString();
+            var SDate = $("#StartDate").val().toString();
+             var EDate = $("#EndDate").val().toString();
+
+              //if (!riderCode) {
+              //  swal('Select From Rider');
+              //  return;
+            //}
+            if (!SDate) {
+                swal('Select From Date');
+                return;
+            }
+            if (!EDate) {
+                swal('Select To Date');
+                return;
+            }
+            else {
+                debugger;
+                getstats(Reason, sDate, EDate);
+                var postData = { Reason: Reason, SDate: SDate, EDate: EDate };
+                debugger;
+                 $.ajax(
+                {
+
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: '@Url.Action("getRecordsByRider", "PickupReport")',
+                    data: JSON.stringify(postData),
+                     success: function (data) {
+
+                         var rows = '';
+                         var sno = 0;
+                         var r = data.result;
+                         debugger;
+                         for (let x of r) {
+                             sno++;
+                             var radiobutton;
+                             if (x.Status == 'Pending')
+                                 radiobutton = '<input type="radio" style="-webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #ff8000; border-radius:100%;" checked></input>';
+                             else if (x.Status == 'InProcess')
+                                  radiobutton = '<input type="radio" style="-webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #ffff00; border-radius:100%;" checked></input>';
+                             else if (x.Status == 'Cancelled')
+                                  radiobutton ='<input type="radio" style="-webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #ef5350; border-radius:100%;" checked></input>';
+                            else if (x.Status == 'Performed')
+                                  radiobutton = '<input type="radio" style="  -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;" checked></input>';
+
+                        rows += `<tr style='font-size:14px; text-align:center; margin:0px; padding:0px; font-family:Lato;'>
+                                    <td>${sno}</td>
+                                    <td>${radiobutton}</td>
+                                    <td><button id="${x.ticketNumber}" type="button" class="btn btn-dark btnView" data-id="${x.ticketNumber}" value="${x.ticketNumber}">${x.ticketNumber}</button>  </td>
+                                    <td>${x.ServiceType}</td>
+                                    <td>${x.Amount}</td>
+                                    <td>${x.origin}</td>
+                                    <td>${x.destination}</td>
+
+
+
+                                </tr>`;
+
+                         }
+                         debugger;
+                         $('#tbl_pickup').html(rows);
+
+                    }
+
+                });
+
+            }
+
+         });
+    });
+</script>

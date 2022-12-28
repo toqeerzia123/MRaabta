@@ -1,0 +1,598 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style type="text/css">
+        input, textarea, select {
+            border: 1px solid;
+        }
+
+            input:focus, textarea:focus, select:focus {
+                border: 1px solid #FF4500;
+            }
+
+
+
+        td.heading {
+            width: 13%;
+        }
+
+        td.spacer {
+            width: 2%;
+        }
+
+        td.controlSmall {
+            width: 10%;
+        }
+
+        td.controlLarge {
+            width: 10%;
+        }
+
+        .form-control {
+            width: 240px !important;
+        }
+    </style>
+}
+
+@section scripts{
+    <script>
+
+    function isNumberKey(evt) {
+
+        var count = 1;
+        var charCode = (evt.which) ? evt.which : event.keyCode
+        if (charCode != 46 && charCode > 31
+            && (charCode < 48 || charCode > 57 || charCode == 110 || charCode == 109 || charCode == 45 || charCode == 9)) {
+            return false;
+        }
+        else {
+
+            if (charCode == 110 || charCode == 46) {
+                count++;
+            }
+            if (count > 1) {
+                return false
+            }
+        }
+
+        return true;
+    }
+
+    function isNumberKeyDecimal(evt, txt) {
+        var count = 0;
+        var charCode = (evt.which) ? evt.which : event.keyCode
+        if (charCode != 46 && charCode > 31
+            && (charCode < 48 || charCode > 57 || charCode == 110 || charCode == 109 || charCode == 45 || charCode == 9)) {
+            return false;
+        }
+        else {
+
+            if (charCode == 110 || charCode == 46) {
+                count++;
+                if (txt.value.includes('.')) {
+                    return false;
+                }
+            }
+            if (count > 1) {
+                return false
+            }
+        }
+
+        return true;
+    }
+
+    function getConsignmentNumberDetails() {
+        var consignmentNumber = document.getElementById('ConsignmentNumberTxt').value;
+        if (consignmentNumber=='') {
+            return;
+        }
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetConsignmentDetails","CXMComplaint")',
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ consignmentNumber: consignmentNumber }),
+            dataType: "json",
+            async: false,
+            success: (rs) => {
+                debugger;
+                if (rs.response.isSuccess) {
+
+                    document.getElementById('ConsigneeAddressTxt').value = rs.response.ConsigneeAddress;
+                    document.getElementById('ConsigneeCellTxt').value = rs.response.ConsigneeAddress;
+                    document.getElementById('ConsigneeNameTxt').value = rs.response.Consignee;
+                    document.getElementById('ShipperAddressTxt').value = rs.response.ShipperAddress;
+                    document.getElementById('ShipperCellTxt').value = rs.response.ShipperCell;
+                    document.getElementById('ShipperNameTxt').value = rs.response.ShipperName;
+                    document.getElementById('PiecesTxt').value = rs.response.Pieces;
+                    document.getElementById('WeightTxt').value = rs.response.Weight;
+                    document.getElementById('AccountNoTxt').value = rs.response.AccountNo;
+                    document.getElementById('CellNumberTxt').value = rs.response.ShipperCell;
+                    document.getElementById('PhoneNumberTxt').value = rs.response.InquirerPhoneNumber;
+                    document.getElementById('CellNumberTxt').value = rs.response.InquirerCellNumber;
+                    document.getElementById('EmailIdTxt').value = rs.response.InquirerEmail;
+                    document.getElementById('InquirerNameTxt').value = rs.response.InquirerName;
+                    document.getElementById('ConsignmentStatus').value = 1;
+                    document.getElementById('ErrorLabel').value = '';
+
+                    var opt = document.createElement('option');
+                    var opt1 = document.createElement('option');
+                    var opt2 = document.createElement('option');
+
+                    var AllocationZone = document.getElementById('AllocationByDDL');
+                    AllocationZone.innerHTML = "";
+                    opt.value = rs.response.AllocationZoneCode;
+                    opt.innerHTML = rs.response.AllocationZoneName;
+                    AllocationZone.appendChild(opt);
+
+                    var OriginBranch = document.getElementById('OriginDDL');
+                    OriginBranch.innerHTML = "";
+                    opt1.value = rs.response.OriginCode;
+                    opt1.innerHTML = rs.response.OriginName;
+                    OriginBranch.appendChild(opt1);
+
+                    var DestinationBranch = document.getElementById('DestinationDDL');
+                    DestinationBranch.innerHTML = "";
+                    opt2.value = rs.response.DestinationCode;
+                    opt2.innerHTML = rs.response.DestinationName;
+                    DestinationBranch.appendChild(opt2);
+                } else {
+                    document.getElementById('ConsignmentStatus').value = 0;
+                    document.getElementById('ConsigneeAddressTxt').value = '';
+                    document.getElementById('ConsigneeCellTxt').value = '';
+                    document.getElementById('ConsigneeNameTxt').value = '';
+                    document.getElementById('ShipperAddressTxt').value = '';
+                    document.getElementById('ShipperCellTxt').value = '';
+                    document.getElementById('ShipperNameTxt').value = '';
+                    document.getElementById('PiecesTxt').value = '';
+                    document.getElementById('WeightTxt').value = '';
+                    document.getElementById('AccountNoTxt').value = '';
+                    document.getElementById('CellNumberTxt').value = '';
+                    document.getElementById('PhoneNumberTxt').value = '';
+                    document.getElementById('CellNumberTxt').value = '';
+                    document.getElementById('EmailIdTxt').value = '';
+                    document.getElementById('InquirerNameTxt').value = '';
+
+                    var AllocationZone = document.getElementById('AllocationByDDL');
+                    AllocationZone.innerHTML = "";
+
+                    var OriginBranch = document.getElementById('OriginDDL');
+                    OriginBranch.innerHTML = "";
+
+                    var DestinationBranch = document.getElementById('DestinationDDL');
+                    DestinationBranch.innerHTML = "";
+
+                    alert('No such consignment found!');
+                    document.getElementById('ErrorLabel').value = 'Warning!, Please provide valid consignment number';
+
+                }
+            }, error: function (xhr, ajaxOptions, thrownError) {
+                alert('Error finding consignment');
+            }
+        });
+    }
+
+
+
+    function GetRequestType() {
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetRequestType","CXMComplaint")',
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+
+            success: (rs) => {
+                debugger;
+                if (rs.response.length > 0) {
+                    var option = '';
+                    for (var k = 0; k < rs.response.length; k++) {
+                        option += `<option value='${rs.response[k][0]}'>${rs.response[k][1]}</option>`;
+                    }
+                    // requestDDL.innerHTML = option;
+                    $('#RequestTypeDDL').html(option);
+                    StandardNotesFetch();
+                }
+            }
+        });
+    }
+
+    function StandardNotesFetch() {
+        var requestTypeValue = document.getElementById('RequestTypeDDL').value;
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetStandardNotes","CXMComplaint")',
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ requestTypeValue: requestTypeValue }),
+            dataType: "json",
+            async: false,
+            success: (rs) => {
+                debugger;
+                if (rs.response.length > 0) {
+                    var option = '';
+                    for (var k = 0; k < rs.response.length; k++) {
+                        option += `<option value='${rs.response[k][0]}'>${rs.response[k][1]}</option>`;
+                    }
+                    $('#StandardNotesDDL').html(option);
+                }
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        GetRequestType();
+
+    });
+
+    function SaveComplaint() {
+        debugger;
+        var RequestNature = document.getElementById('RequestNatureDDL').value;
+        var RequestType = document.getElementById('RequestTypeDDL').value;
+        var ConsignmentNumber = document.getElementById('ConsignmentNumberTxt').value;
+        var InquirerType = document.getElementById('InquirerTypeDDL').value;
+        var InquirerName = document.getElementById('InquirerNameTxt').value;
+        var EmailId = document.getElementById('EmailIdTxt').value;
+        var PhoneNumber = document.getElementById('PhoneNumberTxt').value;
+        var CellNumber = document.getElementById('CellNumberTxt').value;
+        var AccountNo = document.getElementById('AccountNoTxt').value;
+        var Weight = document.getElementById('WeightTxt').value;
+        var Pieces = document.getElementById('PiecesTxt').value;
+        var ShipperName = document.getElementById('ShipperNameTxt').value;
+        var ShipperCell = document.getElementById('ShipperCellTxt').value;
+        var ShipperAddress = document.getElementById('ShipperAddressTxt').value;
+        var ConsigneeName = document.getElementById('ConsigneeNameTxt').value;
+        var ConsigneeCell = document.getElementById('ConsigneeCellTxt').value;
+        var ConsigneeAddress = document.getElementById('ConsigneeAddressTxt').value;
+        var SourceMedia = document.getElementById('SourceMediaDDL');
+        SourceMedia = SourceMedia.options[SourceMedia.selectedIndex].text;
+        var Department = document.getElementById('DepartmentDDL').value;
+        var AllocationBy = document.getElementById('AllocationByDDL').value;
+        var StandardNotes = document.getElementById('StandardNotesDDL').value;
+        var Description = document.getElementById('DescriptionTxt').value;
+        var Origin = document.getElementById('OriginDDL').value;
+        var Destination = document.getElementById('DestinationDDL').value;
+        var ConsignmentStatus = document.getElementById('ConsignmentStatus').value;
+
+        if (RequestType == '') {
+            ErrorLabel.innerHTML = 'Warning!, Please select request type';
+            return;
+        }
+        if (ConsignmentNumber == '') {
+            ErrorLabel.innerHTML = 'Warning!, Please provide consignment number';
+            return;
+        }
+        else if (ConsignmentStatus == '0') {
+            ErrorLabel.innerHTML = 'Warning!, Please provide valid consignment number';
+            return;
+        }
+        else {
+            ErrorLabel.innerHTML = '';
+        }
+        if (StandardNotes == '') {
+            ErrorLabel.innerHTML = 'Warning!, Please select a standard note';
+            return;
+        }
+
+        var Data = {
+            RequestNature: RequestNature,
+            RequestType: RequestType,
+            ConsignmentNumber: ConsignmentNumber,
+            InquirerType: InquirerType,
+            InquirerName: InquirerName,
+            EmailId: EmailId,
+            PhoneNumber: PhoneNumber,
+            CellNumber: CellNumber,
+            AccountNo: AccountNo,
+            Weight: Weight,
+            Pieces: Pieces,
+            ShipperName: ShipperName,
+            ShipperCell: ShipperCell,
+            ShipperAddress: ShipperAddress,
+            ConsigneeName: ConsigneeName,
+            ConsigneeCell: ConsigneeCell,
+            ConsigneeAddress: ConsigneeAddress,
+            SourceMedia: SourceMedia,
+            Department: Department,
+            AllocationBy: AllocationBy,
+            StandardNotes: StandardNotes,
+            Description: Description,
+            Origin: Origin,
+            Destination: Destination
+        }
+
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("SaveComplaint","CXMComplaint")',
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ Data: Data }),
+            dataType: "json",
+
+            success: (rs) => {
+
+                alert(rs.response.message);
+                ErrorLabel.innerHTML = rs.response.message;
+
+                document.getElementById('ConsignmentNumberTxt').value = '';
+
+                document.getElementById('InquirerNameTxt').value = '';
+                document.getElementById('EmailIdTxt').value = '';
+                document.getElementById('PhoneNumberTxt').value = '';
+                document.getElementById('CellNumberTxt').value = '';
+                document.getElementById('AccountNoTxt').value = '';
+                document.getElementById('WeightTxt').value = '';
+                document.getElementById('PiecesTxt').value = '';
+                document.getElementById('ShipperNameTxt').value = '';
+                document.getElementById('ShipperCellTxt').value = '';
+                document.getElementById('ShipperAddressTxt').value = '';
+                document.getElementById('ConsigneeNameTxt').value = '';
+                document.getElementById('ConsigneeCellTxt').value = '';
+                document.getElementById('ConsigneeAddressTxt').value = '';
+                document.getElementById('AllocationByDDL').value = '';
+                document.getElementById('StandardNotesDDL').value = '';
+                document.getElementById('DescriptionTxt').value = '';
+                document.getElementById('OriginDDL').value = '';
+                document.getElementById('DestinationDDL').value = '';
+                document.getElementById('ConsignmentStatus').value = '';
+
+            }, error: function (xhr, ajaxOptions, thrownError) {
+                alert('Error saving complaint');
+            }
+        });
+    }
+
+    </script>
+}
+
+
+<div class="app-content">
+
+    <div class="row main-body newPanel">
+        <div class="col-lg-12 col-md-12 col-sm-12 screen-name">
+            <h3>Complaint Form</h3>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <label style="color: red;font-weight:bolder" id="ErrorLabel"></label>
+
+        </div>
+        <div class="col-lg-12 col-md-12 col-sm-12 screen-table" style="overflow: scroll;">
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Request Nature</b>
+                    </div>
+                    <div class="col-2">
+                        <select id="RequestNatureDDL" class="form-control">
+                            <option value="2" selected="selected">Complaint</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Request Type</b>
+                    </div>
+                    <div class="col-2">
+                        <select id="RequestTypeDDL" class="form-control" onchange="StandardNotesFetch()">
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Consignment Number</b>
+                    </div>
+                    <div class="col-3">
+                        <input type="text" id="ConsignmentNumberTxt" class="form-control" onchange="getConsignmentNumberDetails()" />
+                        <input type="hidden" id="ConsignmentStatus" value="0" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Inquirer Type</b>
+                    </div>
+                    <div class="col-2">
+                        <select id="InquirerTypeDDL" class="form-control">
+                            <option value="2">Shipper</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Inquirer Name</b>
+                    </div>
+                    <div class="col-2">
+                        <input type="text" id="InquirerNameTxt" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Email</b>
+
+                    </div>
+                    <div class="col-3">
+                        <input type="text" id="EmailIdTxt" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Phone Number</b>
+                    </div>
+                    <div class="col-2">
+                        <input id="PhoneNumberTxt" type="text" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Cell Number</b>
+                    </div>
+                    <div class="col-2">
+                        <input id="CellNumberTxt" type="text" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Account No</b>
+                    </div>
+                    <div class="col-3">
+                        <input type="text" id="AccountNoTxt" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Weight</b>
+                    </div>
+                    <div class="col-2">
+                        <input id="WeightTxt" type="text" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Pieces</b>
+                    </div>
+                    <div class="col-2">
+                        <input type="text" id="PiecesTxt" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4   form-group form-inline">
+                    <div class="col-3">
+                        <b>ShipperName</b>
+                    </div>
+                    <div class="col-2">
+                        <input id="ShipperNameTxt" type="text" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4   form-group form-inline">
+                    <div class="col-3">
+                        <b>Shipper Cell</b>
+                    </div>
+                    <div class="col-2">
+                        <input type="text" id="ShipperCellTxt" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4   form-group form-inline">
+                    <div class="col-3">
+                        <b>Shipper Address</b>
+                    </div>
+                    <div class="col-3">
+                        <textarea id="ShipperAddressTxt"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4   form-group form-inline">
+                    <div class="col-3">
+                        <b>Consignee</b>
+                    </div>
+                    <div class="col-2">
+                        <input type="text" id="ConsigneeNameTxt" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4   form-group form-inline">
+                    <div class="col-3">
+                        <b>Consignee Cell</b>
+                    </div>
+                    <div class="col-2">
+                        <input id="ConsigneeCellTxt" type="text" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4   form-group form-inline">
+                    <div class="col-3">
+                        <b>Consignee Address</b>
+                    </div>
+                    <div class="col-3">
+                        <textarea id="ConsigneeAddressTxt"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Source Media</b>
+                    </div>
+                    <div class="col-2">
+                        <select id="SourceMediaDDL" class="form-control">
+                            <option value="5">Internet</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3   ">
+                        <b>Department</b>
+                    </div>
+                    <div class="col-2">
+                        <select id="DepartmentDDL" class="form-control">
+                            <option value="5">COD</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3">
+                        <b>Allocation by Zone</b>
+                    </div>
+                    <div class="col-3">
+                        <select id="AllocationByDDL" class="form-control">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-4   form-group form-inline">
+                    <div class="col-3">
+                        <b>Standard Notes</b>
+                    </div>
+                    <div class="col-2">
+                        <select id="StandardNotesDDL" class="form-control" multiple="multiple">
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  form-group form-inline">
+                    <div class="col-3   ">
+                        <b>Description</b>
+                    </div>
+                    <div class="col-2">
+                        <textarea id="DescriptionTxt"></textarea>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-4  ">
+                    <div class="form-group form-inline">
+                        <div class="col-3">
+                            <b>Origin Location</b>
+                        </div>
+                        <div class="col-3">
+                            <select id="OriginDDL" class="form-control">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group form-inline">
+                        <div class="col-3">
+                            <b>Destination</b>
+                        </div>
+                        <div class="col-3">
+                            <select id="DestinationDDL" class="form-control">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="Div1" runat="server" style="width: 100%">
+            </div>
+            <button id="btn_Save" type="button" onclick="SaveComplaint()" class="btn btn-outline-primary">Save Complaint</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MRaabta.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="MRaabta_BridgeConnector_Connector" Type="(Web Service URL)" Scope="Application">
+      <Value Profile="(Default)">http://192.168.200.145/bridgeConnectorNew/connector.asmx</Value>
+    </Setting>
+    <Setting Name="MRaabta_SalezmanConnection_Connector" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://192.168.200.145/bridgeConnector/Connector.asmx</Value>
+    </Setting>
+    <Setting Name="MRaabta_SalezmanConnection1_Connector" Type="(Web Service URL)" Scope="Application">
+      <Value Profile="(Default)">http://192.168.200.145/bridgeConnector/Connector.asmx</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

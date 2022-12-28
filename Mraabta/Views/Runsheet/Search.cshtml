@@ -1,0 +1,186 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    table {
+        font-size: 12px;
+    }
+</style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <h2 class="text-center">Search Runsheets</h2>
+        <div id="root"></div>
+    </div>
+</main>
+
+
+@section scripts{
+<script>
+    var date = '@DateTime.Now.ToString("yyyy-MM-dd")';
+    var searchUrl = '@Url.Action("SearchRunsheets","Runsheet")';
+    var printUrl = '@Url.Action("Print","Runsheet")';
+</script>
+<script type="text/babel">
+
+    function Grid(props) {
+
+        return (
+            <div style={{ overflowX: 'auto' }}>
+                {
+                    props.data.length == 0 ? '' :
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>SNo</th>
+                                    <th>Runsheet Number</th>
+                                    <th>Runsheet Date</th>
+                                    <th>Route Code</th>
+                                    <th>Consignment Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    props.data.map((x, index) =>
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td><a target="_blank" href={printUrl + '?id=' + x.EncryptedId} style={{ color: 'blue', textDecoration: 'underline' }}>{x.RunsheetNumber}</a></td>
+                                            <td>{x.RunsheetDate}</td>
+                                            <td>{x.RouteCode}</td>
+                                            <td>{x.RunsheetCount}</td>
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                }
+            </div>
+        );
+    }
+
+
+    function App() {
+
+        const [data, setData] = React.useState({
+            date: date,
+            routeCode: ''
+        });
+
+        const [gridData, setGridData] = React.useState([]);
+
+        const [loading, setLoading] = React.useState(false);
+
+        const updateData = (key, val) => {
+            let x = { ...data };
+            x[key] = val;
+            setData(x);
+        }
+
+        const getRunsheets = () => {
+            setLoading(true);
+            fetch(searchUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 0) {
+                            if (rs.data.length > 0) {
+                                setGridData(rs.data);
+                            } else {
+                                alert('No data found');
+                            }
+                        } else {
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const process = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+        const overlayStyle = {
+            position: 'fixed',
+            top: '0px',
+            left: '0px',
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)',
+            zIndex: 10000,
+            backdropFilter: 'blur(15px)'
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={overlayStyle}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="row">
+                    <div className="col-lg-3 col-sm-12">
+                        <label>Date</label>
+                        <input type="date" className="form-control" value={data.date} onChange={(x) => updateData('date', x.target.value)} />
+                    </div>
+                    <div className="col-lg-3 col-sm-12">
+                        <label>Route Code</label>
+                        <input className="form-control" value={data.routeCode} onChange={(x) => updateData('routeCode', x.target.value)} />
+                    </div>
+                    <div className="col-lg-3 col-sm-12">
+                        <button type="button" className="btn btn-outline-secondary" style={{ marginTop: '1.5rem' }} onClick={() => {
+                            if (data.routeCode) {
+                                getRunsheets();
+                            } else {
+                                alert('Enter Route Code');
+                            }
+                        }}>Search</button>
+                    </div>
+                </div>
+                <br />
+                {
+                    gridData.length > 0 ? <Grid data={gridData} /> : ''
+                }
+
+            </div>
+        );
+    }
+    ReactDOM.render(<App />, document.querySelector('#root'));
+</script>
+}

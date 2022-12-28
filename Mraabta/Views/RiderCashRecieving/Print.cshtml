@@ -1,0 +1,226 @@
+﻿@model MRaabta.Models.RiderCashRecievingModel
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Rider Recieving Slip</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: Arial;
+        }
+
+        body {
+            padding: 20px;
+        }
+
+        #cont {
+            width: 100%;
+            margin: 10px auto;
+        }
+
+            #cont table {
+                width: 100%;
+            }
+
+                #cont table th, #cont table td {
+                    text-align: left;
+                    padding: 5px;
+                    font-size: 14px;
+                }
+
+        #header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            min-width: 100% !important;
+            align-items: center;
+        }
+
+        .detail {
+            border: 2px solid black;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+            .detail td {
+                border: 1px solid black;
+            }
+
+        #grid table {
+            width: 100%;
+        }
+
+            #grid table th, #grid table td {
+                text-align: left;
+                padding: 5px;
+                font-size: 14px;
+            }
+
+            #grid table th, #grid table td {
+                border: 1px solid black;
+                border-collapse: collapse;
+                font-weight: bolder;
+                text-align: center;
+            }
+    </style>
+    <script src="~/Scripts/jquery-3.5.1.js"></script>
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <script>
+        $(document).ready(function () {
+            var a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+            var b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+            function inWords(num) {
+                if ((num = num.toString()).length > 9) return 'overflow';
+                n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+                if (!n) return; var str = '';
+                str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+                str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+                str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+                str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+                str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+                return str + 'Only ';
+            }
+            var amt = parseInt(document.getElementById('txtAmount').innerHTML);
+            document.getElementById('words').innerHTML = inWords(amt);
+        });
+    </script>
+</head>
+<body onload="window.print()">
+    <div id="cont" class="detail">
+        <table class="table table-bordered ">
+            <tr>
+                <td colspan="4">
+                    <div id="header">
+                        <div style="text-align:left">
+                            <img src="@Url.Content("~/images/mnpLogo.png")" alt="Alternate Text" height="50" />
+                        </div>
+                        <div style="text-align:center">
+                            <h2><center>RIDER CASH RECIEVING SLIP</center></h2>
+                        </div>
+                        <div style="text-align:right">@DateTime.Now</div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style=" width:25%;">Reciept No</td>
+                <td style=" width:25%;">@Model.ECCode-@Model.Id</td>
+                <td style=" width:15%;">Express Center</td>
+                <td style=" width:35%;">@Model.ECName</td>
+            </tr>
+            <tr>
+                <td>Rider Code</td>
+                <td>@Model.RiderCode</td>
+                <td>Staff Code</td>
+                <td>@Model.StaffCode</td>
+            </tr>
+            <tr>
+                <td>Rider Name</td>
+                <td>@Model.RiderName</td>
+                <td>Staff Name</td>
+                <td>@Model.StaffName</td>
+            </tr>
+            <tr>
+                <td>COD Amount</td>
+                <td style="font-weight:bolder;font-size:20px;">@Model.CurrExpAmount / -</td>
+                <td>Total CNs:</td>
+                <td>@Model.CNLineItem.Count()</td>
+            </tr>
+            <tr>
+                <td>Collected Amount</td>
+                <td id="txtAmount" style="font-weight:bolder;font-size:20px;">@Model.ColAmount /-</td>
+                <td id="words" colspan="2"></td>
+            </tr>
+        </table>
+        <br /><br />
+        <div style="text-align:right;padding-right:100px;">
+            <p>_______________</p>
+            <p>EC Staff Signature</p>
+        </div>
+    </div>
+    @if (Model.paymentLineItem.Count() > 0)
+    {
+        <div id="grid" class="detail">
+            <table class="table table-bordered " style="border-collapse: collapse;">
+                <h3><center>TRANSACTION HISTORY</center></h3>
+                <thead class="header">
+                    <tr>
+                        <th style="width:10%;">S No.</th>
+                        <th style="width:25%;">Submit Time</th>
+                        <th style="width:25%;">Express Center</th>
+                        <th style="width:25%;">Expect Amount</th>
+                        <th style="width:25%;">Submitted Amount</th>
+                        <th style="width:25%;">Short/Excess Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 1;
+                        foreach (var item in Model.paymentLineItem)
+                        {
+                            <tr>
+                                <td>@i</td>
+                                <td>@item.SubmitTime</td>
+                                <td>@item.ExpressCenter</td>
+                                <td>@item.ExpectAmount</td>
+                                <td>@item.SubmittedAmount</td>
+                                <td>@item.ShortAmount</td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th></th>
+                        <th>TOTAL</th>
+                        <th></th>
+                        <th>@Model.paymentLineItem.Sum(c => Int32.Parse(c.ExpectAmount))</th>
+                        <th>@Model.paymentLineItem.Sum(c => Int32.Parse(c.SubmittedAmount))</th>
+                        <th>@Model.paymentLineItem.Sum(c => Int32.Parse(c.ShortAmount))</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+    @if (Model.CNLineItem.Count() > 0)
+    {
+        <div id="grid" class="detail">
+            <table class="table table-bordered" style="border-collapse: collapse;">
+                <h3><center>CONSIGNMENTS DETAIL</center></h3>
+                <thead class="header">
+                    <tr>
+                        <th style="width:5%;">S No.</th>
+                        <th style="width:25%;">Runsheet No</th>
+                        <th style="width:25%;">Consignment No</th>
+                        <th style="width:15%;">CN Amount</th>
+                        <th style="width:15%;">Amount Recieved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 1;
+                        foreach (var item in Model.CNLineItem)
+                        {
+                            <tr>
+                                <td>@i</td>
+                                <td>@item.RunSheetNumber</td>
+                                <td>@item.ConsignmentNumber</td>
+                                <td>@item.RiderAmount</td>
+                                <td>@item.AmountRcv</td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <p style='page-break-after:always;'></p>
+</body>
+</html>

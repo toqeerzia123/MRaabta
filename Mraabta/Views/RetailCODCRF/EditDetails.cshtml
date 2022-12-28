@@ -1,0 +1,234 @@
+﻿@model IEnumerable<MRaabta.Models.RetailCODCRFNewModel>
+@{
+    ViewBag.Title = "Edit Customer Accounts Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var data = Model.FirstOrDefault();
+
+}
+
+@section styles{
+    <style>
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #formrow {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .rowitem {
+            width: calc(88% / 4) !important;
+            padding: 10px !important;
+        }
+
+        .rowitembtn {
+            display: flex;
+            flex-direction: row;
+            width: 12% !important;
+            padding: 10px !important;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .page-content {
+            /*          padding-left:10px !important;*/
+        }
+
+        #AccountDetails {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            #AccountDetails td, #AccountDetails th {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+
+            #AccountDetails tr:hover {
+                background-color: #ddd;
+            }
+
+            #AccountDetails th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: left;
+                background-color: #ddd;
+                color: black;
+            }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loader">
+    </div>
+    @if (Model != null && Model.Any())
+    {
+        if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success alert-dismissable">
+                <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span>
+                <strong>@TempData["Message"]</strong>
+            </div>
+        }
+        <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+            <form method="post" action="~/RetailCODCRF/UpdateDetail">
+                <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+                    <div></div>
+                    <div style="justify-self:center;align-self:center">
+                        <h2 style="justify-self:center;align-self:center">@ViewBag.Title</h2>
+                    </div>
+                </div>
+                <div></div>
+                <div style="justify-self:center;align-self:center">
+                    <h2 style="justify-self:center;align-self:center">Basic Info</h2>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-lg-3 col-sm-12">
+                        <label>Account #</label>
+                        <label class="form-control">@data.AccountNumber</label>
+                        <input hidden class="form-control" type="text" id="AccountNumber" name="AccountNumber" value="@data.AccountNumber" />
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <label>Customer Name</label>
+                        <input class="form-control" type="text" required id="CustomerName" name="CustomerName" value="@data.CustomerName" />
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <label>Mobile Number</label>
+                        <label class="form-control">@data.BankContactNo</label>
+                        @*<input class="form-control" type="tel" id="BankContactNo" disabled name="BankContactNo" value="@data.BankContactNo" onkeypress="return isNumberKeydouble();" onchange="changeFunction()" MaxLength="11" placeholder="XXXX-XXXXXXX" />*@
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <label>Email Id</label>
+                        <label class="form-control">@data.Email</label>
+                        @* <input class="form-control" type="email" id="Email" disabled name="Email" CssClass="txt_width" value="@data.Email" />*@
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <label>CNIC Number</label>
+                        <label class="form-control">@data.CNIC</label>
+                        @*<input class="form-control" type="text" id="CNIC" name="CNIC" MaxLength="13" value="@data.CNIC" placeholder="XXXXX-XXXXXXX-X" onkeypress="return isNumberKeydouble();" OnTextChanged="txt_cnic_TextChanged" onchange="changeFunctionNIC()" />*@
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <label>Address</label>
+                        <br />
+                        <textarea id="Address" name="Address" required class="form-control">@data.Address</textarea>
+                        @*   <input class="form-control" type="text" id="Address" name="Address" value="@data.Address" />*@
+                    </div>
+                </div>
+
+                <div></div>
+                <div style="justify-self:center;align-self:center">
+                    <h2 style="justify-self:center;align-self:center"><br />Bank Info</h2>
+                </div>
+                <div>
+                    <div class="row mt-4">
+                        <div class="col-lg-3 col-sm-12">
+                            <label>Bank Name</label>
+                            @Html.DropDownList("BankId", (SelectList)ViewBag.Bank, "Select Bank", new { @class = "form-control", @required="required" })
+                        </div>
+                        <div class="col-lg-3 col-sm-12">
+                            <label>Bank Branch Name</label>
+                            <input type="text" class="form-control" required id="BankBranchName" name="BankBranchName" value="@data.BankBranchName" />
+                        </div>
+                        <div class="col-lg-3 col-sm-12">
+                            <label>Bank Branch Code</label>
+                            <input type="text" class="form-control" required id="BankBranchCode" name="BankBranchCode" value="@data.BankBranchCode" />
+                        </div>
+                        <div class="col-lg-3 col-sm-12">
+                            <label>Account Title</label>
+                            <input type="text" class="form-control" required id="AccountTitle" name="AccountTitle" value="@data.AccountTitle" />
+                        </div>
+                        <div class="col-lg-3 col-sm-12">
+                            <label>IBAN Number</label>
+                            <input class="form-control" required type="text" id="IBFT" name="IBFT" value="@data.IBFT" MaxLength="24" onkeypress="return isNumberKeydouble__();" onchange="changeFunctionIBAN();" />
+                        </div>
+                    </div>
+                </div>
+                <div class="">
+                    <button type="submit" id="sbtbtn" class="btn btn-primary" style="float:right; background-color: #EA5B0C;">Save</button>
+                    <br />
+                    <br />
+                </div>
+            </form>
+        </div>
+    }
+    else
+    {
+        <h5 style="text-align: center;background-color: #EA5B0C;">No Records Found</h5>
+    }
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+
+           function changeFunctionNIC() {
+                debugger;
+                var num = document.getElementById("CNIC").value.length;
+
+                if (num < 13) {
+                    document.getElementById("CNIC").value = "";
+                    alert("Length of CNIC Number is not Correct.");
+                }
+                if (num > 13) {
+                    document.getElementById("CNIC").value = "";
+                    alert("Length of CNIC Number is not Correct.");
+                }
+            }
+            function changeFunctionIBAN() {
+                var num = document.getElementById("IBFT").value.length;
+
+                if (num < 24) {
+                    document.getElementById("IBFT").value = "";
+                    alert("Length of IBAN Number is not Correct.");
+                }
+                if (num > 24) {
+                    document.getElementById("IBFT").value = "";
+                    alert("Length of IBAN Number is not Correct.");
+                }
+            }
+
+            function isNumberKeydouble__() {
+                var regex = new RegExp("^[a-zA-Z0-9]+$");
+                var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+                if (!regex.test(key)) {
+                    event.preventDefault();
+                    return false;
+                }
+            }
+            function changeFunction() {
+                var num = document.getElementById("Mobile").value.length;
+
+                if (num < 11) {
+                    document.getElementById("Mobile").value = "";
+                    alert("Length of Mobile Number is not Correct.");
+                }
+                if (num > 11) {
+                    document.getElementById("Mobile").value = "";
+                    alert("Length of Mobile Number is not Correct.");
+                }
+            }
+            function isNumberKeydouble__() {
+                var regex = new RegExp("^[a-zA-Z0-9]+$");
+                var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+                if (!regex.test(key)) {
+                    event.preventDefault();
+                    return false;
+                }
+            }
+        
+
+    </script>
+}

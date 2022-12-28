@@ -1,0 +1,46 @@
+﻿@model IEnumerable<MRaabta.Controllers.GridModel>
+@{
+    Layout = null;
+}
+
+
+<html>
+<head>
+    <title></title>
+    <style>
+
+        body {
+            font-family:Consolas;
+        }
+
+        h1 {
+            text-align: center
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            table th, table td {
+                border: 1px solid black
+            }
+    </style>
+</head>
+<body>
+    <h1>COD Payment Download</h1>
+    <table>
+        <tr>
+            <th>Directory</th>
+            <th>File</th>
+        </tr>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Directory</td>
+                <td><a href="@Url.Content($"~/{item.Directory}/{item.File}")" download>@item.File</a></td>
+            </tr>
+        }
+    </table>
+</body>
+</html>

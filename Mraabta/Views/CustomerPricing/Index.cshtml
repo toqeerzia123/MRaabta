@@ -1,0 +1,290 @@
+﻿@{
+    ViewBag.Title = "Customer Pricing";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    #formrow {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .rowitem {
+        width: calc(88% / 4) !important;
+        padding: 10px !important;
+    }
+
+    .rowitembtn {
+        display: flex;
+        flex-direction: row;
+        width: 12% !important;
+        padding: 10px !important;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+</style>
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center">
+                    <h3><b>Customer Pricing</b></h3>
+                </div>
+                <div id="root">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+@section styles{
+    <style>
+        #root {
+            padding: 15px;
+        }
+
+        .form-control {
+            border: 1px solid #969799 !important;
+        }
+
+            .form-control:focus {
+                border: 1px solid #f46425 !important;
+            }
+    </style>
+}
+
+@section scripts{
+    <script>
+        const currentDate = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        const PDate = @Html.Raw(Json.Encode(ViewBag.Date));
+        const url = '@Url.Action("Save","CustomerPricing")';
+        const checkCnUrl = '@Url.Action("CheckAccStatus", "CustomerPricing")';
+    </script>
+    <script type="text/babel">
+
+    const App = () => {
+            const d = new Date(PDate);
+            @*var addDay = new Date(d.getTime()+(1*24*60*60*1000));
+            var days= addDay.getDate() < 10 ? '0'+addDay.getDate() :addDay.getDate();
+            var month=addDay.getMonth()+1;
+            const formatdate = addDay.getFullYear()+'-'+month+'-'+days;*@
+
+            var month= d.toLocaleString('en-us', { month: 'long' });
+            var txt_Date=month +' - '+d.getFullYear();
+          const [formData, setFormData] = React.useState({
+            AccNo : '',
+            AccCount : '',
+            AccTitle : '',
+            From: PDate,
+            To: currentDate,
+            CDate :txt_Date,
+            Compute:0
+        });
+        const [AccNo, setAcc] = React.useState('');
+        const [loading, setLoading] = React.useState(false);
+        const [isOpen, setIsOpen] = React.useState(false);
+
+        const getPricing = () => {
+            setLoading(true);
+            if (formData.From > formData.To)
+            {
+                alert('Invalid Date');
+                return;
+            }
+            fetch(`${url}?acc=${AccNo}&From=${formData.From}&To=${formData.To}&Compute=${formData.Compute}`).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            setLoading(false);
+                            setAcc('');
+                            setFormData(
+                            {
+                                AccCount : '',
+                                AccTitle : '',
+                                From: PDate,
+                                To: currentDate,
+                                Compute:0
+                            });
+
+                            alert(rs.msg);
+                        } else {
+                            @*setAcc('');*@
+                            setLoading(false);
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+         const checkCns = (AccNo) => {
+            setLoading(true);
+            fetch(`${checkCnUrl}?acc=${AccNo}`).then(
+                function (response) {
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            setLoading(false);
+                            if(rs.data!=null){
+                               setFormData(
+                                {
+                                    AccCount : rs.data.AccCount,
+                                    AccTitle : rs.data.AccTitle,
+                                    From: PDate,
+                                    To: currentDate,
+                                    Compute:0
+                                });
+                            }
+                            else{
+                                if (confirm('Do you really want to Continue?')) {
+                                setFormData(
+                                {
+                                    AccCount : 0,
+                                    AccTitle : '',
+                                    From: PDate,
+                                    To: currentDate,
+                                    Compute:1
+                                });
+                                } else {
+                                setFormData(
+                                {
+                                    AccCount : 0,
+                                    AccTitle :'',
+                                    From: PDate,
+                                    To: currentDate,
+                                    Compute:0
+                                });
+                                    alert('Data Not Found !!');
+                                }
+
+                            }
+                        }
+                        else {
+                            setLoading(false);
+                            setAcc('');
+                            setFormData(
+                            {
+                                AccCount : '',
+                                AccTitle : '',
+                                From: currentDate,
+                                To: currentDate
+                            });
+
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const changeFormData = (key, val) => {
+            let x = { ...formData, [key]: val };
+            setFormData(x);
+        }
+
+        const overlayStyle = {
+            width: '100vw',
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 10000,
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)'
+        }
+
+        return (
+            <div style={{ position: 'relative'}}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+
+                <React.Fragment>
+                    <div className="row" >
+                        <div className="col-md-2 col-sm-12">
+                            <label>Account Number</label>
+                            <input type="text" className="form-control" value={AccNo} onBlur={(x) => {
+                            const val = x.target.value;
+                            if (val.length > 0)
+                                checkCns(val);
+                        }} onChange={(x) => setAcc(x.target.value)} />
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>From</label>
+                            <input type="date" className="form-control" value={formData.From} min={PDate} max={currentDate} onChange={(x) => changeFormData('From', x.target.value)} />
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>To</label>
+                            <input type="date" value={formData.To} className="form-control" min={PDate} max={currentDate} onChange={(x) => changeFormData('To', x.target.value)} />
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>Month - Year</label>
+                            <input type="text" className="form-control" value={formData.CDate} readOnly  />
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>Account Title</label>
+                            <input type="text" className="form-control" value={formData.AccTitle} readOnly />
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>Total Count</label>
+                            <input type="text" className="form-control" value={formData.AccCount} readOnly />
+                        </div>
+                    </div>
+        {formData.AccCount < 100000 ?
+                    <div className="row" >
+                        <div className="col-md-12 col-sm-12 text-right">
+                            <button type="button" className="btn btn-primary" style={{ marginTop: 25, background: '#f46425', border: '#a53200' }} onClick={(x) => {
+                                if (AccNo) {
+                                    getPricing();
+                                } else {
+                                    alert('Enter Account Number');
+                                }
+                            }}>Pricing</button>
+                        </div>
+                    </div> : ''
+        }
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    ReactDOM.render(<App />,
+        document.querySelector('#root')
+    )
+    </script>
+}

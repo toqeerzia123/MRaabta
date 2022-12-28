@@ -1,0 +1,282 @@
+﻿@model MRaabta.Models.ConsigneeShipperModel
+
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewBag.Title = "Index";
+}
+<style>
+    .ui-autocomplete {
+        height: 100px;
+        overflow-y: scroll;
+        overflow-x: hidden;
+    }
+
+    .ui-autocomplete {
+        width: 20px;
+    }
+</style>
+<div>
+    <div class="col-12 text-center">
+        <h3>Enter Data</h3>
+    </div>
+    @*<input id="btn_chk" type="button" accesskey="b" value="Next Item">*@
+    <div class="col-12 text-center">
+        <div class="img-zoom-container">
+            @if (Model.CNNumber != null)
+            {
+
+                //<img id="myimage" style="height:55vh" src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/"+string.Format("cnimage/{0}.jpg", Model.CNNumber))" class="img-fluid" alt="No Image" />
+
+                @*<img id="myimage" style="height:55vh" src="@Url.Content(string.Format("http://mraabta.mulphico.pk/cnimage/{0}.jpg", Model.CNNumber))" class="img-fluid" alt="No Image" />*@
+                <img id="myimage" style="height:40vh; width:40em " src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/"+string.Format("PickupAPI/cnimage/{0}.jpg", Model.CNNumber))" class="img-fluid" alt="No Image" />
+            }
+            else
+            {
+                <img id="myimage" style="height:40vh" src="@Url.Content("/NoDataFound.jpg")" class="img-fluid" alt="No Image" />
+            }
+        </div>
+    </div>
+</div>
+<br>
+@using (Html.BeginForm("Index", "ConsigneeDetail", FormMethod.Post))
+{
+    <div class="row">
+        <div class="col-2">
+            <label>CN Number</label>
+            @if (ViewBag.err == null || ViewBag.err == "")
+            {
+                <input type="hidden" value="@Model.CNNumber" name="CNNumber" />
+                <input type="hidden" value="@ViewBag.PickUpId" name="PickUpId" />
+                @Html.TextBoxFor(x => x.CNNumber, new { @class = "form-control", @disabled = true, @style = "height:2em;" })
+            }
+        </div>
+        <div class="col-3">
+            <label>Shipper Name</label>
+            @Html.TextBoxFor(x => x.ShipperName, new { @class = "form-control", @disabled = true, @style = "height:2em;" })
+        </div>
+        <div class="col-2">
+            <label>Shipper Contact</label>
+            @Html.TextBoxFor(x => x.ShipperContact, new { @class = "form-control", @disabled = true, @style = "height:2em;" })
+        </div>
+        <div class="col-3">
+            <label>Shipper Address</label>
+            @Html.TextAreaFor(x => x.ShipperAddress, new { @class = "form-control", @disabled = true, @style = "height:3em;" })
+        </div>
+        <div class="col-2">
+            <label>Is Faulty</label><br>
+            @Html.CheckBoxFor(x => x.IsFaulty)
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-2">
+            <label>Consignee Contact</label>
+            @Html.TextBoxFor(x => x.ConsigneeContact, new { @class = "form-control", @maxlength = "11", @onkeypress = "return isNumber(event)", @id = "con_num", @style = "height:2em;" })
+        </div>
+        <div class="col-2">
+            <label>Consignee Name</label>
+            @Html.TextBoxFor(x => x.ConsigneeName, new { @class = "form-control", @maxlength = "50", @id = "con_name", @style = "height:2em;" })
+        </div>
+        <div class="col-3">
+            <label>Consignee Address</label>
+            @Html.TextAreaFor(x => x.ConsigneeAddress, new { @class = "form-control", @maxlength = "200", @id = "con_add", @style = "height:3em;" })
+        </div>
+        <div class="col-2">
+            <label>Street/Town</label>
+            @Html.TextBoxFor(x => x.Town, new { @class = "form-control", @maxlength = "50", @id = "street", @style = "height:2em;" })
+        </div>
+        <div class="col-2">
+            <label>City</label>
+            @Html.TextBoxFor(x => x.City, new { @class = "form-control", @maxlength = "50", @id = "city", @style = "height:2em;" })
+        </div>
+
+        <div class="col-1 text-center">
+            <br>
+            <button id="btn_next" type="submit" class="btn btn-outline-secondary">Next</button>
+        </div>
+    </div>
+    <div class="mt-3 mb-4"></div>
+}
+
+@section scripts{
+    <script type="text/javascript">
+        function preventBack() {
+            window.history.replaceState({}, '/pendingdata/index', '/pendingdata/index');
+        }
+        setTimeout("preventBack()", 0);
+        window.onunload = function () { null };
+
+    </script>
+    @*<script type="text/javascript">
+
+            function preventBack() {
+               //window.history.replaceState({}, '/pendingdata/index', '')
+                //window.history.go(-1)
+                window.history.forward();
+               // window.history.autocomplete
+
+            }
+
+            setTimeout("preventBack()",0);
+            window.onunload = function () {
+               null
+            };
+        </script>*@
+    <script>
+        debugger;
+
+        var dataexists = '@ViewBag.err';
+            if (dataexists != "") {
+          swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+                }, function() {
+                    window.location = "../Login";
+                });
+    }
+ $(function () {
+            debugger;
+            $('#city').autocomplete({
+                source: function (request, response) {
+                    var param = { prefix: $('#city').val() };
+                    $.ajax({
+                        url: "GetCountries",
+                        data: JSON.stringify(param),
+                        type: "post",
+                        contentType: "application/json; charset=utf-8",
+                        //dataFilter: function (data) { return data; },
+                        success: function (data) {
+                            //salert("he")
+                            response($.map(data.list, function (data) { return { label: data.Text, value: data.Text } }))
+                            //response(data.d);
+                        },
+
+                    });
+                },
+                minLength: 1
+            })
+            });
+
+          $(function () {
+            debugger;
+            $('#street').autocomplete({
+                source: function (request, response) {
+                    var param = { prefix: $('#street').val() };
+                    //$('.ui-autocomplete#street').css('width', '100px');
+                    //$('#street ui.a').css('width', '50px');
+                    //$('#street > input.ui-autocomplete-input').css('width', '100px')
+                    //$('.ui-autocomplete-input').css('width','100px')
+                    $.ajax({
+                        url: "GetTowns",
+                        data: JSON.stringify(param),
+                        type: "post",
+                        contentType: "application/json; charset=utf-8",
+                        //dataFilter: function (data) { return data; },
+                        success: function (data) {
+                            debugger;
+                            //salert("he")
+                            response($.map(data.list, function (data) { return { label: data.Text, value: data.Text } }))
+                            //response(data.d);
+                            //response($.map(data.slice(0, 10)));
+                        },
+
+                    });
+                },
+                minLength: 1,
+                open: function(){
+                $('.ui-autocomplete').css('width', '320px'); // HERE
+                }
+            })
+            });
+        $(function () {
+            debugger;
+            $('#con_name').autocomplete({
+                source: function (request, response) {
+                    var param = { prefix: $('#con_num').val() };
+                    $.ajax({
+                        url: "GetConsignmentDetails",
+                        data: JSON.stringify(param),
+                        type: "post",
+                        contentType: "application/json; charset=utf-8",
+                        //dataFilter: function (data) { return data; },
+                        success: function (data) {
+                            //salert("he")
+                            response($.map(data.list, function (data) { return { label: data.Text, value: data.Text } }))
+
+                            //response(data.d);
+                        },
+
+                    });
+                },
+                minLength: 1
+            })
+         });
+
+         $(function () {
+            debugger;
+            $('#con_add').autocomplete({
+                source: function (request, response) {
+                    var param = { prefix: $('#con_num').val() };
+                    $.ajax({
+                        url: "GetConsignmentAddDetails",
+                        data: JSON.stringify(param),
+                        type: "post",
+                        contentType: "application/json; charset=utf-8",
+                        //dataFilter: function (data) { return data; },
+                        success: function (data) {
+                            //salert("he")
+                            response($.map(data.list, function (data) { return { label: data.Text, value: data.Text } }))
+                            //response(data.d);
+                        },
+
+                    });
+                },
+                minLength: 1
+            })
+         });
+
+         $(function () {
+            debugger;
+            $('#con_num').autocomplete({
+                source: function (request, response) {
+                    var param = { prefix: $('#con_num').val() };
+                    $.ajax({
+                        url: "GetConsignmentNum",
+                        data: JSON.stringify(param),
+                        type: "post",
+                        contentType: "application/json; charset=utf-8",
+                        //dataFilter: function (data) { return data; },
+                        success: function (data) {
+                            //salert("he")
+                            response($.map(data.list, function (data) { return { label: data.Text, value: data.Text } }))
+                            //response(data.d);
+                        },
+
+                    });
+                },
+                minLength: 1
+            })
+          });
+
+        var isNumber = (event) => {
+            var keycode = event.keyCode;
+            if (keycode >= 48 && keycode <= 57) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+         //zoom image
+            $(function () {
+            $('img').wrap('<span style="display:inline-block"></span>')
+            .css('display', 'block')
+            .parent()
+            .zoom({
+                magnify: 1
+            });
+        });
+
+
+    </script>
+}

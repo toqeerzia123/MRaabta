@@ -1,0 +1,169 @@
+﻿@model MRaabta.Models.PaymentInstrumentModel
+@{
+    ViewBag.Title = "Uploader";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section styles{
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/datatable.css" rel="stylesheet" />
+
+    <style>
+        /* Center the loader */
+        .outer_box {
+            background: gray none repeat scroll 0 0;
+            height: 100%;
+            opacity: 0.9;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+        }
+
+        @@-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @@keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        table {
+            text-align: left;
+            position: relative;
+            border-collapse: collapse;
+        }
+
+        th {
+            position: -webkit-sticky;
+            background: white;
+            position: sticky;
+            top: 0; /* Don't forget this, required for the stickiness */
+            box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+}
+@section scripts{
+    <script>
+        function ShowLoader() {
+            $("#Submit").attr("disabled", true);
+            $('#loaders').show();
+            $("#UploaderForm").submit();
+        }
+        function UpdateFile(url) {
+            $("#UpdateFile").attr("disabled", true);
+            $('#loaders').show();
+            window.location.href = url;
+        }
+
+
+        function HideLoader() {
+            setTimeout(function () {
+                $('#loaders').hide();
+                $("#btnSearch").attr("disabled", false);
+            }, 100);
+        }
+
+    </script>
+}
+
+<div class="app-content">
+
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div id="loaders" runat="server" class="outer_box" style="display: none;">
+            <div id="loader" runat="server" class="loader"></div>
+        </div>
+        <h3 style="text-align:center">Payment Instrument</h3>
+
+        <div id="RazorUploader">
+
+            <h6>Please provide csv file to upload</h6>
+            @using (Html.BeginForm("index", "Uploader", FormMethod.Post, new { id = "UploaderForm", enctype = "multipart/form-data" }))
+            {
+                <input type="file" id="CSVFile" name="CSVFile" required class="btn btn-success" />
+                <br /><br />
+                <input type="submit" id="Submit" onclick="ShowLoader()" value="Upload File" class="btn btn-success" />
+            }
+            <span style="color:black;font-size:16px;font-weight: bolder;"> @ViewBag.Status</span>
+            @if (Model != null)
+            {
+                <div style="float:right;"><a onclick="UpdateFile('@Url.Action("UploadFile", "Uploader", new { FileName = Model.FileName })')" id="UpdateFile" style="background-color: lightgreen;" class="btn btn-success">Update Instrument</a></div>
+            }
+        </div>
+
+
+
+        @if (Model != null)
+        {
+            <div style="overflow-y: scroll; height:450px;width:100%;margin-top:20px">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr style="font-weight:bolder">
+                            <th>S#</th>
+                            <th>Payment Id</th>
+                            <th>Payment Mode</th>
+                            <th>Payment Mode No</th>
+                            <th>isUpdated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.InstrumentModelList != null)
+                        {
+                            int serial = 0;
+                            foreach (var item in Model.InstrumentModelList)
+                            {
+                                serial++;
+                                var ColorStyle = "";
+                                var IsUpdatedText = "";
+                                if (item.isUpdated)
+                                {
+                                    ColorStyle = "style=background-color:lightgreen";
+                                    IsUpdatedText = "Yes";
+                                }
+                                else
+                                {
+                                    ColorStyle = "style=background-color:red;color:white";
+                                    IsUpdatedText = "No";
+                                }
+                                <tr @ColorStyle>
+                                    <td>@serial</td>
+                                    <td>@item.PaymentId </td>
+                                    <td>@item.PaymentMode </td>
+                                    <td>@item.PaymentModeNo </td>
+                                    <td>@IsUpdatedText </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+</div>

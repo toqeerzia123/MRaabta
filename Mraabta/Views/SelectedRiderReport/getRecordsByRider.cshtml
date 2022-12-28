@@ -1,0 +1,168 @@
+﻿
+@model IEnumerable<MRaabta.Models.RiderReportModel>
+@{
+    Layout = null;
+}
+
+<link href="~/Content/Site.css" rel="stylesheet" />
+
+@*<link href="~/assets/css/bootstrap.css" rel="stylesheet" />*@
+<script type="text/javascript">
+    $('table.table_data').each(function () {
+        debugger;
+        var currentPage = 0;
+        var numPerPage = 10;
+        var $table = $(this);
+        $table.bind('repaginate', function () {
+            $table.find('tbody tr').hide().slice(currentPage * numPerPage, (currentPage + 1) * numPerPage).show();
+        });
+        $table.trigger('repaginate');
+        var numRows = $table.find('tbody tr').length;
+        var numPages = Math.ceil(numRows / numPerPage);
+        var $pager = $('<div class="pager"></div>');
+        for (var page = 0; page < numPages; page++) {
+            $('<span class="page-number"></span>').text(page + 1).bind('click', {
+                newPage: page
+            }, function (event) {
+                currentPage = event.data['newPage'];
+                $table.trigger('repaginate');
+                $(this).addClass('active').siblings().removeClass('active');
+            }).appendTo($pager).addClass('clickable');
+        }
+
+        $pager.insertAfter($table).find('span.page-number:first').addClass('active');
+
+
+    });
+
+</script>
+<style>
+    #tbl_pickUp {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+        #tbl_pickUp td, #tbl_pickUp th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #tbl_pickUp tr:hover {
+            background-color: #ddd;
+        }
+
+        #tbl_pickUp th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #ddd;
+            color: black;
+        }
+</style>
+
+<div>
+
+</div>
+<link href="~/Content/themes/Css/tableCss.css" rel="stylesheet" />
+@if (Model.Count() > 0 && Model != null)
+{
+    <div>
+        <div class="card text-center mt-2">
+            <div class="card-header" style="font-family:'Cambria Math'; font-size:18px; font-weight:bold;">
+                Total Records of Selected Riders
+            </div>
+            <div class="card-body" style="padding:0.25rem">
+                <div>
+                    <div id="MostReasons">
+                    </div>
+                    <div id="Abc">
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        @*<hr style="width:68em;" />*@
+        @*<div class="alert alert-warning" style="width:68em;" role="alert">
+                Records of All Riders
+            </div>*@
+
+
+    </div>
+    <br />
+
+    <div style="overflow-x:scroll; width:1000px;">
+        <table id="tbl_pickUp" class="table-bordered mt-4" border="1">
+            <thead>
+                <tr>
+                    <th>S No.</th>
+                    <th>Location</th>
+                    <th>Routes Operated</th>
+                    <th>Rider Code</th>
+                    <th>Rider Name</th>
+                    <th>Total Runsheet</th>
+                    <th>Downloaded Runsheet</th>
+                    <th>Total CN</th>
+                    <th>Total CN Downloaded</th>
+                    <th>Delivered</th>
+                    <th>UnDelivered</th>
+                    <th>Attempted</th>
+                    <th>UnAttempted</th>
+                    @*<th>Route</th>*@
+                    <th>Total Touchpoints</th>
+                    <th>Total Time Taken</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int i = 0; }
+                @foreach (var asset in Model)
+                {
+                    <tr>
+                        <td style="width:5%"> @{ i++; }   @i.ToString() </td>
+                        <td style="width:5%">@asset.Location</td>
+                        @if (asset.RiderRoute == "")
+                        {
+                            <td style="width:5%">@Session["LocationName"]</td>
+                        }
+                        else
+                        {
+                            <td style="width:5%">@asset.RiderRoute</td>
+                        }
+                        <td style="width:5%">@asset.riderCode</td>
+                        <td style="width:8%">@asset.RiderName.ToString()</td>
+                        <td style="width:8%">@asset.TotalRunsheet.ToString()</td>
+                        <td style="width:8%">@asset.DownloadedRunsheet.ToString()</td>
+
+                        @*<td> @Html.ActionLink(asset.locationName, "GetPickUpChildByLocations", new { locationID = asset.locationID, PickUpDate = asset.PickUpTime }, new { @class = "GetLocationPickUp", LocationID = asset.locationID, PickUpDate = asset.PickUpTime }) </td>*@
+                        @*<td> @Html.ActionLink(asset.locationName, "GetPickUpChildByLocations", new { locationID = asset.locationID, PickUpDate = asset.PickUpTime }) </td>*@
+                        @*<td style="width:10%"><input type="url" name="lb_locationName" class="link_button" value="@asset.RunsheetNumber" onclick="getDtails(@asset.RunsheetNumber);"></td>*@
+
+                        @*<td><a onclick="getDtails(@asset.RunsheetNumber);" style="color:dodgerblue">@asset.RunsheetNumber</a></td>*@
+                        @*<td style="width:10%"><input onclick="getDtails(@asset.RunsheetNumber);">@asset.RunsheetNumber"</input></td>*@
+                        @{ int attempted = (asset.delivered + asset.undelivered);
+                            int unattempted = (asset.TCNDownloaded - attempted);
+                        }
+
+                        <td style="width:10%">@asset.TotalCN</td>
+                        <td style="width:10%">@asset.TCNDownloaded</td>
+                        <td style="width:5%">@asset.delivered</td>
+                        <td style="width:5%">@asset.undelivered</td>
+                        <td style="width:5%">@attempted</td>
+                        <td style="width:5%">@unattempted</td>
+                        @*<td style="width:5%">@asset.Route</td>*@
+                        <td style="width:5%">@asset.Touchpoints</td>
+                        <td style="width:5%">@asset.TotalTimeTaken</td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <script type="text/javascript">
+        swal("No Record Found.");
+    </script>
+}

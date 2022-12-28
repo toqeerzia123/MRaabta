@@ -1,0 +1,107 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Main CSS-->
+    <link rel="stylesheet" type="text/css" href="~/Content/NewContent/main.css">
+    <link rel="stylesheet" type="text/css" href="~/Content/NewContent/theme.css">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Font-icon css-->
+    <title>Login - Name</title>
+    <style>
+        body {
+            background:url(@Url.Content("~/images/back.jpg"));
+            background-size:cover;
+            background-attachment:fixed;
+        }
+
+        .login-box {
+            padding: 30px !important;
+        }
+
+        .logo{
+            display:flex;
+            justify-content:center;
+        }
+    </style>
+</head>
+<body>
+    @if (ViewBag.Msg != null)
+    {
+        <div class="alert alert-danger text-center" role="alert">
+            @ViewBag.Msg
+        </div>
+    }
+
+    <section class="material-half-bg">
+        <div class="cover"></div>
+    </section>
+    <section class="login-content">
+        @using (Html.BeginForm("Index", "Login", FormMethod.Post))
+        {
+            <div class="login-box">
+                <div class="logo">
+                    <img src="@Url.Content("~/images/mnpLogo.png")" height="120" />
+                </div>
+                <form class="login-form" action="index.html">
+                    <h3 class="login-head">SIGN IN</h3>
+                    <div class="form-group">
+                        <label class="control-label">USERNAME</label>
+                        <input class="form-control" type="email" placeholder="Email" autofocus name="userName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">PASSWORD</label>
+                        <input class="form-control" type="password" placeholder="Password" name="password" required>
+                    </div>
+                    @*<div class="form-group">
+                            <div class="utility">
+                                <div class="animated-checkbox">
+                                    <label>
+                                        <input type="checkbox"><span class="label-text">Stay Signed in</span>
+                                    </label>
+                                </div>
+                                <p class="semibold-text mb-2"><a href="#" data-toggle="flip">Forgot Password ?</a></p>
+                            </div>
+                        </div>*@
+                    <div class="form-group btn-container">
+                        <button type="submit" class="btn btn-secondary btn-block">SIGN IN</button>
+                    </div>
+                </form>
+                <form class="forget-form" action="index.html">
+                    <h3 class="login-head">Forgot Password ?</h3>
+                    <div class="form-group">
+                        <label class="control-label">EMAIL</label>
+                        <input class="form-control" type="text" placeholder="Email">
+                    </div>
+                    <div class="form-group btn-container">
+                        <button class="btn btn-secondary btn-block">RESET</button>
+                    </div>
+                    <div class="form-group mt-3">
+                        <p class="semibold-text mb-0"><a href="#" data-toggle="flip"><i class="fa fa-angle-left fa-fw"></i> Back to Login</a></p>
+                    </div>
+                </form>
+            </div>
+        }
+
+    </section>
+    <!-- Essential javascripts for application to work-->
+    <script src="~/Scripts/jquery-3.5.1.min.js"></script>
+    <script src="~/Scripts/popper.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/main.js"></script>
+    <script src="~/Scripts/plugins/pace.min.js"></script>
+    <script type="text/javascript">
+        // Login Page Flipbox control
+        $('.login-content [data-toggle="flip"]').click(function () {
+            $('.login-box').toggleClass('flipped');
+            return false;
+        });
+    </script>
+</body>
+</html>

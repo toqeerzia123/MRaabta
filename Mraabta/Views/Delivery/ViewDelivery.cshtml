@@ -1,0 +1,709 @@
+﻿@model MRaabta.Models.DeliveryModel
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewBag.Title = "ViewDelivery";
+}
+
+@section styles{
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <style>
+
+        .reason {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        #tblDetail tr td {
+            font-size: 1vw !important;
+        }
+
+        .dvclass {
+            background: #50d771;
+        }
+
+            .dvclass a {
+                color: #0810ff;
+            }
+
+        .undvclass {
+            background: #ca0000;
+            color: rgba(255,255,255,.8);
+        }
+
+            .undvclass a {
+                color: #ffe108;
+            }
+
+        .rtsclass {
+            background: #f36523;
+        }
+
+        .select2-container .select2-selection--single {
+            height: 37px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 37px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            height: 37px !important;
+            line-height: 37px !important;
+        }
+
+        #tblDetail tr th {
+            position: sticky;
+            top: 0px;
+            background: #fff;
+        }
+    </style>
+}
+
+<div style="border:1px solid red; height:3.5em; width:13em; float:right; margin-right:2em;">
+    <p style="margin-left:1em; margin-right:1em;  margin-top:1em; margin-bottom:1em; color:red;">For Debriefer Use Only</p>
+</div>
+
+<div class="row" id="listdiv" style="margin-top:0px;">
+    <div class="col-12">
+        <h3 class="text-center">Delivery Details</h3>
+    </div>
+    <div class="col-12 mt-3" id="tblreq">
+    </div>
+</div>
+
+
+<div class="row">
+
+</div>
+<div class="row">
+    <div class="col-3 mt-2">
+        <label>From Date</label>
+        @Html.TextBox("date", DateTime.Now.ToString(), new { @class = "form-control", @id = "StartDate", @name = "StartDate", @type = "date" })
+    </div>
+    <div class="col-3 mt-2">
+        <label>To Date</label>
+
+        @if (ViewBag.Date == null)
+        {
+            @Html.TextBox("date", DateTime.Now.ToString(), new { @class = "form-control", @id = "EndDate", @name = "EndDate", @type = "date" })
+        }
+        else
+        {
+            DateTime date = Convert.ToDateTime(ViewBag.Date);
+            @Html.TextBox("date", date, new { @class = "form-control", @id = "EndDate", @name = "EndDate", @type = "date" })
+        }
+
+    </div>
+    <div class="col-3 mt-2">
+        <label>Select Rider</label>
+        @if (ViewBag.err == null || ViewBag.err == "")
+        {
+            <select id="ddl_rider" class="form-control form-control-lg">
+                <option value="">Choose Rider</option>
+            </select>
+
+        }
+    </div>
+    <div class="col-3 mt-2">
+        <input type="button" name="btn_search" value="Search" class="btn btn-onLine" id="btn_search" style="border:1px solid black;" />
+        
+        <input type="button" name="btn_undelivered" value="Search Undelivered" class="btn btn-onLine" id="btn_undelivered" style="border:1px solid black;" />
+
+    </div>
+
+
+    <div class="row col-md-12">
+        <div class="col-8 mt-3" style="height:300px; width: 78%;">
+
+            <div id="chartContainer" style="height:300px"></div>
+        </div>
+        <div class="col-4" style="margin-top: 2em;">
+            <div id="MostReasons">
+            </div>
+            <div id="Abc">
+
+            </div>
+        </div>
+
+    </div>
+    <div id="wait" style="display:none;width:69px;height:89px;border:1px solid black;position:absolute;top:50%;left:50%;padding:2px;">
+        <img src="~/images/loader.gif" width="64" height="64" /><br>Loading..
+    </div>
+    <div class="panel-body mainTable" style="min-height:650px;">
+        <div id="div_tbl_details" style="width:100%; overflow:no-content">
+
+        </div>
+
+    </div>
+    <div class="panel-body mainTable" style="min-height:650px;">
+        <div id="div_tbl_Child" style="width:100%; overflow:no-content">
+
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+    <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script type="text/javascript">
+
+        var getRiders = (sDate, eDate) => {
+               $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("ViewRiders","Delivery")',
+                     data: {
+                         sDate: sDate,
+                         eDate: eDate
+                         },
+                    dataType: 'json',
+                    success: (rs) => {
+                        var html = ``;
+                        for (let x of rs) {
+                            html += `<option value="${x.Value}">${x.Value}-${x.Text}</option>`;
+                        }
+                        $('#ddl_rider').html(html);
+                        let searchParams = new URLSearchParams(window.location.search)
+
+                           if (searchParams.has('StartDate')) {
+                               if (searchParams.has('EndDate')) {
+                                    if (searchParams.has('RiderCode')) {
+                                            var RiderCode= searchParams.get('RiderCode');
+                                            document.getElementById('ddl_rider').value = RiderCode;
+                                             getreasonpoints(RiderCode, searchParams.get('StartDate'),searchParams.get('EndDate'));
+                                            search(RiderCode, searchParams.get('StartDate'), searchParams.get('EndDate'));
+                                    }
+                                }
+                           }
+                    }
+               });
+        }
+       $("#btn_undelivered").click(function (e) {
+            var riderCode = $("#ddl_rider").val().toString();
+            var StartDate = $("#StartDate").val().toString();
+            var EndDate = $("#EndDate").val().toString();
+
+            if (riderCode == '') {
+                swal("Select Rider");
+                return;
+            }
+
+            if (!StartDate) {
+                swal('Select From Date');
+                return;
+            }
+
+            if (!EndDate) {
+                swal('Select To Date');
+                return;
+            }
+            else {
+                window.open('@Url.Action("UndeliveredPODSheet","RunsheetPrintView")' + '?ridercode=' + riderCode + "&startrunsheetdate=" + StartDate+"&endrunsheetdate=" + EndDate, "_blank")
+            }
+        });
+
+
+        $(function () {
+            var sDate, eDate;
+             $('#StartDate').change(function () {
+
+                sDate = $(this).val();
+                 if (sDate != "" && eDate != "" && sDate <= eDate) {
+                     getRiders(sDate, eDate);
+                 }
+                 if (sDate > eDate) {
+                     swal('Select Correct Date');
+                 }
+             });
+
+             $('#EndDate').change(function () {
+
+                eDate = $(this).val();
+                 if (sDate != "" && eDate != "" && sDate <= eDate) {
+                     getRiders(sDate, eDate);
+                 }
+                 else if (sDate == "" || eDate == "") {
+                 }
+                 else
+                 {
+                     swal('Select Correct Date');
+                 }
+             });
+        });
+
+      function search(riderCode, StartDate, EndDate) {
+            $.ajax({
+                type: 'GET',
+                url: '../Delivery/getDeliveryByRider',
+                data: { riderCode: riderCode, StartDate: StartDate, EndDate: EndDate },
+                contentType: 'application/html; charset=utf-8',
+                dataType: "html",
+                success: function (response) {
+                    $('#div_tbl_details').html(response);
+                },
+                error: function (response) {
+                    swal('Error! Something went wrong');
+                }
+            });
+        }
+       function getreasonpoints(riderCode, StartDate, EndDate) {
+                 $.ajax({
+                    type: 'post',
+                    url: '../Delivery/GetReasonPoints',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify({ riderCode: riderCode, StartDate: StartDate, EndDate: EndDate }),
+                     success: function (rs) {
+
+                         if (rs.dataPoints) {
+
+                         var TCN = rs.dataPoints[0].TotalCN;
+                         var TCNDownloaded = rs.dataPoints[0].TCNDownloaded;
+                         var Performed = rs.dataPoints[0].delivered + rs.dataPoints[0].undelivered;
+                         var UnPerformed = TCNDownloaded - Performed;
+                         if (rs.dataPoints[0].delivered == 0 && rs.dataPoints[0].undelivered == 0 && UnPerformed == 0) {
+                             $("#chartContainer").empty();
+                             $("#MostReasons").empty();
+                             $("#Abc").empty();
+                         }
+                         else {
+                             var TotalR = rs.dataPoints[0].TotalRunsheet;
+                             var TCN = rs.dataPoints[0].TotalCN;
+                             var Performed = rs.dataPoints[0].delivered + rs.dataPoints[0].undelivered + rs.dataPoints[0].deliveredRts;
+                             TCNDownloaded = rs.dataPoints[0].TCNDownloaded;
+                             var UnPerformed = TCNDownloaded - Performed;
+                             var City = rs.dataPoints[0].City;
+                             var Rider_IEMI = rs.dataPoints[0].Rider_IEMI;
+                             var Rider_CNIC_No = rs.dataPoints[0].Rider_CNIC_No
+                             var courier = rs.dataPoints[0].Courier;
+                             var touchpoints = rs.dataPoints[0].Touchpoints;
+                             var totaltime = rs.dataPoints[0].TotalTimeTaken;
+                             var route = rs.dataPoints[0].Route;
+                             DownloadedRunsheet = rs.dataPoints[0].DownloadedRunsheet;
+                             //<button id='btn_switch' class='btn btn-onLine'>Logout Rider</button><br/>
+                             $('#MostReasons').html("<div style='color:black; font-weight: bold; font-size:12px;'><span>Courier Name: </span> <span>" + courier + "</span></div><div style='color:black; font-weight: bold; font-size:12px;'><span>City: </span> <span>" + City + "</span></div><div style='color:black; font-weight: bold; font-size:12px;'><span>Rider IEMI: </span> <span>" + Rider_IEMI + "</span></div><div style='color:black; font-weight: bold; font-size:12px;'><span>Route: </span> <span>" + route + "</span></div><br/><div style='color:black; font-weight: bold; font-size:12px;'><span>Total Touchpoints: </span> <span>" + touchpoints + "</span></div><div style='color:black; font-weight: bold; font-size:12px;'><span>Total Time Taken: </span> <span>" + totaltime + "</span></div><br/><div style='color:black; font-weight: bold; font-size:12px;'><span>Total Runsheets: </span> <span class='col-md-2'>" + TotalR + "</span></div><div style='color:black; font-weight: bold; font-size:12px;'><span>Total Consignments: </span> <span class='col-md-2'>" + TCN + "</span></div><br/><div style='color:black; font-weight: bold; font-size:12px;'><span>Total Donwloaded Runsheets: </span> <span class='col-md-2'>" + DownloadedRunsheet + "</span></div> <div style='color:black; font-weight: bold; font-size:12px;'><span>Total Downloaded Consignments: </span> <span class='col-md-2'>" + TCNDownloaded + "</span></div><div style='color:green; font-weight: bold; font-size:12px;'><span>Attempted: </span> <span>" + Performed + "</span></div><div style='color:#009688; font-weight: bold; font-size:12px;'><span>UnAttempted: </span> <span>" + UnPerformed + "</span></div><br/><div style='color:#009688; font-weight: bold; font-size:12px;'><span id='totalKmDistance'>Total Distance travelled (approx.): </span> <span></span></div>");
+                             var chart = new CanvasJS.Chart("chartContainer", {
+                                 animationEnabled: true,
+                                 title: {
+                                     text: "Delivery Details",
+                                     horizontalAlign: "left",
+                                     fontSize: '16'
+                                 },
+
+                                 data: [{
+                                     type: "doughnut",
+                                     plot: {
+                                         borderColor: "#2B313B",
+                                         borderWidth: 5
+                                     },
+                                     valueBox: {
+                                         placement: 'out',
+                                         text: '%t\n%npv%',
+                                         fontFamily: "Open Sans"
+                                     },
+                                     tooltip: {
+                                         fontSize: '18',
+                                         fontFamily: "Open Sans",
+                                         padding: "5 10",
+                                         text: "%npv%"
+                                     },
+                                     animation: {
+                                         effect: 2,
+                                         method: 5,
+                                         speed: 900,
+                                         sequence: 1,
+                                         delay: 3000
+                                     },
+                                     source: {
+                                         text: 'gs.statcounter.com',
+                                         fontColor: "#8e99a9",
+                                         fontFamily: "Open Sans"
+                                     },
+                                     plotarea: {
+                                         margin: "20 0 0 0"
+                                     },
+                                     series: [{
+                                         values: [11.38],
+                                         text: "Internet Explorer",
+                                         backgroundColor: '#50ADF5',
+                                     },
+                                     {
+                                         values: [56.94],
+                                         text: "Chrome",
+                                         backgroundColor: '#FF7965',
+                                         detached: true
+                                     },
+                                     {
+                                         values: [14.52],
+                                         text: 'Firefox',
+                                         backgroundColor: '#FFCB45',
+                                         detached: true
+                                     },
+                                     {
+                                         text: 'Safari',
+                                         values: [9.69],
+                                         backgroundColor: '#6877e5'
+                                     },
+                                     {
+                                         text: 'Other',
+                                         values: [7.48],
+                                         backgroundColor: '#6FB07F'
+                                     }
+                                     ],
+                                     startAngle: 60,
+                                     innerRadius: 60,
+                                     indexLabelFontSize: 12,
+                                     indexLabel: "{label} - {y}",
+                                     toolTipContent: "<b>{label}:</b> {y}",
+                                     dataPoints: [
+                                         { y: rs.dataPoints[0].delivered, label: "Delivered", color: "#43a047" },
+                                         { y: rs.dataPoints[0].deliveredRts, label: "Delivered-RTS", color: "#ff5e00" },
+                                         { y: rs.dataPoints[0].undelivered, label: "UnDelivered", color: "#b71c1c" },
+                                         { y: UnPerformed, label: "UnAttempted", color: "#009688" }
+                                     ]
+                                 }]
+
+                             });
+                             chart.render();
+                             }
+                         }
+                    }
+                });
+            }
+
+        $(document).ready(function () {
+            let searchParams = new URLSearchParams(window.location.search)
+            var StartDate = '';
+            var EndDate  = '';
+            var RiderCode  = '';
+            if (searchParams.has('StartDate')) {
+                StartDate = searchParams.get('StartDate');
+                document.getElementById('StartDate').value = StartDate;
+                if (searchParams.has('EndDate')) {
+                    EndDate = searchParams.get('EndDate');
+                    document.getElementById('EndDate').value = EndDate;
+                    getRiders(StartDate, EndDate);
+                }
+            }
+
+
+         $(document).on({
+                ajaxStart: function () { $("#wait").show() },
+                ajaxStop: function () { $("#wait").hide(); },
+           });
+
+        $("#btn_search").click(function (e) {
+            e.preventDefault();
+            $('#div_tbl_Child').empty();
+            var riderCode = $("#ddl_rider").val().toString();
+            var StartDate = $("#StartDate").val().toString();
+            var EndDate = $("#EndDate").val().toString();
+
+            if (riderCode == '') {
+                swal("Select Rider");
+                return;
+            }
+
+            if (!StartDate) {
+                swal('Select From Date');
+                return;
+            }
+
+            if (!EndDate) {
+                swal('Select To Date');
+                return;
+            }
+            else {
+                getreasonpoints(riderCode, StartDate, EndDate);
+                search(riderCode, StartDate, EndDate);
+            }
+        });
+
+
+            var riderCode = $("#ddl_rider").val().toString();
+        });
+
+        $.fn.scrollView = function () {
+
+        return this.each(function () {
+                $('html, body').animate({
+                    scrollTop: $(this).offset().top
+                }, 1000);
+            });
+        }
+
+        function getDtails(ID) {
+            rid = ID;
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetDeliveryByRunsheet", "Delivery")' + '?RunsheetID=' + ID,
+                dataType: "html",
+                success: function (response) {
+                    $('#div_tbl_Child').html(response);
+                    $('html, body').animate({
+                        scrollTop: $("#div_tbl_Child").offset().top
+                    }, 1000);
+                },
+                failure: function (xhr, textStatus, error){
+                      console.log(xhr.statusText);
+                      console.log(textStatus);
+                      console.log(error);
+                },
+                error: function (xhr, textStatus, error){
+                      console.log(xhr.statusText);
+                      console.log(textStatus);
+                      console.log(error);
+               }
+        });
+    };
+
+        var rid = null;
+        var coord = 0;
+
+        var submitVerification = (data) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("SubmitVerification", "Delivery")',
+                dataType: 'json',
+                data: JSON.stringify({ Id: parseInt(data.el.data('id')), IsVerify: data.isverify, Comment: data.comment }),
+                contentType:'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        //data.el.parent().parent().remove();
+                        refreshGrid(rid);
+                    }
+                }
+            });
+        };
+
+        var updateReason = (data) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("UpdateCN", "Delivery")',
+                dataType: 'json',
+                data: JSON.stringify({ Id: parseInt(data.id), Reason: data.reason }),
+                contentType:'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        alert('Consignment Updated');
+                        $('#exampleModalCenter').modal('hide');
+                        refreshGrid(rid);
+                    }
+                }
+            });
+        };
+
+        var updateRelationAndReceiver = (data) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("UpdateRelationAndReceiver", "Delivery")',
+                dataType: 'json',
+                data: JSON.stringify({ Id: parseInt(data.id), Relation: data.relation, Receiver: data.receiver }),
+                contentType:'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        alert('Consignment Updated');
+                        $('#relationModal').modal('hide');
+                        refreshGrid(rid);
+                    }
+                }
+            });
+        };
+
+        var refreshGrid = (id) => {
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetDeliveryByRunsheet", "Delivery")' + '?RunsheetID=' + id,
+                dataType: "html",
+                success: function (rs) {
+                    $('#div_tbl_Child').html(rs);
+                    $('#tablecontainer').scrollTop(coord);
+                }
+            });
+        };
+
+        var verifyAll = (data) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("VerifyAll", "Delivery")',
+                data: JSON.stringify({ model : data }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (rs) {
+                    if (rs.sts == 1) {
+                        alert('All Consignments Verified');
+                        refreshGrid(rid);
+                    }
+                }
+            });
+        };
+
+        $(function () {
+
+            $('body').on('click', '.btnEdit', function (e) {
+                coord = $('#tablecontainer').scrollTop();
+                var val = $(this).val();
+                var id = $(this).data('id');
+                var reason = $(this).data('reason');
+                var receiver = $(this).data('receiver');
+                var relation = $(this).data('relation');
+                $('#hdnId').val(id);
+                if ([1, 3].includes(parseInt(val))) {
+                    $('#relationModal').modal('show');
+                    $('#ddlRelation').val(relation).trigger('change');
+                    $('#txtReceiver').val(receiver);
+
+                } else if(val == 2) {
+                    $('#exampleModalCenter').modal('show');
+                    $('#ddlReason').val(reason).trigger('change');
+                }
+            });
+
+            $('body').on('change','.chkvrfy',function () {
+                var isChecked = $(this).is(":checked");
+                var tr = $(this).parent().parent();
+                if (isChecked) {
+                    tr.find('td').eq(9).find('button').removeAttr('disabled');
+                } else {
+                    tr.find('td').eq(9).find('button').attr('disabled', 'disabled');
+                }
+            });
+
+            $('body').on('click', '.btnSubmit', function () {
+                coord = $('#tablecontainer').scrollTop();
+                var tr = $(this).parent().parent();
+                var isverify = tr.find('td').eq(7).find('input[type=checkbox]').is(':checked');
+                var comment = tr.find('td').eq(8).find('textarea').val();
+                var data = {
+                    isverify,
+                    comment,
+                    el: $(this)
+                };
+                submitVerification(data);
+            });
+
+            $('body').on('click','#btnUpdate',function () {
+                var id = $('#hdnId').val();
+                var reason = $('#ddlReason').val();
+                var data = {
+                    id, reason
+                };
+
+                updateReason(data);
+            });
+
+            $('body').on('click', '#btnUpdate2', function () {
+                var id = $('#hdnId').val();
+                var relation = $('#ddlRelation').val();
+                var receiver = $('#txtReceiver').val();
+                var data = {
+                    id, relation, receiver
+                };
+
+                updateRelationAndReceiver(data);
+            });
+
+
+            $('body').on('click', '.btnView', function (e) {
+                e.preventDefault();
+                var data = $(this).data('view');
+                //console.log(data);
+                $('#modalCn').text(data.CN);
+
+                var table = `
+                        <table class="table table-bordered">
+                                <tr>
+                                    <th>NIC</th>
+                                    <td>${data.NicNo}</td>
+                                </tr>
+                                <tr>
+                                    <th>Rider Comments</th>
+                                    <td>${data.RiderComments}</td>
+                                </tr>
+                                <tr>
+                                    <th>COD</th>
+                                    <td>${data.CodAmount}</td>
+                                </tr>
+                                <tr>
+                                    <th>Weight</th>
+                                    <td>${data.Weight}</td>
+                                </tr>
+                                <tr>
+                                    <th>Pieces</th>
+                                    <td>${data.Pcs}</td>
+                                </tr>
+                                <tr>
+                                    <th>Origin</th>
+                                    <td>${data.Origin}</td>
+                                </tr>
+                                <tr>
+                                    <th>Destination</th>
+                                    <td>${data.Destination}</td>
+                                </tr>
+                                <tr>
+                                    <th>Reason</th>
+                                    <td>${data.Reason}</td>
+                                </tr>
+                                <tr>
+                                    <th>Debriefed By</th>
+                                    <td>${data.DBUserName}</td>
+                                </tr>
+                                <tr>
+                                    <th>Debriefed On</th>
+                                    <td>${data.DBOnStr}</td>
+                                </tr>
+                                <tr>
+                                    <th>CN Image</th>
+                                    <td><img src="${(`@Url.Content("http://20.46.47.21/mraabta/CnImage/")` + data.CN + `.jpg`)}" width="200px"/></td>
+                                </tr>
+                                ${[1, 3].includes(data.StatusId) ? `
+                                    <tr>
+                                    <th>Receiver</th>
+                                    <td>${data.Receiver}</td>
+                                    </tr>
+                                    <tr>
+                                    <th>Receiver Phone No</th>
+                                    <td>${data.PickerPhoneNo}</td>
+                                    </tr>
+                                    <tr>
+                                    <th>Relation</th>
+                                    <td>${data.Relation}</td>
+                                    </tr>
+                                    <tr>
+                                    <th>Sign Image</th>
+                                    <td><img src="${(`@Url.Content("http://20.46.47.21/mraabta/SignImage/")` + data.CN + `.jpg`)}" width="200px"/></td>
+                                </tr>` : ``}
+                                <tr>
+                                    <th>View Map</th>
+                                    <td><a href="${`@Url.Action("Index", "DlvRoute")` + `?isCN=true&rs=` + data.RunsheetNo +`&cn=` + data.CN}" target="_blank">View Map</a></td>
+                                </tr>
+                            </table>`;
+
+                $('#tableView').html(table);
+                $('#exampleModalCenter2').modal('show');
+            });
+
+            $('body').on('click', '#btnVerifyAll', function () {
+                if (confirm('Are you sure?')) {
+                    var rs = [];
+                    var rows = document.querySelectorAll("#tblDetailBody tr");
+
+                    for (let x of rows) {
+                        var data = x.dataset;
+                        if (parseInt(data.sts) > 0 && data.verify == "False") {
+                            var chkbox = x.querySelectorAll('td')[7].querySelector('input[type="checkbox"]');
+                            var comment = x.querySelectorAll('td')[8].querySelector('textarea');
+                            rs.push({
+                                Id: parseInt(data.id),
+                                Comment: chkbox.checked ? comment.value : null
+                            });
+                        }
+                    }
+
+                    if (rs.length > 0) {
+                        verifyAll(rs);
+                    }
+                }
+            });
+        });
+    </script>
+}

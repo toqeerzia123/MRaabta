@@ -1,0 +1,956 @@
+@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    .confirmOverlayInput {
+        width: 100%;
+        height: 60px;
+        border: none !important;
+        border-bottom: 5px solid white !important;
+        background: none;
+        color: rgba(255, 255, 255, .8);
+        text-align: center;
+        font-size: 35px;
+    }
+
+    .confirmOverlayInput:active,
+    .confirmOverlayInput:focus {
+        outline: none;
+    }
+
+    .confirmOverlayButton {
+        background: none;
+        width: 200px;
+        height: 80px;
+        border: 5px solid white;
+        font-size: 35px;
+        color: rgba(255, 255, 255, .8)
+    }
+
+    .confirmOverlayButton:active {
+        outline: none;
+        background: rgba(255, 255, 255, .8);
+        color: rgba(0, 0, 0, .8)
+    }
+
+    .confirmOverlayButton:focus {
+        outline: none;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script src="~/Scripts/dexie.js"></script>
+<script>
+    const origin = '@ViewBag.Origin';
+    const cnlength =  @Html.Raw(Json.Encode(ViewBag.CNLengths));
+    const branches =  @Html.Raw(Json.Encode(ViewBag.Branches));
+    const products =  @Html.Raw(Json.Encode(ViewBag.Products));
+    const baggingData =  @Html.Raw(Json.Encode(ViewBag.BaggingData));
+    const servicesUrl = '@Url.Action("Services","Bagging")';
+    const getManisfestUrl = '@Url.Action("GetManisfest","Bagging")';
+    const getCNUrl = '@Url.Action("GetCN","Bagging")';
+    const getRouteDestinationUrl = '@Url.Action("GetBranchDestinations","Bagging")';
+    const insertUrl = '@Url.Action("Insert","Bagging")';
+    const searchUrl = '@Url.Action("Search","Bagging")';
+    const printUrl = '@Url.Action("Print","Bagging")';
+    const checkBagUrl = '@Url.Action("CheckBag","Bagging")';
+    const types = [{ Value: 'PR', Text: 'Proper' }, { Value: 'TR', Text: 'Transit' }];
+    const shs = [{ Value: '1', Text: 'Yes' }, { Value: '0', Text: 'No' }];
+</script>
+<script type="text/babel">
+
+    var db = new Dexie("BaggingDB");
+
+    db.version(2).stores({
+        BagInfo: "Id,BagNo,Destination,Product,Service,BagType,SHS,SealNo,TotalWeight",
+        BagDetails: "ManCN,ServiceType,Origin,DestinationId,Destination,Weight,Pcs,IsMan,Remarks,AccountNo,Sort"
+    });
+
+    async function AddBagInfo(obj) {
+        if (!baggingData.bagno)
+            await db.BagInfo.add(obj);
+    }
+
+    async function AddBagDetails(obj) {
+        if (!baggingData.bagno)
+            await db.BagDetails.add(obj);
+    }
+
+    async function UpdateBagInfo(key, val) {
+        if (!baggingData.bagno) {
+            var rs = await GetBagInfo();
+            if (key == 'Product' && !val) {
+                await db.BagInfo.update(rs.Id, { ...rs, [key]: val, Service: '' });
+            } else {
+                await db.BagInfo.update(rs.Id, { ...rs, [key]: val });
+            }
+        }
+    }
+
+    async function UpdateBagDetails(obj) {
+        if (!baggingData.bagno)
+            await db.BagDetails.update(rest.ManCN, obj);
+    }
+
+    async function DeleteBagDetails(pk) {
+        if (!baggingData.bagno)
+            await db.BagDetails.where('ManCN').equals(pk).delete();
+    }
+
+    async function CountBagInfo() {
+        return await db.BagInfo.count();
+    }
+
+    async function CountBagDetails() {
+        return await db.BagDetails.count();
+    }
+
+    async function ClearBagInfo() {
+        await db.BagInfo.clear();
+    }
+
+    async function ClearBagDetails() {
+        await db.BagDetails.clear();
+    }
+
+    async function GetBagInfo() {
+        return await db.BagInfo.get(1);
+    }
+
+    async function GetBagDetails() {
+        return await db.BagDetails.orderBy('Sort').reverse().toArray();
+    }
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processFloat = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9.]/g, "");
+        e.target.value = numbers;
+    }
+
+    const validateForm = (data) => {
+
+        if (!data.BagNo) {
+            alert('Enter BagNo');
+            return false;
+        }
+
+        if (!data.Destination) {
+            alert('Select Destination');
+            return false;
+        }
+
+        if (!data.Product) {
+            alert('Select Product');
+            return false;
+        }
+
+        if (!data.Service) {
+            alert('Select Service');
+            return false;
+        }
+
+        if (!data.BagType) {
+            alert('Select Bag Type');
+            return false;
+        }
+
+        return true;
+    }
+
+    const Context = React.createContext(null);
+
+    const Grid = () => {
+        //const [savedGrid,setSavedGrid] = React.useState(baggingData.details)
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            grid,
+            setGrid,
+            routeDest,
+            setRouteDest
+        } = React.useContext(Context);
+
+        const [isManifest, setIsManifest] = React.useState(true);
+        const [scanned, setScanned] = React.useState(false);
+        const scanRef = React.useRef(null);
+
+
+        const fetchManifest = (no) => {
+            setScanned(true);
+            fetch(getManisfestUrl + '?manifestNo=' + no).then(
+                function (response) {
+                    setScanned(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(async function (rs) {
+                        if (rs.sts == 0) {
+                            let d = [...grid];
+                            const z = { ...rs.data, Sort: grid.length + 1 };
+                            d.unshift(z);
+                            setGrid(d);
+                            await AddBagDetails(z);
+                        } else {
+                            alert(rs.msg);
+                        }
+                        scanRef.current.value = '';
+                        scanRef.current.focus();
+                    });
+                }
+            ).catch(function (err) {
+                console.log('Fetch Error :-S', err);
+                setScanned(false);
+                scanRef.current.value = '';
+                scanRef.current.focus();
+            });
+        }
+
+        const fetchCN = (no, dest) => {
+            setScanned(true);
+            fetch(getCNUrl + '?cn=' + no + "&dest=" + dest).then(
+                function (response) {
+                    setScanned(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(async function (rs) {
+                        if (rs.sts == 0) {
+                            let d = [...grid];
+                            const z = { ...rs.data, Sort: grid.length + 1 };
+                            d.unshift(z);
+                            setGrid(d);
+                            await AddBagDetails(z);
+                        } else {
+                            alert(rs.msg);
+                        }
+                        scanRef.current.value = '';
+                        scanRef.current.focus();
+                    });
+                }
+            ).catch(function (err) {
+                console.log('Fetch Error :-S', err);
+                setScanned(false);
+                scanRef.current.value = '';
+                scanRef.current.focus();
+            });
+        }
+
+        const validateCN = (val) => {
+
+            if (val[0] == 5 && val.length != 15) {
+                alert('Invalid length of COD Consignment');
+                scanRef.current.value = '';
+                scanRef.current.focus();
+                return false;
+            }
+
+            const prefix = cnlength.filter(x => x.Prefix == val.substring(0, x.PrefixLength))[0];
+
+            if (prefix) {
+                if (prefix.Length == val.length) {
+                    return true;
+                } else {
+                    alert('Prefix length not found');
+                    scanRef.current.value = '';
+                    scanRef.current.focus();
+                    return false;
+                }
+            } else {
+                alert('Prefix not found');
+                scanRef.current.value = '';
+                scanRef.current.focus();
+                return false;
+            }
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                scanRef.current.blur();
+            }
+        }
+
+        const onScanBlur = (e) => {
+            const val = e.target.value;
+            if (val) {
+                if (validateForm(data)) {
+                    let gd = [...grid];
+                    if (baggingData.details)
+                        gd = gd.concat(baggingData.details);
+
+                    if (gd.filter(x => x.IsMan == isManifest && x.ManCN == val).length <= 0) {
+                        if (isManifest) {
+                            fetchManifest(val);
+                        } else {
+                            if (validateCN(val)) {
+                                fetchCN(val, data.Destination);
+                            }
+                        }
+                    } else {
+                        alert('Manifest/Consignment No already exists');
+                        scanRef.current.value = '';
+                        scanRef.current.focus();
+                    }
+                } else {
+                    scanRef.current.value = '';
+                    scanRef.current.focus();
+                }
+            }
+        }
+
+        const updateGrid = async (index, key, val) => {
+            let x = [...grid];
+            x[index][key] = val;
+            setGrid(x);
+            await UpdateBagDetails(x[index]);
+        }
+
+        const onRemove = async (index, val) => {
+            let x = [...grid];
+            x.splice(index, 1);
+            setGrid(x);
+            await DeleteBagDetails(val);
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row mt-3">
+                    <div className="col-12">
+                        <div>
+                            <div style={{ marginTop: '10px', display: 'flex', flexDirecttion: 'row', alignItems: 'center' }}>
+                                <div>
+                                    <b>Type:</b>
+                                </div>
+                                <div className="ml-2 form-check form-check-inline">
+                                    <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" checked={isManifest} onChange={(e) => setIsManifest(true)} />
+                                    <label className="form-check-label" htmlFor="inlineRadio1">Manifest</label>
+                                </div>
+                                <div className="form-check form-check-inline">
+                                    <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" checked={!isManifest} onChange={(e) => setIsManifest(false)} />
+                                    <label className="form-check-label" htmlFor="inlineRadio2">Consigment No</label>
+                                </div>
+                                <div >
+                                    <input type="text" className="form-control" ref={scanRef} onInput={process} onKeyPress={keypressHandler} onBlur={onScanBlur} placeholder={isManifest ? "Manifest No" : "Consigment No"} readOnly={scanned} />
+                                </div>
+                                <div className="text-right" style={{ flex: 6 }}>
+                                    <b>Scanned Items: {grid.length}</b>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {
+                    grid.length > 0 || (baggingData.bagno && baggingData.details.length > 0) ?
+                        <div className="row mt-1">
+                            <div className="table-responsive">
+                                <table className="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Type</th>
+                                            <th>Manifest/Consignment No</th>
+                                            <th>Service Type</th>
+                                            <th>Origin</th>
+                                            <th>Destination</th>
+                                            <th>Pieces</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {
+                                            grid.map((x, index) =>
+                                                <tr key={index} style={!routeDest.some((e) => e == x.DestinationId) ? { background: 'rgba(150, 0, 24,.8)', color: 'rgb(255,255,255,.8)' } : {}}>
+                                                    <td className="text-center">
+                                                        <button type="button" className="btn btn-sm btn-danger" onClick={async (e) => await onRemove(index, x.ManCN)}>Remove</button>
+                                                    </td>
+                                                    <td>{x.IsMan ? 'Manifest' : 'Consigment'}</td>
+                                                    <td>{x.ManCN}</td>
+                                                    <td>{x.ServiceType}</td>
+                                                    <td>{x.Origin}</td>
+                                                    <td>
+                                                        {
+                                                            x.IsMan || x.AccountNo != '4D1' ? `${x.Destination}` :
+                                                                <select className="form-control" value={x.DestinationId} onChange={async (e) => await updateGrid(index, 'DestinationId', e.target.value)}>
+                                                                    {
+                                                                        branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                                                    }
+                                                                </select>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {!x.IsMan && <input type="text" className={!x.Pcs || parseInt(x.Pcs) === 0 ? 'form-control is-invalid' : 'form-control'} value={x.Pcs} onInput={process} maxLength="4" onChange={async (e) => await updateGrid(index, 'Pcs', e.target.value)} />}
+                                                    </td>
+                                                    <td>
+                                                        <textarea className="form-control" value={x.Remarks} onChange={async (e) => await updateGrid(index, 'Remarks', e.target.value)}></textarea>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        }
+                                        {
+                                            baggingData.bagno && baggingData.details.length > 0 && data.BagNo ?
+                                                baggingData.details.map((x, index) =>
+                                                    <tr key={index} style={!routeDest.some((e) => e == x.DestinationId) ? { background: 'rgba(150, 0, 24,.8)', color: 'rgb(255,255,255,.8)' } : {}}>
+                                                        <td className="text-center"></td>
+                                                        <td>{x.IsMan ? 'Manifest' : 'Consigment'}</td>
+                                                        <td>{x.ManCN}</td>
+                                                        <td>{x.ServiceType}</td>
+                                                        <td>{x.Origin}</td>
+                                                        <td>{x.Destination}</td>
+                                                        <td>{x.Pcs}</td>
+                                                        <td>{x.Remarks}</td>
+                                                    </tr>
+                                                )
+                                                : null
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div> : ''}
+
+            </React.Fragment>
+        )
+    }
+
+    const MainForm = () => {
+
+        const [services, setServices] = React.useState([]);
+        const bagNoRef = React.useRef(null);
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            grid,
+            setGrid,
+            routeDest,
+            setRouteDest,
+            confirmation,
+            setConfirmation
+        } = React.useContext(Context);
+
+        const updateData = (key, val) => {
+            let x = { ...data };
+            x[key] = val;
+            setData(x);
+        }
+
+        const fetchServices = (product) => {
+            fetch(servicesUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ product })
+            }).then(
+                function (response) {
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 0) {
+                            setServices(rs.data);
+                        } else {
+                            alert(rs.msg);
+                            setServices([]);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const fetchBranchDestination = (branch, type) => {
+            fetch(`${getRouteDestinationUrl}?branch=${branch}&type=${type}`).then(
+                function (response) {
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 0) {
+                            setRouteDest(rs.data);
+                        } else {
+                            alert(rs.msg);
+                            setRouteDest([]);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const checkBag = (bagno) => {
+            fetch(`${checkBagUrl}?bagno=${bagno}`).then(
+                function (response) {
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(async function (rs) {
+                        if (rs.sts > 0) {
+                            alert(rs.msg);
+                            bagNoRef.current.value = '';
+                            bagNoRef.current.focus();
+                            await updateBagInfoDB('BagNo', '');
+                        } else {
+                            await updateBagInfoDB('BagNo', bagno);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+
+        React.useEffect(() => {
+            if (data.Product) {
+                fetchServices(data.Product);
+            } else {
+                setServices([]);
+            }
+        }, [data.Product]);
+
+        React.useEffect(() => {
+            if (data.Destination && data.BagType) {
+                fetchBranchDestination(data.Destination, data.BagType);
+            }
+        }, [data.Destination, data.BagType]);
+
+        const onSave = () => {
+            if (validateForm(data)) {
+
+                if (!baggingData.bagno && grid.length == 0) {
+                    alert('Manifest/Consignment not found');
+                    return;
+                }
+
+                if (grid.filter(x => !x.Pcs || parseInt(x.Pcs) === 0).length <= 0) {
+                    setConfirmation(true);
+                } else {
+                    alert('Pieces should be greater than 0');
+                }
+            }
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                bagNoRef.current.blur();
+            }
+        }
+
+        const onBagNoBlur = async e => {
+            const val = e.target.value;
+            if (val) {
+                checkBag(val);
+            }
+        }
+
+        const updateBagInfoDB = async (key, val) => {
+            await UpdateBagInfo(key, val);
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-lg col-sm-12">
+                        <label>Bag No</label>
+                        <input type="text" className="form-control" ref={bagNoRef} onInput={process} value={data.BagNo} onKeyPress={keypressHandler} onBlur={(e) => {
+                            if (!baggingData.bagno)
+                                onBagNoBlur(e)
+                        }} onChange={(x) => updateData('BagNo', x.target.value)} readOnly={grid.length > 0 || baggingData.bagno} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Bagging Branch</label>
+                        <input type="text" className="form-control" value={origin} readOnly={true} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Destination</label>
+                        <select className="form-control" disabled={grid.length > 0 || baggingData.bagno} value={data.Destination} onChange={async (x) => {
+                            updateData('Destination', x.target.value);
+                            await updateBagInfoDB('Destination', x.target.value);
+                        }}>
+                            <option value="">Select Destination</option>
+                            {
+                                branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Product</label>
+                        <select className="form-control" disabled={grid.length > 0 || baggingData.bagno} value={data.Product} onChange={async (x) => {
+                            updateData('Product', x.target.value);
+                            await updateBagInfoDB('Product', x.target.value);
+                        }}>
+                            <option value="">Select Product</option>
+                            {
+                                products.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Service</label>
+                        <select className="form-control" disabled={grid.length > 0 || baggingData.bagno} value={data.Service} onChange={async (x) => {
+                            updateData('Service', x.target.value);
+                            await updateBagInfoDB('Service', x.target.value);
+                        }}>
+                            <option value="">Select Service</option>
+                            {
+                                services.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Bag Type</label>
+                        <select className="form-control" disabled={grid.length > 0 || baggingData.bagno} value={data.BagType} onChange={async (x) => {
+                            updateData('BagType', x.target.value);
+                            await updateBagInfoDB('BagType', x.target.value);
+                        }}>
+                            <option value="">Select Bag Type</option>
+                            {
+                                types.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div className="row mt-3">
+                    <div className="col-lg-2 col-sm-12">
+                        <label>SHS</label>
+                        <select className="form-control" disabled={grid.length > 0 || baggingData.bagno} value={data.SHS} onChange={async (x) => {
+                            updateData('SHS', x.target.value);
+                            await updateBagInfoDB('SHS', x.target.value);
+                        }}>
+                            {
+                                shs.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg-10 col-sm-12 text-right">
+                        <button type="button" style={{ marginTop: '1.5rem' }} className="btn btn-secondary" onClick={onSave}>Save</button>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    const WeightAndSealPrompt = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            grid,
+            setGrid,
+            setConfirmation
+        } = React.useContext(Context);
+
+        const confirmOverlay = {
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            zIndex: '100000',
+            width: '100%',
+            height: '100vh',
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-evenly',
+            alignItems: 'center',
+            color: 'white',
+            backdropFilter: 'blur(5px)'
+        }
+
+        const updateData = (key, val) => {
+            let x = { ...data };
+            x[key] = val;
+            setData(x);
+        }
+
+        const reset = async () => {
+            const d = {
+                Id: 1,
+                BagNo: '',
+                Destination: '',
+                Product: '',
+                Service: '',
+                BagType: '',
+                SHS: '1',
+                SealNo: '',
+                TotalWeight: ''
+            };
+            setData(d);
+            setGrid([]);
+            await ClearBagInfo();
+            await ClearBagDetails();
+            await AddBagInfo(data);
+        }
+
+        const validate = () => {
+
+            if (!data.TotalWeight || parseFloat(data.TotalWeight) == 0) {
+                alert('Total Weight must be greater than zero');
+                return false;
+            }
+
+            if (!data.SealNo) {
+                alert('Enter Seal No');
+                return false;
+            }
+
+            return true;
+        }
+
+        const save = (dt) => {
+            setLoading(true);
+            fetch(insertUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ model: { ...dt, Edit: baggingData.bagno != null, BagDetails: grid } })
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        alert(rs.msg);
+                        if (rs.sts == 0) {
+                            setConfirmation(false);
+                            reset();
+                            window.open(`${printUrl}?bagno=${rs.id}`, '_blank');
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const saveToDB = () => {
+            if (validate()) {
+                save(data);
+            }
+        }
+
+        const tempSaveToDB = () => {
+            let x = { ...data, TotalWeight: null, SealNo: null };
+            setData(x);
+            save(x);
+        }
+
+        const updateBagInfoDB = async (key, val) => {
+            await UpdateBagInfo(key, val);
+        }
+
+
+        return (
+            <div style={confirmOverlay}>
+                <input type="text" className="confirmOverlayInput" onInput={processFloat} maxLength="5" onBlur={async (e) => {
+                    await updateBagInfoDB('TotalWeight', e.target.value);
+                }} placeholder="Enter Weight" value={data.TotalWeight} onChange={(e) => updateData('TotalWeight', e.target.value)} />
+                <input type="text" className="confirmOverlayInput" onInput={process} onBlur={async (e) => {
+                    await updateBagInfoDB('SealNo', e.target.value);
+                }} placeholder="Enter Seal No" value={data.SealNo} onChange={(e) => updateData('SealNo', e.target.value)} />
+                <div>
+                    <button type="button" className="confirmOverlayButton" onClick={tempSaveToDB}>Temp Save</button>
+                    <button type="button" className="ml-2 confirmOverlayButton" onClick={saveToDB}>Save</button>
+                    <button type="button" className="ml-2 confirmOverlayButton" onClick={() => setConfirmation(false)}>Cancel</button>
+                </div>
+            </div>
+        )
+    }
+
+    const App = () => {
+
+        const {
+            loading,
+            setLoading,
+            confirmation,
+            data,
+            setData,
+            grid,
+            setGrid
+        } = React.useContext(Context);
+
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.8)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(5px)'
+            }
+        }
+
+        React.useEffect(() => {
+            const confirmRestore = async () => {
+                const b = await CountBagDetails();
+                if (b > 0) {
+                    if (confirm("Unsaved data found want to save? If cancel data will be removed.")) {
+                        const bagInfo = await GetBagInfo();
+                        const bagDetails = await GetBagDetails();
+                        setData(bagInfo);
+                        setGrid(bagDetails);
+                    } else {
+                        await ClearBagInfo();
+                        await ClearBagDetails();
+                        await AddBagInfo(data);
+                    }
+                } else {
+                    await ClearBagInfo();
+                    await ClearBagDetails();
+                    await AddBagInfo(data);
+                }
+            };
+
+            if (!baggingData.bagno)
+                confirmRestore();
+
+
+            return () => console.log('unmounting...');
+        }, [])
+
+
+
+
+        React.useEffect(() => {
+            const editMode = async () => {
+                await ClearBagInfo();
+                await ClearBagDetails();
+                setData(baggingData.data);
+            }
+
+            if (baggingData.bagno)
+                editMode();
+            return () => console.log('unmounting...');
+        }, [])
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                {
+                    confirmation ? <WeightAndSealPrompt /> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>Bagging</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+                                <a href={searchUrl} className="btn btn-sm btn-secondary" target="_blank">Search Bagging</a>
+                            </div>
+                        </div>
+                        <MainForm />
+                        <Grid />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+        const d = {
+            Id: 1,
+            BagNo: '',
+            Destination: '',
+            Product: '',
+            Service: '',
+            BagType: '',
+            SHS: '1',
+            TotalWeight: '',
+            SealNo: ''
+        };
+        const [loading, setLoading] = React.useState(false);
+        const [confirmation, setConfirmation] = React.useState(false);
+        const [data, setData] = React.useState(d);
+        const [grid, setGrid] = React.useState([]);
+        const [routeDest, setRouteDest] = React.useState([]);
+
+        return (
+            <Context.Provider value={{
+                loading,
+                setLoading,
+                data,
+                setData,
+                grid,
+                setGrid,
+                routeDest,
+                setRouteDest,
+                confirmation,
+                setConfirmation
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

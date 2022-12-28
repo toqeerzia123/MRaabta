@@ -1,0 +1,184 @@
+﻿@model MRaabta.Models.ConsigneeShipperModel
+
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewBag.Title = "Index";
+}
+<style>
+    .ui-autocomplete {
+        height: 100px;
+        overflow-y: scroll;
+        overflow-x: hidden;
+    }
+
+    .ui-autocomplete {
+        width: 20px;
+    }
+</style>
+<div class="row">
+    <div class="col-12 text-center">
+        <h3>Verify Data</h3>
+    </div>
+    <div class="col-12 text-center">
+        <div class="img-zoom-container">
+            @if (Model.CNNumber != null)
+            {
+
+                <img id="img" style="height:40vh; width:40em" src="@Url.Content(Request.Url.Scheme + "://" + Request.Url.Authority + "/"+string.Format("PickupAPI/cnimage/{0}.jpg", Model.CNNumber))" class="img-fluid" alt="No Image" />
+
+                @*<img id="myimage" style="height:55vh" src="@Url.Content(string.Format("http://mraabta.mulphico.pk/cnimage/{0}.jpg", Model.CNNumber))" class="img-fluid" alt="No Image" />*@
+                @*<img id="myimage" style="height:55vh" src="@Url.Content(Request.Url.Scheme + "://" + "mraabta.mulphico.pk" + "/"+string.Format("cnimage/{0}.jpg", Model.CNNumber))" class="img-fluid" alt="No Image" />*@
+            }
+            else
+            {
+                <img style="height:40vh" src="@Url.Content("/NoDataFound.jpg")" class="img-fluid" alt="No Image" />
+            }
+        </div>
+    </div>
+</div>
+<br>
+@using (Html.BeginForm("Index", "VerifyDetail", FormMethod.Post))
+{
+    <div class="row">
+        <div class="col-2">
+            <label>CN Number</label>
+            @if (ViewBag.err == null || ViewBag.err == "")
+            {
+                <input type="hidden" value="@Model.CNNumber" name="CNNumber" />
+                <input type="hidden" value="@ViewBag.PickUpId" name="PickUpId" />
+                @Html.TextBoxFor(x => x.CNNumber, new { @class = "form-control", @disabled = true })
+            }
+        </div>
+        <div class="col-3">
+            <label>Shipper Name</label>
+            @Html.TextBoxFor(x => x.ShipperName, new { @class = "form-control", @disabled = true })
+        </div>
+        <div class="col-2">
+            <label>Shipper Contact</label>
+            @Html.TextBoxFor(x => x.ShipperContact, new { @class = "form-control", @disabled = true })
+        </div>
+        <div class="col-3">
+            <label>Shipper Address</label>
+            @Html.TextAreaFor(x => x.ShipperAddress, new { @class = "form-control", @disabled = true })
+        </div>
+        <div class="col-2">
+            <label>Consignee Contact</label>
+            @Html.TextBoxFor(x => x.ConsigneeContact, new
+            {
+                @class = "form-control",
+                @maxlength = "12",
+                onkeypress = "return Validate(event);"@*@onkeypress = "return isNumber(event)"*@})
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-3">
+            <label>Consignee Name</label>
+            @Html.TextBoxFor(x => x.ConsigneeName, new { @class = "form-control", @maxlength = "20" })
+        </div>
+        <div class="col-3">
+            <label>Consignee Address</label>
+            @Html.TextAreaFor(x => x.ConsigneeAddress, new { @class = "form-control", @rows = "2", @style = "font-size:18px; height:auto ;" })
+        </div>
+        <div class="col-2">
+            <label>Street/Town</label>
+            @Html.TextBoxFor(x => x.Town, new { @class = "form-control", @maxlength = "20", @id = "town" })
+        </div>
+        <div class="col-2">
+            <label>City</label>
+            @Html.TextBoxFor(x => x.City, new { @class = "form-control", @maxlength = "20", @id = "city" })
+        </div>
+        <div class="col-1">
+            <label>Is Faulty</label><br>
+            @Html.CheckBoxFor(x => x.IsFaulty)
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-3">
+            <label>Feed By</label>
+            @Html.TextBoxFor(x => x.FeedBy, new { @class = "form-control", @disabled = true })
+        </div>
+        <div class="col-3">
+            <label>Feed On</label>
+            @Html.TextBoxFor(x => x.FeedOn, new { @class = "form-control", @disabled = true })
+        </div>
+        <div class="col-3 text-center">
+            <br>
+            <button type="submit" class="btn btn-outline-secondary">Next</button>
+        </div>
+    </div>
+}
+
+@section scripts{
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="jqueryui.js"></script>
+
+    <script type="text/javascript">
+        function preventBack() {
+            window.history.replaceState({}, '/verifydata/index', '/verifydata/index');
+        }
+        setTimeout("preventBack()", 0);
+        window.onunload = function () { null };
+
+    </script>
+    <script>
+        $(document).ready(function()
+    {
+        // Stop user to press enter in textbox
+        $("input:text").keypress(function(event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+});
+        var dataexists = '@ViewBag.err';
+    if (dataexists != "") {
+          swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+                }, function() {
+                    window.location = "/mraabtatest/Login";
+                });
+    }        $(function () {
+            debugger;
+            $('#city').autocomplete({
+                source: function (request, response) {
+                    var param = { prefix: $('#city').val() };
+                    $.ajax({
+                        url: "GetCountries",
+                        data: JSON.stringify(param),
+                        type: "post",
+                        contentType: "application/json; charset=utf-8",
+                        dataFilter: function (data) { return data; },
+                        success: function (data) {
+                            //salert("he")
+                             response($.map(data.list, function (data) { return { label: data.Text, value: data.Text } }))
+                        },
+
+                    });
+                },
+                minlength:1
+            })
+         });
+
+       var Validate = (event) => {
+        var regex = new RegExp("^[0-9-]");
+        var key = String.fromCharCode(event.charCode ? event.which : event.charCode);
+        if (!regex.test(key)) {
+            event.preventDefault();
+            return false;
+        }
+    }
+        $(function () {
+            $('img').wrap('<span style="display:inline-block"></span>')
+            .css('display', 'block')
+            .parent()
+            .zoom({
+                magnify: 2
+            });
+        });
+
+
+    </script>
+}

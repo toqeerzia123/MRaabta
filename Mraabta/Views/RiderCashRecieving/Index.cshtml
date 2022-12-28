@@ -1,0 +1,514 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style>
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .confirmOverlayInput {
+            width: 100%;
+            height: 60px;
+            border: none !important;
+            border-bottom: 5px solid white !important;
+            background: none;
+            color: rgba(255, 255, 255, .8);
+            text-align: center;
+            font-size: 35px;
+        }
+
+            .confirmOverlayInput:active,
+            .confirmOverlayInput:focus {
+                outline: none;
+            }
+
+        .confirmOverlayButton {
+            background: none;
+            width: 200px;
+            height: 80px;
+            border: 5px solid white;
+            font-size: 35px;
+            color: rgba(255, 255, 255, .8)
+        }
+
+            .confirmOverlayButton:active {
+                outline: none;
+                background: rgba(255, 255, 255, .8);
+                color: rgba(0, 0, 0, .8)
+            }
+
+            .confirmOverlayButton:focus {
+                outline: none;
+            }
+    </style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center">
+                    <h3><b>Riders Recieving</b></h3>
+                </div>
+                <div id="root">
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section scripts{
+    <script>
+        const Riders =  @Html.Raw(Json.Encode(ViewBag.Riders));
+        const PaymentDetailurl = '@Url.Action("GetRiderPaymentDetail", "RiderCashRecieving")';
+        const CNDetailurl = '@Url.Action("GetRiderCNDetails", "RiderCashRecieving")';
+        const CNAmounturl = '@Url.Action("GetCNAmount", "RiderCashRecieving")';
+        const url = '@Url.Action("Save","RiderCashRecieving")';
+        const SMSurl = '@Url.Action("SendSMStoRider", "RiderCashRecieving")';
+        const printUrl = '@Url.Action("Print", "RiderCashRecieving")';      
+    </script>
+    <script type="text/babel">
+
+        const Context = React.createContext(null);
+        const PaymentDetails = (props) =>
+        {
+                const totalExp=(props.data.reduce((total,currentItem) =>  total = total + parseInt(currentItem.ExpectAmount) , 0 ));
+                const totalCol=(props.data.reduce((total,currentItem) =>  total = total + parseInt(currentItem.SubmittedAmount) , 0 ));
+                const totalRem=(props.data.reduce((total,currentItem) =>  total = total + (parseInt(currentItem.SubmittedAmount) - parseInt(currentItem.ExpectAmount)) , 0 ));
+                return <div style={{ border: '1px solid',borderRadius: '10px', width:'80%', marginLeft: '10%'}} >
+                    { props.data.length > 0 ?
+                    <div style={{ textAlign: 'center'}}><h4> TRANSACTION HISTORY </h4>
+                        <table className="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th>S No.</th>
+                                    <th>Submit Time</th>
+                                    <th>Express Center</th>
+                                    <th>Expected Amount</th>
+                                    <th>Submitted Amount</th>
+                                    <th>Actual Short/Excess Amount</th>
+                                </tr>
+                                {
+                                    props.data.map((x, index) =>
+                                        <tr key={index}>
+                                            <td>{++index}</td>
+                                            <td>{x.SubmitTime}</td>
+                                            <td>{x.ExpressCenter}</td>
+                                            <td>{x.ExpectAmount}</td>
+                                            <td>{x.SubmittedAmount}</td>
+                                            <td>{ x.SubmittedAmount - x.ExpectAmount}</td>
+                                            @*<td>{x.ShortAmount > 0 ? x.ShortAmount +'(Short)' : x.ShortAmount < 0  ? x.ShortAmount +'(Excess)' :  x.ShortAmount}</td>*@
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                            <tfoot>
+                                  <tr>
+                                    <th></th>
+                                    <td><h4>Total</h4></td>
+                                    <td></td>
+                                    <td><b>{totalExp}</b></td>
+                                    <td><b>{totalCol}</b></td>
+                                    <td><b>{totalRem}</b></td>
+                                  </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    : ''
+                    }
+                </div>
+            }
+
+            const CNDetails = (props) =>
+            {
+                const {
+                    loading,
+                    setLoading,
+                    CNDetail,
+                    setCNDetail
+                    } = React.useContext(Context);
+
+                const process = (e) => {
+                    let value = e.target.value;
+                    let numbers = value.replace(/[^0-9]/g, "");
+                    e.target.value = numbers;
+                }
+
+               const updateGrid = async (index, key, val) => {
+                let x = [...CNDetail];
+                x[index-1][key] = val;
+                setCNDetail(x);
+               }
+
+                return <div style={{ border: '1px solid',borderRadius: '10px'}} >
+                    { props.data.length > 0 ?
+                    <div style={{ textAlign: 'center'}}><h4> CONSIGNMENTS DETAIL </h4>
+                        <table className="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th>S No.</th>
+                                    <th>Consignment No</th>
+                                    <th>RunSheet No</th>
+                                    <th>COD Amount</th>
+                                    <th>Amount Recieved</th>
+                                </tr>
+                                {
+                                    props.data.map((x, index) =>
+                                        <tr key={index}>
+                                            <td>{++index}</td>
+                                            <td>{x.ConsignmentNumber}</td>
+                                            <td>{x.RunSheetNumber}</td>
+                                            <td>{x.RiderAmount}</td>
+                                            <td>
+                                            {   x.AmountRcv == x.RiderAmount ?
+                                                    x.AmountRcv
+                                                    :
+                                                 <input type='text' style={{ minWidth: '7rem', maxWidth: '7rem',  textAlign: 'center'}} readOnly={true} className="form-control" value={x.AmountRcv}
+                                                 onInput={process} onChange={(e) => updateGrid(index, 'AmountRcv', e.target.value)} />
+                                            }</td>
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    : ''
+                    }
+                </div>
+            }
+
+            const App = () => {
+            const {
+                loading,
+                setLoading,
+                formData, setFormData,
+                CNDetail,
+                setCNDetail,
+                paymentDetail,
+                setPaymentDetail
+            } = React.useContext(Context);
+
+            const [CurrExpectAmount, setCurrExpectAmount] = React.useState(0);
+            const [CollectAmount, setCollectAmount] = React.useState(0);
+            const [DiffAmount, setDiffAmount] = React.useState(0);
+            const [TotalExpectAmount, setTotalExpectAmount] = React.useState(0);
+
+        const postUnloading = (data) => {
+            setLoading(true);
+            fetch(url, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({  model: data })
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        alert('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(async function (rs) {
+                        if (rs.sts == 1) {
+                                setLoading(false);
+                                setTotalExpectAmount(0);
+                                setCurrExpectAmount(0);
+                                setCollectAmount(0);
+                                setDiffAmount(0);
+                                setLoading(false);
+                                alert(rs.msg);
+                                setCNDetail([]);
+                                setPaymentDetail([]);
+                                window.location.reload(true);
+                                window.open(`${printUrl}?Id=${rs.DataId}&RiderId=${rs.RiderId}`, '_blank');
+                        }
+                        else{
+                                setLoading(false);
+                                setTotalExpectAmount(0);
+                                setCurrExpectAmount(0);
+                                setCollectAmount(0);
+                                setDiffAmount(0);
+                                setLoading(false);
+                                setCNDetail([]);
+                                setPaymentDetail([]);
+                                alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                alert('Fetch Error :-S', err);
+            });
+        }
+
+        const AddAmount = async () => {
+                    var CurrExpAmount=CurrExpectAmount;
+                    var ColAmount=CollectAmount;
+                    var DifferAmount=DiffAmount;
+                    var TotalExpAmount=TotalExpectAmount;
+
+            if (ColAmount > 0) {
+                    const data = {
+                        RiderCode: formData.Riders,
+                        CNLineItem: CNDetail,
+                        paymentLineItem: paymentDetail,
+                        CurrExpAmount:CurrExpAmount,
+                        TotalExpAmount:TotalExpAmount,
+                        ColAmount:ColAmount,
+                        DiffAmount:DifferAmount
+                    };
+                postUnloading(data);
+            }
+        else{
+        }
+        }
+
+         const GetPaymentDetails = (rider) => {
+                setLoading(true);
+                fetch(`${PaymentDetailurl}?RiderId=${rider}`).then(
+                    function (response) {
+                        setLoading(false);
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' + response.status);
+                            return;
+                        }
+                        response.json().then(function (rs) {
+                            if (rs.sts == 1) {
+                                    setLoading(false);
+                                    if(rs.CNDetail != null)
+                                    {
+                                        setCNDetail(rs.CNDetail);
+                                    }
+                                    setTotalExpectAmount(rs.TotalExpAmount);
+
+                                    if(rs.PayDetail != null)
+                                    {
+                                        setPaymentDetail(rs.PayDetail);
+                                        setCurrExpectAmount(rs.ExpAmount);
+                                        setDiffAmount(rs.ExpAmount-CollectAmount);
+                                    }
+                            } else {
+                                alert(rs.msg);
+                                setLoading(false);
+                                setPaymentDetail([]);
+                                setCurrExpectAmount(0);
+                                setCollectAmount(0);
+                                setDiffAmount(0);
+                                setTotalExpectAmount(0);
+                            }
+                        });
+                    }
+                ).catch(function (err) {
+                    setLoading(false);
+                    console.log('Fetch Error :-S', err);
+                });
+            }
+
+            const GetDetails = (rider) => {
+                setLoading(true);
+                fetch(`${CNDetailurl}?RiderId=${rider}`).then(
+                    function (response) {
+                        setLoading(false);
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' + response.status);
+                            return;
+                        }
+                        response.json().then(function (rs) {
+                            if (rs.sts == 1) {
+                                setLoading(false);
+                                setPaymentDetail(rs.CNDetail);
+                                setCurrExpectAmount(rs.setCurrExpectAmount);
+                                setDiffAmount(rs.CurrExpAmount-CollectAmount);
+                            } else {
+                                alert(rs.msg);
+                                setLoading(false);
+                                setPaymentDetail([]);
+                                setCurrExpectAmount(0);
+                                setCollectAmount(0);
+                                setDiffAmount(0);
+                            }
+                        });
+                    }
+                ).catch(function (err) {
+                    setLoading(false);
+                    console.log('Fetch Error :-S', err);
+                });
+            }
+
+            const onRiderChanged = (e) => {
+                const id = e.target.value;
+                    if (id)
+                    {
+                        changeFormData('Riders', e.target.value);
+                        GetPaymentDetails(id);
+                    }
+            }
+
+            const updateGridData = async (index, key, val) => {
+                let x = [...CNDetail];
+                x[index][key] = val;
+                setCNDetail(x);
+            }
+
+            const SetAmountToCNs = (Amount) => {
+                var SubmitAmt = parseInt(Amount);
+                for(var i=0;i<=CNDetail.length-1;i++)
+                {
+                    let x = [...CNDetail];
+                    var CnAmount=parseInt(x[i]["RiderAmount"]);
+                    var IsPaid=x[i]["IsPaid"];
+                    if(IsPaid==false)
+                    {
+                        if(parseInt(CnAmount)<parseInt(SubmitAmt))
+                        {
+                            SubmitAmt =  parseInt(SubmitAmt) - CnAmount;
+                            x[i]["AmountRcv"] = CnAmount;
+                            setCNDetail(x);
+                        }
+                        else
+                        {
+                            x[i]["AmountRcv"] = SubmitAmt + parseInt(x[i]["PrevAmountRcv"]) > CnAmount ? CnAmount : SubmitAmt + parseInt(x[i]["PrevAmountRcv"]);
+                            setCNDetail(x);
+                            SubmitAmt=SubmitAmt-SubmitAmt;
+                        }
+                    }
+                }
+            }
+
+            const process = (e) => {
+                let value = e.target.value;
+                let numbers = value.replace(/[^0-9]/g, "");
+                e.target.value = numbers;
+            }
+
+            const changeFormData = (key, val) => {
+                let x = { ...formData, [key]: val };
+                setFormData(x);
+            }
+
+            const overlayStyle = {
+                width: '100vw',
+                height: '100vh',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                zIndex: 10000,
+                background: 'rgba(0,0,0,.8)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'rgba(255,255,255,.8)'
+            }
+
+        return (
+            <div style={{ position: 'relative'}}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+
+                <React.Fragment>
+                    <div className="row" >
+                        <div className="col-md-3 col-sm-12">
+                            <label>Riders</label>
+                            <select className="form-control" value={formData.Riders} onChange={onRiderChanged}>
+                                <option value="0">-- Select --</option>
+                                {
+                                    Riders.map((x, index) => <option key={index} value={x.Value} >{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>Amount (CURRENT)</label>
+                            <input type="text" className="form-control" value={CurrExpectAmount} readOnly={true}/>
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>Collected Amount</label>
+                            <input type="text" className="form-control" onInput={process} value={CollectAmount} onBlur={(x) => {
+                            const val = x.target.value;
+                            const diff = CurrExpectAmount-val;
+                            setDiffAmount(diff);
+                            if(val != '')
+                            {
+                                SetAmountToCNs(val);
+                            }
+                        }} onChange={(x) => setCollectAmount(x.target.value)} />
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>Short/Excess Amount</label>
+                            <input type="text" className="form-control" value={DiffAmount} readOnly={true}/>
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <label>Amount (TODAY)</label>
+                            <input type="text" className="form-control" value={TotalExpectAmount} readOnly={true}/>
+                        </div>
+                        <div className="col-md-1 col-sm-12">
+                            <button type="button" className="btn btn-primary" style={{ marginTop: 25, background: '#f46425', border: '#a53200' }} onClick={(x) => {
+                                if (formData.Riders !=0 & CollectAmount!=0) {
+                                    AddAmount();
+                                } else {
+                                    alert('Enter Rider / Amount');
+                                }
+                            }}>Save</button>
+                        </div>
+                    </div>
+                    <br />
+                <br/>
+                   {
+                        paymentDetail ? <PaymentDetails data={paymentDetail} /> : ''
+                    }
+                <br/>
+                   {
+                        CNDetail ? <CNDetails data={CNDetail} /> : ''
+                    }
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+            let formDatas  = {
+                Riders: 0,
+                CurrExpectAmount:0,
+                CollectAmount:0,
+                DiffAmount:0,
+                TotalExpectAmount:0,
+                paymentDetail:null,
+                CNDetail:null
+            }
+
+            const [paymentDetail, setPaymentDetail] = React.useState([]);
+            const [CNDetail, setCNDetail] = React.useState([]);
+            const [formData, setFormData] = React.useState(formDatas);
+            const [loading, setLoading] = React.useState(false);
+        return (
+            <Context.Provider value={{
+                formData, setFormData,
+                loading, setLoading,
+                paymentDetail, setPaymentDetail,
+                CNDetail, setCNDetail
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render( <Store>
+                <App />
+            </Store>,
+        document.querySelector('#root')
+    )
+    </script>
+}

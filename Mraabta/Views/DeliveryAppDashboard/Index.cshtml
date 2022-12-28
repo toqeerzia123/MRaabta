@@ -1,0 +1,338 @@
+﻿@model MRaabta.Models.DashboardViewModel
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<main class="app-content">
+    <div class="app-title">
+        <div>
+            <h1><i class="fa fa-dashboard"></i> Delivery App Dashboard</h1>
+        </div>
+        <ul class="app-breadcrumb breadcrumb">
+            <li class="breadcrumb-item"><a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index","AllCNDebriefing")" target="_blank">Undelivered Consignments</a></li>
+        </ul>
+    </div>
+    <div class="row pt-2 pb-2">
+        <div class="col-12">
+            <div id="statsDiv">
+                <div class="countDiv" style="background:#f94144">
+                    <div class="countLabel">
+                        <p>Total Riders</p>
+                    </div>
+                    <div class="countValue">
+                        <p>@Model.TotalRiders</p>
+                    </div>
+                </div>
+                <div class="countDiv" style="background: #f3722c">
+                    <div class="countLabel">
+                        <p>Active Riders</p>
+                    </div>
+                    <div class="countValue">
+                        <p>@Model.ActiveRiders</p>
+                    </div>
+                </div>
+                <div class="countDiv" style="background: #f8961e">
+                    <div class="countLabel">
+                        <p>Performing Riders</p>
+                    </div>
+                    <div class="countValue">
+                        <p>@Model.PerformingRiders</p>
+                    </div>
+                </div>
+                <div class="countDiv" style="background: #f9c74f">
+                    <div class="countLabel">
+                        <p>Download Runsheets</p>
+                    </div>
+                    <div class="countValue">
+                        <p>@Model.DRS</p>
+                    </div>
+                </div>
+                <div class="countDiv" style="background: #90be6d">
+                    <div class="countLabel">
+                        <p>Download Consignments</p>
+                    </div>
+                    <div class="countValue">
+                        <p>@Model.DCN</p>
+                    </div>
+                </div>
+                <div class="countDiv" style="background: #43aa8b">
+                    <div class="countLabel">
+                        <p>Performed</p>
+                    </div>
+                    <div class="countValue">
+                        <p>@Model.Performed</p>
+                    </div>
+                </div>
+                <div class="countDiv" style="background: #577590">
+                    <div class="countLabel">
+                        <p>Unperformed</p>
+                    </div>
+                    <div class="countValue">
+                        <p>@Model.UnPerformed</p>
+                    </div>
+                </div>
+                <div class="countDiv" style="background: #118ab2">
+                    <div class="countLabel">
+                        <p>Touchpoints</p>
+                    </div>
+                    <div class="countValue">
+                        <p>@Model.TouchPoints</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-lg-6 col-md-12">
+            <br>
+            <h4>Daily Stats</h4>
+            <div id="barchart"></div>
+            <br>
+            <h4>Monthly Stats</h4>
+            <div id="lineChart"></div>
+        </div>
+        <div class="col-lg-6 col-md-12">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Consignment No</th>
+                        <th>Rider Name</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                    @foreach (var item in Model.DashboardRiderReport)
+                    {
+                        <tr>
+                            <td style="display:flex;justify-content:center">
+                                @if (item.StatusId == 1)
+                                {
+                                    <div style="width: 30px;height: 30px;border-radius: 50%;background: rgb(95, 136, 6)"></div>
+
+                                }
+                                else if (item.StatusId == 2)
+                                {
+                                    <div style="width: 30px;height: 30px;border-radius: 50%;background: rgb(172,14,40)"></div>
+                                }
+                                else if (item.StatusId == 3)
+                                {
+                                    <div style="width: 30px;height: 30px;border-radius: 50%;background: rgb(184, 115, 51)"></div>
+                                }
+                            </td>
+                            <td>@item.CN</td>
+                            <td>@item.RiderName</td>
+                            <td>@item.PerformedOn.ToString("HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+@section styles{
+    <link rel="stylesheet"
+          href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" />
+    <style>
+        #statsDiv {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+            grid-auto-rows: 100px;
+            column-gap: 10px;
+            grid-row-gap: 10px;
+        }
+
+        .info h4 {
+            font-size: 15px !important;
+            font-weight: 900;
+        }
+
+        .row {
+            background: rgba(255,255,255,.4)
+        }
+
+        .countDiv {
+            width: 100% !important;
+            height: 100% !important;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0px 0px 2px rgba(0,0,0,.5);
+        }
+
+            .countDiv p {
+                margin: 0px !important;
+                font-weight: 900;
+                font-size: 1.15rem;
+                color: rgba(255,255,255,.8)
+            }
+
+        .countLabel {
+            position: absolute;
+            display: flex;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            transition: all 500ms cubic-bezier(1.000, 0.000, 0.000, 1.000);
+        }
+
+        .countValue {
+            position: absolute;
+            display: flex;
+            top: 100%;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            transition: all 500ms cubic-bezier(1.000, 0.000, 0.000, 1.000);
+        }
+
+        .countDiv:hover .countLabel {
+            top: -100%;
+        }
+
+        .countDiv:hover .countValue {
+            top: 0px;
+        }
+    </style>
+}
+
+@section scripts{
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+
+        var jsonData =  @Html.Raw(Json.Encode(Model));
+        console.log(jsonData);
+        google.charts.load('current', { packages: ['corechart'] });
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            drawChart1();
+            drawChart2();
+        }
+
+        function drawChart1() {
+            var data = google.visualization.arrayToDataTable([
+                ["Element", "Total", { role: "style" }],
+                ["Delivered", jsonData.Delivered, "#5f8806"],
+                ["Undelivered", jsonData.Undelivered, "#ac0e28"],
+                ["Delivered-RTS", jsonData.DeliveredRTS, "#b87333"],
+            ]);
+
+            var view = new google.visualization.DataView(data);
+            view.setColumns([0, 1,
+                {
+                    calc: "stringify",
+                    sourceColumn: 1,
+                    type: "string",
+                    role: "annotation"
+                },2]);
+
+            var options = {
+                width: '100%',
+                height: 200,
+                bar: { groupWidth: "95%" },
+                legend: { position: "none" },
+                backgroundColor: { fill: 'transparent' },
+                animation: {
+                    duration: 1000,
+                    easing: 'out',
+                    startup: true
+                },
+            };
+            var chart = new google.visualization.BarChart(document.getElementById("barchart"));
+            chart.draw(view, options);
+        }
+
+
+        function drawChart2() {
+
+            var d = [];
+            d.push(['Day', 'Delivered']);
+            for (let x of jsonData.MonthlyStats) {
+                d.push([`${x.Day}`, x.DeliveredCNs]);
+            }
+
+            var data = google.visualization.arrayToDataTable(d);
+
+            var options = {
+                title: 'Monthly  Performance',
+                legend: { position: 'bottom' },
+                width: '100%',
+                height: 200,
+                series: {
+                    0: { color: '#5f8806' }
+                },
+                backgroundColor: { fill: 'transparent' },
+                pointSize: 5,
+                animation: {
+                    duration: 1000,
+                    easing: 'out',
+                    startup: true
+                },
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('lineChart'));
+
+            chart.draw(data, options);
+        }
+
+        const getRiderData = () => {
+            const url = '@Url.Action("GetRiderReport", "DeliveryAppDashboard")';
+            fetch(url)
+                .then(
+                    function (response) {
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' +
+                                response.status);
+                            return;
+                        }
+
+                        // Examine the text in the response
+                        response.json().then(function (data) {
+                            let rows = ``;
+                            for (let x of data) {
+                                let sts = ``;
+                                if (x.StatusId == 1)
+                                {
+                                    sts = `<div style="width: 30px;height: 30px;border-radius: 50%;background: rgb(95, 136, 6)"></div>`;
+                                }
+                                else if (x.StatusId == 2)
+                                {
+                                    sts = `<div style="width: 30px;height: 30px;border-radius: 50%;background: rgb(172,14,40)"></div>`;
+                                }
+                                else if (x.StatusId == 3)
+                                {
+                                    sts = `<div style="width: 30px;height: 30px;border-radius: 50%;background: rgb(184, 115, 51)"></div>`;
+                                }
+                                rows += `<tr>
+                                            <td style="display:flex;justify-content:center">
+                                            ${sts}
+                                            </td>
+                                            <td>${x.CN}</td>
+                                            <td>${x.RiderName}</td>
+                                            <td>${x.PerformedOnStr}</td>
+                                        </tr>`;
+                            }
+
+                            $('#tbody').html(rows);
+                        });
+                    }
+                )
+                .catch(function (err) {
+                    console.log('Fetch Error :-S', err);
+                });
+        }
+
+        $(function () {
+            setInterval(getRiderData,10000)
+        });
+    </script>
+}

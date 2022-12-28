@@ -1,0 +1,67 @@
+﻿@model IEnumerable<MRaabta.Models.DebreifingAllModel>
+
+
+<div class="modal fade" id="exampleModalCenter2" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Consignment <span id="modalCn"></span> Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="tableView">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" style="font-size:20px">
+    <div class="col-6">
+        <b>Runsheet: </b> @ViewBag.RunsheetID <br>
+    </div>
+</div>
+
+<div class="row mt-2">
+    <div class="col-12" style="overflow:scroll;height:92vh">
+        <table class="table table-bordered" id="tblDetail">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Consignment No.</th>
+                    <th>Status</th>
+                    <th>Delivered Date & Time</th>
+                    <th>Consignee</th>
+                    <th>Consignee Number</th>
+                    <th>Consignee Address</th>
+                    <th>Verify</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var i = 1;
+                    foreach (var item in Model)
+                    {
+                        <tr @(item.StatusId == 1 ? "class=dvclass" : item.StatusId == 2 ? "class=undvclass" : item.StatusId == 3 ? "class=rtsclass" : "")>
+                            <td style="vertical-align:middle" class="text-center">@i</td>
+                            <td style="vertical-align: middle" class="text-center"><a href="#" class="btnView" data-view="@Json.Encode(item)">@item.CN</a></td>
+                            <td>@item.Status</td>
+                            <td style="vertical-align: middle" class="text-center">@(item.PerformedOn.HasValue ? item.PerformedOn.Value.ToString("dd-MMM-yyyy HH:mm") : "")</td>
+                            <td style="vertical-align: middle" class="text-center">@item.ConsigneeName</td>
+                            <td style="vertical-align: middle" class="text-center">@item.ConsigneePhone</td>
+                            <td style="vertical-align: middle" class="text-center">@item.ConsigneeAddress</td>
+                            <td>@(item.Verify ? "Yes" : "No")</td>
+                            <td>@item.Comments</td>
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

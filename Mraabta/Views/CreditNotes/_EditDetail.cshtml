@@ -1,0 +1,47 @@
+﻿@model MRaabta.Models.CreditNotesModel
+
+<div class="modal" id="createCategory" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <img class="col-lg-2" src="~/images/mnpLogo.png" style="float:left;" width="50" />
+                <h4 class="col-lg-8 modal-title text-center" style="text-align:center;">@ViewBag.ModalTitle</h4>
+                <button class="col-lg-2 close" type="button" style="color:#337ab7" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body center-block">
+                <br />
+                <form method="post" action="~/CreditNotes/UpdateCreditNoteDetail">
+                    <input hidden id="Id" name="Id" value="@Model.creditnoteid" />
+                    <input hidden id="Invoice" name="Invoice" value="@ViewBag.Invoice" />
+                    <input hidden id="IsCOD" value="@Model.isCOD" />
+                    <div class="col-lg-12">
+                        <label>Amount</label>
+                        <input type="text" id="Amount" name="Amount" value=@Model.totalAmount onchange="CheckAmount();" class="form-control" required />
+                        <label id="allowedamount"><b>Allowed Amount: @ViewBag.TotalAmount</b></label>
+                        <label class="text-danger" id="amounterror"></label>
+                        <input hidden id="hiddentotalamount" value="@ViewBag.TotalAmount" />
+                        <br>
+                    </div>
+                    <div class="col-lg-12">
+                        <label> Voucher Date</label>
+                        <input type="date" id="VoucherDate" name="VoucherDate" onchange="CheckDate();" value=@Model.invoiceDate.ToString("yyyy-MM-dd") class="form-control" />
+                        <label class="text-danger" id="dateerror"></label>
+                        <input hidden id="hiddendateend" value="@ViewBag.DayEnd" />
+                        <br>
+                    </div>
+                    <div class="col-lg-12">
+                        <label>Payment Type</label>
+                        @Html.DropDownList("PaymentType", ViewBag.PaymentType as List<SelectListItem>, "Select Payment Type", new { @class = "form-control", @required = "required" })
+                        <br>
+                    </div>
+                    <br />
+                    <button class="btn btn-sm btn-primary" id="edtsubt" style="float:right;background-color: #EA5B0C" type="submit">Submit</button>
+                    <br /><br />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

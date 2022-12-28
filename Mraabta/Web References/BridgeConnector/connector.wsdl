@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/">
+      <s:element name="Get_ConnectionString">
+        <s:complexType />
+      </s:element>
+      <s:element name="Get_ConnectionStringResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Get_ConnectionStringResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetChaseLogin">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="depotCode" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="Password" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="userName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetChaseLoginResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetChaseLoginResult">
+              <s:complexType>
+                <s:sequence>
+                  <s:any minOccurs="0" maxOccurs="unbounded" namespace="http://www.w3.org/2001/XMLSchema" processContents="lax" />
+                  <s:any minOccurs="1" namespace="urn:schemas-microsoft-com:xml-diffgram-v1" processContents="lax" />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetAssignedDepots">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="id" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetAssignedDepotsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetAssignedDepotsResult">
+              <s:complexType>
+                <s:sequence>
+                  <s:any minOccurs="0" maxOccurs="unbounded" namespace="http://www.w3.org/2001/XMLSchema" processContents="lax" />
+                  <s:any minOccurs="1" namespace="urn:schemas-microsoft-com:xml-diffgram-v1" processContents="lax" />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Get_datatable">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="query" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Get_datatableResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Get_datatableResult">
+              <s:complexType>
+                <s:sequence>
+                  <s:any minOccurs="0" maxOccurs="unbounded" namespace="http://www.w3.org/2001/XMLSchema" processContents="lax" />
+                  <s:any minOccurs="1" namespace="urn:schemas-microsoft-com:xml-diffgram-v1" processContents="lax" />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Get_dataset">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="query" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Get_datasetResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Get_datasetResult">
+              <s:complexType>
+                <s:sequence>
+                  <s:element ref="s:schema" />
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Insert_data">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="query" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Insert_dataResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="Insert_dataResult" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="string" nillable="true" type="s:string" />
+      <s:element name="DataTable" nillable="true">
+        <s:complexType>
+          <s:sequence>
+            <s:any minOccurs="0" maxOccurs="unbounded" namespace="http://www.w3.org/2001/XMLSchema" processContents="lax" />
+            <s:any minOccurs="1" namespace="urn:schemas-microsoft-com:xml-diffgram-v1" processContents="lax" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="DataSet" nillable="true">
+        <s:complexType>
+          <s:sequence>
+            <s:element ref="s:schema" />
+            <s:any />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="int" type="s:int" />
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="Get_ConnectionStringSoapIn">
+    <wsdl:part name="parameters" element="tns:Get_ConnectionString" />
+  </wsdl:message>
+  <wsdl:message name="Get_ConnectionStringSoapOut">
+    <wsdl:part name="parameters" element="tns:Get_ConnectionStringResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetChaseLoginSoapIn">
+    <wsdl:part name="parameters" element="tns:GetChaseLogin" />
+  </wsdl:message>
+  <wsdl:message name="GetChaseLoginSoapOut">
+    <wsdl:part name="parameters" element="tns:GetChaseLoginResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetAssignedDepotsSoapIn">
+    <wsdl:part name="parameters" element="tns:GetAssignedDepots" />
+  </wsdl:message>
+  <wsdl:message name="GetAssignedDepotsSoapOut">
+    <wsdl:part name="parameters" element="tns:GetAssignedDepotsResponse" />
+  </wsdl:message>
+  <wsdl:message name="Get_datatableSoapIn">
+    <wsdl:part name="parameters" element="tns:Get_datatable" />
+  </wsdl:message>
+  <wsdl:message name="Get_datatableSoapOut">
+    <wsdl:part name="parameters" element="tns:Get_datatableResponse" />
+  </wsdl:message>
+  <wsdl:message name="Get_datasetSoapIn">
+    <wsdl:part name="parameters" element="tns:Get_dataset" />
+  </wsdl:message>
+  <wsdl:message name="Get_datasetSoapOut">
+    <wsdl:part name="parameters" element="tns:Get_datasetResponse" />
+  </wsdl:message>
+  <wsdl:message name="Insert_dataSoapIn">
+    <wsdl:part name="parameters" element="tns:Insert_data" />
+  </wsdl:message>
+  <wsdl:message name="Insert_dataSoapOut">
+    <wsdl:part name="parameters" element="tns:Insert_dataResponse" />
+  </wsdl:message>
+  <wsdl:message name="Get_ConnectionStringHttpGetIn" />
+  <wsdl:message name="Get_ConnectionStringHttpGetOut">
+    <wsdl:part name="Body" element="tns:string" />
+  </wsdl:message>
+  <wsdl:message name="GetChaseLoginHttpGetIn">
+    <wsdl:part name="depotCode" type="s:string" />
+    <wsdl:part name="Password" type="s:string" />
+    <wsdl:part name="userName" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="GetChaseLoginHttpGetOut">
+    <wsdl:part name="Body" element="tns:DataTable" />
+  </wsdl:message>
+  <wsdl:message name="GetAssignedDepotsHttpGetIn">
+    <wsdl:part name="id" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="GetAssignedDepotsHttpGetOut">
+    <wsdl:part name="Body" element="tns:DataTable" />
+  </wsdl:message>
+  <wsdl:message name="Get_datatableHttpGetIn">
+    <wsdl:part name="query" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="Get_datatableHttpGetOut">
+    <wsdl:part name="Body" element="tns:DataTable" />
+  </wsdl:message>
+  <wsdl:message name="Get_datasetHttpGetIn">
+    <wsdl:part name="query" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="Get_datasetHttpGetOut">
+    <wsdl:part name="Body" element="tns:DataSet" />
+  </wsdl:message>
+  <wsdl:message name="Insert_dataHttpGetIn">
+    <wsdl:part name="query" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="Insert_dataHttpGetOut">
+    <wsdl:part name="Body" element="tns:int" />
+  </wsdl:message>
+  <wsdl:message name="Get_ConnectionStringHttpPostIn" />
+  <wsdl:message name="Get_ConnectionStringHttpPostOut">
+    <wsdl:part name="Body" element="tns:string" />
+  </wsdl:message>
+  <wsdl:message name="GetChaseLoginHttpPostIn">
+    <wsdl:part name="depotCode" type="s:string" />
+    <wsdl:part name="Password" type="s:string" />
+    <wsdl:part name="userName" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="GetChaseLoginHttpPostOut">
+    <wsdl:part name="Body" element="tns:DataTable" />
+  </wsdl:message>
+  <wsdl:message name="GetAssignedDepotsHttpPostIn">
+    <wsdl:part name="id" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="GetAssignedDepotsHttpPostOut">
+    <wsdl:part name="Body" element="tns:DataTable" />
+  </wsdl:message>
+  <wsdl:message name="Get_datatableHttpPostIn">
+    <wsdl:part name="query" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="Get_datatableHttpPostOut">
+    <wsdl:part name="Body" element="tns:DataTable" />
+  </wsdl:message>
+  <wsdl:message name="Get_datasetHttpPostIn">
+    <wsdl:part name="query" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="Get_datasetHttpPostOut">
+    <wsdl:part name="Body" element="tns:DataSet" />
+  </wsdl:message>
+  <wsdl:message name="Insert_dataHttpPostIn">
+    <wsdl:part name="query" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="Insert_dataHttpPostOut">
+    <wsdl:part name="Body" element="tns:int" />
+  </wsdl:message>
+  <wsdl:portType name="ConnectorSoap">
+    <wsdl:operation name="Get_ConnectionString">
+      <wsdl:input message="tns:Get_ConnectionStringSoapIn" />
+      <wsdl:output message="tns:Get_ConnectionStringSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetChaseLogin">
+      <wsdl:input message="tns:GetChaseLoginSoapIn" />
+      <wsdl:output message="tns:GetChaseLoginSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetAssignedDepots">
+      <wsdl:input message="tns:GetAssignedDepotsSoapIn" />
+      <wsdl:output message="tns:GetAssignedDepotsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Get_datatable">
+      <wsdl:input message="tns:Get_datatableSoapIn" />
+      <wsdl:output message="tns:Get_datatableSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Get_dataset">
+      <wsdl:input message="tns:Get_datasetSoapIn" />
+      <wsdl:output message="tns:Get_datasetSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Insert_data">
+      <wsdl:input message="tns:Insert_dataSoapIn" />
+      <wsdl:output message="tns:Insert_dataSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="ConnectorHttpGet">
+    <wsdl:operation name="Get_ConnectionString">
+      <wsdl:input message="tns:Get_ConnectionStringHttpGetIn" />
+      <wsdl:output message="tns:Get_ConnectionStringHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetChaseLogin">
+      <wsdl:input message="tns:GetChaseLoginHttpGetIn" />
+      <wsdl:output message="tns:GetChaseLoginHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetAssignedDepots">
+      <wsdl:input message="tns:GetAssignedDepotsHttpGetIn" />
+      <wsdl:output message="tns:GetAssignedDepotsHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Get_datatable">
+      <wsdl:input message="tns:Get_datatableHttpGetIn" />
+      <wsdl:output message="tns:Get_datatableHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Get_dataset">
+      <wsdl:input message="tns:Get_datasetHttpGetIn" />
+      <wsdl:output message="tns:Get_datasetHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Insert_data">
+      <wsdl:input message="tns:Insert_dataHttpGetIn" />
+      <wsdl:output message="tns:Insert_dataHttpGetOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="ConnectorHttpPost">
+    <wsdl:operation name="Get_ConnectionString">
+      <wsdl:input message="tns:Get_ConnectionStringHttpPostIn" />
+      <wsdl:output message="tns:Get_ConnectionStringHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetChaseLogin">
+      <wsdl:input message="tns:GetChaseLoginHttpPostIn" />
+      <wsdl:output message="tns:GetChaseLoginHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetAssignedDepots">
+      <wsdl:input message="tns:GetAssignedDepotsHttpPostIn" />
+      <wsdl:output message="tns:GetAssignedDepotsHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Get_datatable">
+      <wsdl:input message="tns:Get_datatableHttpPostIn" />
+      <wsdl:output message="tns:Get_datatableHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Get_dataset">
+      <wsdl:input message="tns:Get_datasetHttpPostIn" />
+      <wsdl:output message="tns:Get_datasetHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Insert_data">
+      <wsdl:input message="tns:Insert_dataHttpPostIn" />
+      <wsdl:output message="tns:Insert_dataHttpPostOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ConnectorSoap" type="tns:ConnectorSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Get_ConnectionString">
+      <soap:operation soapAction="http://tempuri.org/Get_ConnectionString" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetChaseLogin">
+      <soap:operation soapAction="http://tempuri.org/GetChaseLogin" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAssignedDepots">
+      <soap:operation soapAction="http://tempuri.org/GetAssignedDepots" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Get_datatable">
+      <soap:operation soapAction="http://tempuri.org/Get_datatable" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Get_dataset">
+      <soap:operation soapAction="http://tempuri.org/Get_dataset" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Insert_data">
+      <soap:operation soapAction="http://tempuri.org/Insert_data" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ConnectorSoap12" type="tns:ConnectorSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Get_ConnectionString">
+      <soap12:operation soapAction="http://tempuri.org/Get_ConnectionString" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetChaseLogin">
+      <soap12:operation soapAction="http://tempuri.org/GetChaseLogin" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAssignedDepots">
+      <soap12:operation soapAction="http://tempuri.org/GetAssignedDepots" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Get_datatable">
+      <soap12:operation soapAction="http://tempuri.org/Get_datatable" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Get_dataset">
+      <soap12:operation soapAction="http://tempuri.org/Get_dataset" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Insert_data">
+      <soap12:operation soapAction="http://tempuri.org/Insert_data" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ConnectorHttpGet" type="tns:ConnectorHttpGet">
+    <http:binding verb="GET" />
+    <wsdl:operation name="Get_ConnectionString">
+      <http:operation location="/Get_ConnectionString" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetChaseLogin">
+      <http:operation location="/GetChaseLogin" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAssignedDepots">
+      <http:operation location="/GetAssignedDepots" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Get_datatable">
+      <http:operation location="/Get_datatable" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Get_dataset">
+      <http:operation location="/Get_dataset" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Insert_data">
+      <http:operation location="/Insert_data" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ConnectorHttpPost" type="tns:ConnectorHttpPost">
+    <http:binding verb="POST" />
+    <wsdl:operation name="Get_ConnectionString">
+      <http:operation location="/Get_ConnectionString" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetChaseLogin">
+      <http:operation location="/GetChaseLogin" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAssignedDepots">
+      <http:operation location="/GetAssignedDepots" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Get_datatable">
+      <http:operation location="/Get_datatable" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Get_dataset">
+      <http:operation location="/Get_dataset" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Insert_data">
+      <http:operation location="/Insert_data" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:mimeXml part="Body" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Connector">
+    <wsdl:port name="ConnectorSoap" binding="tns:ConnectorSoap">
+      <soap:address location="http://192.168.200.145/bridgeConnectorNew/connector.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ConnectorSoap12" binding="tns:ConnectorSoap12">
+      <soap12:address location="http://192.168.200.145/bridgeConnectorNew/connector.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ConnectorHttpGet" binding="tns:ConnectorHttpGet">
+      <http:address location="http://192.168.200.145/bridgeConnectorNew/connector.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ConnectorHttpPost" binding="tns:ConnectorHttpPost">
+      <http:address location="http://192.168.200.145/bridgeConnectorNew/connector.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

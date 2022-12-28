@@ -1,0 +1,224 @@
+﻿@{
+    ViewBag.Title = "Customer Pricing";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    #formrow {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .rowitem {
+        width: calc(88% / 4) !important;
+        padding: 10px !important;
+    }
+
+    .rowitembtn {
+        display: flex;
+        flex-direction: row;
+        width: 12% !important;
+        padding: 10px !important;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+</style>
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center">
+                    <h3><b>Tax Forwarder</b></h3>
+                </div>
+                <div id="root">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+@section styles{
+    <style>
+        #root {
+            padding: 15px;
+        }
+
+        .form-control {
+            border: 1px solid #969799 !important;
+        }
+
+            .form-control:focus {
+                border: 1px solid #f46425 !important;
+            }
+    </style>
+}
+
+@section scripts{
+    <script>
+        const currentDate = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        const url = '@Url.Action("Save","CustomerPricing")';
+        const parseFileUrl = '@Url.Action("Save", "TaxForwarder")';
+        const sampleFileUrl = '@Url.Content("~/Samples/TaxForwarderSample.xlsx")';
+    </script>
+    <script type="text/babel">
+
+    const App = () => {
+            const [formData, setFormData] = React.useState({
+            Date: currentDate
+        });
+
+        const fileRef = React.useRef(null);
+        const [loading, setLoading] = React.useState(false);
+
+        const OnSave = () => {
+            setLoading(true);
+
+            if (!formData.Date)
+            {
+                alert('Enter Date');
+                return;
+            }
+
+            if (fileRef.current.files.length > 0) {
+                    setLoading(true);
+                    const f = fileRef.current;
+                    var data = new FormData()
+                    data.append('file', f.files[0])
+                    data.append('Date', formData.Date)
+
+                    fetch(parseFileUrl, {
+                        method: 'POST',
+                        body:   data,
+                        contentType: false,
+                        processData: false
+                    }).then(
+                        function (response) {
+                            f.value = '';
+                            f.labels[0].innerText = '';
+                            f.labels[0].innerHtml = '';
+                            setLoading(false);
+                            if (response.status !== 200) {
+                                console.log('Looks like there was a problem. Status Code: ' + response.status);
+                                return;
+                            }
+                            response.json().then(function (rs) {
+                                if (rs.sts == 0) {
+                                    setData(rs.data)
+                                } else {
+                                    alert(rs.msg);
+                                    setData([])
+                                }
+                            });
+                        }
+                    ).catch(function (err) {
+                        setLoading(false);
+                        console.log('Fetch Error :-S', err);
+                    });
+                } else {
+                    setLoading(false);
+                    alert('Select File');
+                }
+        }
+
+        const getPricing = () => {
+            setLoading(true);
+
+            fetch(`${url}?acc=${AccNo}&Date=${formData.Date}`).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            setLoading(false);
+                            alert(rs.msg);
+                        } else {
+                            setLoading(false);
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const changeFormData = (key, val) => {
+            let x = { ...formData, [key]: val };
+            setFormData(x);
+        }
+
+        const overlayStyle = {
+            width: '100vw',
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 10000,
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)'
+        }
+
+        return (
+            <div style={{ position: 'relative'}}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+
+                <React.Fragment>
+                    <div className="row" >
+                        <div className="col-md-3 col-sm-12">
+                            <label>Date</label>
+                            <input type="date" className="form-control" value={formData.Date} max={currentDate} onChange={(x) => changeFormData('Date', x.target.value)} />
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>Excel File</label>
+                            <div className="custom-file">
+                                <input type="file" className="custom-file-input" id="customFile" ref={fileRef} />
+                                <label className="custom-file-label" htmlFor="customFile">Choose file</label>
+                            </div>
+                            <a href={sampleFileUrl} download>Download Sample</a>
+                        </div>
+                    </div>
+                    <div className="row" >
+                        <div className="col-md-12 col-sm-12 text-right">
+                            <button type="button" className="btn btn-primary" style={{ marginTop: 25, background: '#f46425', border: '#a53200' }} onClick={(x) => {
+                                    OnSave();
+                            }}>Save</button>
+                        </div>
+                    </div>
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    ReactDOM.render(<App />,
+        document.querySelector('#root')
+    )
+    </script>
+}

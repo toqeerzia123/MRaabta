@@ -1,0 +1,716 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+
+@section scripts{
+    <script type="text/javascript">
+        var nanToZero = (val, round = true) => {
+                if (isNaN(val)) {
+                    return 0;
+                } else {
+                    return round ? Math.round(val) : val;
+                }
+            };
+
+        var getRiders = (Date) => {
+        debugger;
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("ViewRiders","DailyPerformance")',
+                     data: {
+                         Date: Date
+                         },
+                    dataType: 'json',
+                    success: (rs) => {
+                        var html = ``;
+                        for (let x of rs) {
+                            html += `<option value="${x.Value}">${x.Value}-${x.Text}</option>`;
+                        }
+                        $('#ddl_rider_name').html(html);
+                    }
+                });
+        };
+
+    $(function () {
+     $(document).on({
+                ajaxStart: function () { $("#wait").show() },
+                ajaxStop: function () { $("#wait").hide(); },
+           });
+        var Date;
+        $('#Date').change(function () {
+            debugger;
+            Date = $(this).val();
+            if (Date != null) {
+                getRiders(Date);
+            }
+
+        });
+
+        $("#btn_search").click(function (e) {
+            debugger;
+        e.preventDefault();
+        var riderCode = $("#ddl_rider_name").val();
+        var Date = $("#Date").val();
+            if (!Date) {
+                swal('Select Date');
+                return;
+            }
+            if (!riderCode) {
+                swal('Select Rider');
+                 $('#container').empty();
+                 $('#container1').empty();
+                 $('#container2').empty();
+                 $('#container3').empty();
+                 $('#container4').empty();
+                 $('#main_heading').empty();
+                 $('#sub_sub_para').empty();
+                 $('#second_heading').empty();
+                 $('#progress_charts').empty();
+                return;
+            }
+            else {
+                 monthlyCount(Date, riderCode);
+            }
+            function monthlyCount(riderCode, Date) {
+                $.ajax({
+                    type: 'post',
+                    url: '../DailyPerformance/GetMonthlyCount',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify({ riderCode: riderCode, Date: Date }),
+                    success: function (rs) {
+                        if (rs.dataPoints.length == 0) {
+
+                        }
+                        else {
+                            debugger;
+                            var Delivered = rs.dataPoints[0].delivered;
+                            var Undelivered = rs.dataPoints[0].undelivered;
+                            var deliveredRTS = rs.dataPoints[0].deliveredrts;
+                            var TCNDownloaded = rs.dataPoints[0].TCNDownloaded;
+                            var Performed = rs.dataPoints[0].delivered + rs.dataPoints[0].deliveredrts + rs.dataPoints[0].undelivered;
+                            var UnPerformed = TCNDownloaded - Performed;
+                            var del_percentage = (Delivered * 100) / TCNDownloaded;
+                            var del_per_pointsan = nanToZero((Delivered / TCNDownloaded), false);
+                            var undel_per = (Undelivered * 100) / TCNDownloaded;
+                            var delrts_peran = (deliveredRTS) / TCNDownloaded;
+                            var undel_per_pointsan = nanToZero((Undelivered / TCNDownloaded), false);
+                            var performed_pointsan = nanToZero((Performed / TCNDownloaded) , false);
+                            var unper_pointsan = nanToZero((UnPerformed/ TCNDownloaded), false);
+                            var DownloadedRunsheet = rs.dataPoints[0].DownloadedRunsheet;
+                            var touchpoints = rs.dataPoints[0].Touchpoints;
+                            var TotalTimeTaken = rs.dataPoints[0].TotalTimeTaken;
+                            //alert(del_percentage);
+                            if (Delivered == null) {
+
+                            }
+                            if (Undelivered == null) {
+
+                            }
+                            if (Delivered == null && Undelivered == null) {
+
+                            }
+                            else {
+                                //Progress JS
+                                //Delivered
+                                $('#container').empty();
+                                $('#container1').empty();
+                                $('#container2').empty();
+                                $('#container3').empty();
+                                $('#container4').empty();
+                                $('#container').html("<span id='pro_chart_del'></span>");
+                                $('#container1').html("<span id='pro_chart_undel'></span>");
+                                $('#container2').html("<span id='pro_chart_delrts'></span>");
+                                $('#container3').html("<span id='pro_chart_per'></span>")
+                                $('#container4').html("<span id='pro_chart_unper'></span>")
+                                $('#main_heading').html('<h3 class="mt-2" style="text-align: center; border:1px solid black; margin:1px;">Consignment Statistic</h3>')
+                                $('#sub_sub_para').html("<span class='col-md-12'><span class='col-md-6'><input type='radio' style='-webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;' checked></input><b style='margin-left: 5px;'>    Total CN Downloaded:  </b> " + TCNDownloaded + "  </span><span class='col-md-6'><input type='radio' style='margin-left:5px; -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;' checked></input><b style='margin-left: 5px;'>    Total Downloaded Runsheet:</b> " + DownloadedRunsheet + "</span></span>")
+                                var bar = new ProgressBar.Circle(container, {
+                                    color: '#aaa',
+                                    // This has to be the same size as the maximum width to
+                                    // prevent clipping
+                                    strokeWidth: 12,
+                                    trailWidth: 1,
+                                    easing: 'easeInOut',
+                                    duration: 1400,
+                                    text: {
+                                        autoStyleContainer: false,
+                                        style: {
+                                            // Text color.
+                                            // Default: same as stroke color (options.color)
+                                            color: '#37474f',
+                                            position: 'absolute',
+                                            left: '45%',
+                                            top: '45%',
+                                            padding: 0,
+                                            margin: 0,
+
+                                            // You can specify styles which will be browser prefixed
+                                            transform: {
+                                                prefix: true,
+                                                value: 'translate(-50%, -50%)'
+                                            }
+                                        },
+                                    },
+                                    svgStyle: {
+                                        display: 'block',
+
+                                        // Important: make sure that your container has same
+                                        // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                        width: '85%'
+                                    },
+
+                                    from: { color: '#00897b', width: 12 },
+                                    to: { color: '#00897b', width: 12 },
+                                    // Set default step function for all animate calls
+                                    step: function (state, circle) {
+
+                                        circle.path.setAttribute('stroke', state.color);
+                                        circle.path.setAttribute('stroke-width', state.width);
+
+                                        var value = (Math.round(del_per_pointsan * 100) + '%');
+                                        if (value === 0) {
+                                            circle.setText('');
+                                        } else {
+                                            $('#pro_chart_del').html("<h6 style='text-align: center;width:10em;'>Delivered <span style='color:#00897b;'>" + Delivered + "</span></h6>")
+                                            circle.setText(value);
+                                        }
+
+                                    }
+                                });
+
+
+                                bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                                bar.text.style.fontSize = '2rem';
+                                bar.animate(del_per_pointsan);  // Number from 0.0 to 1.0
+
+                                //Undelivered
+
+                                var bar1 = new ProgressBar.Circle(container1, {
+                                    color: '#aaa',
+                                    // This has to be the same size as the maximum width to
+                                    // prevent clipping
+                                    strokeWidth: 12,
+                                    trailWidth: 1,
+                                    easing: 'easeInOut',
+                                    duration: 1400,
+                                    text: {
+                                        autoStyleContainer: false,
+                                        style: {
+                                            // Text color.
+                                            // Default: same as stroke color (options.color)
+                                            color: '#37474f',
+                                            position: 'absolute',
+                                            left: '45%',
+                                            top: '45%',
+                                            padding: 0,
+                                            margin: 0,
+                                            // You can specify styles which will be browser prefixed
+                                            transform: {
+                                                prefix: true,
+                                                value: 'translate(-50%, -50%)'
+                                            }
+                                        },
+                                    },
+                                    svgStyle: {
+                                        display: 'block',
+
+                                        // Important: make sure that your container has same
+                                        // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                        width: '85%'
+                                    },
+                                    style: {
+                                        // Text color.
+                                        // Default: same as stroke color (options.color)
+                                        color: '#f00',
+                                        position: 'absolute',
+                                        left: '45%',
+                                        top: '45%',
+                                        padding: 0,
+                                        margin: 0,
+                                        // You can specify styles which will be browser prefixed
+                                        transform: {
+                                            prefix: true,
+                                            value: 'translate(-50%, -50%)'
+                                        }
+                                    },
+                                    from: { color: '#c62828', width: 12 },
+                                    to: { color: '#c62828', width: 12 },
+                                    // Set default step function for all animate calls
+                                    step: function (state, circle) {
+                                        circle.path.setAttribute('stroke', state.color);
+                                        circle.path.setAttribute('stroke-width', state.width);
+
+                                        var value = (Math.round(undel_per_pointsan * 100) + '%');
+                                        if (value === 0) {
+                                            circle.setText('');
+                                        } else {
+                                            $('#pro_chart_undel').html("<h6 style='text-align: center;width:10em;'>Un-Delivered <span style='color:#c62828;'>" + Undelivered + "</span></h6>")
+                                            circle.setText(value);
+                                        }
+
+                                    }
+                                });
+
+
+                                bar1.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                                bar1.text.style.fontSize = '2rem';
+                                bar1.animate(undel_per_pointsan);  // Number from 0.0 to 1.0
+
+                                //delivered RTS
+                                 var bar2 = new ProgressBar.Circle(container2, {
+                                    color: '#aaa',
+                                    // This has to be the same size as the maximum width to
+                                    // prevent clipping
+                                    strokeWidth: 12,
+                                    trailWidth: 1,
+                                    easing: 'easeInOut',
+                                    duration: 1400,
+                                    text: {
+                                        autoStyleContainer: false,
+                                        style: {
+                                            // Text color.
+                                            // Default: same as stroke color (options.color)
+                                            color: '#37474f',
+                                            position: 'absolute',
+                                            left: '45%',
+                                            top: '45%',
+                                            padding: 0,
+                                            margin: 0,
+                                            // You can specify styles which will be browser prefixed
+                                            transform: {
+                                                prefix: true,
+                                                value: 'translate(-50%, -50%)'
+                                            }
+                                        },
+                                    },
+                                    svgStyle: {
+                                        display: 'block',
+
+                                        // Important: make sure that your container has same
+                                        // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                        width: '85%'
+                                    },
+                                    style: {
+                                        // Text color.
+                                        // Default: same as stroke color (options.color)
+                                        color: '#f00',
+                                        position: 'absolute',
+                                        left: '45%',
+                                        top: '45%',
+                                        padding: 0,
+                                        margin: 0,
+                                        // You can specify styles which will be browser prefixed
+                                        transform: {
+                                            prefix: true,
+                                            value: 'translate(-50%, -50%)'
+                                        }
+                                    },
+                                    from: { color: '#c62828', width: 12 },
+                                    to: { color: '#c62828', width: 12 },
+                                    // Set default step function for all animate calls
+                                    step: function (state, circle) {
+                                        circle.path.setAttribute('stroke', state.color);
+                                        circle.path.setAttribute('stroke-width', state.width);
+
+                                        var value = (Math.round( delrts_peran * 100) + '%');
+                                        if (value === 0) {
+                                            circle.setText('');
+                                        } else {
+                                            $('#pro_chart_delrts').html("<h6 style='text-align: center;width:10em;'>Delivered RTS <span style='color:#c62828;'>" + deliveredRTS + "</span></h6>")
+                                            circle.setText(value);
+                                        }
+
+                                    }
+                                });
+
+
+                                bar2.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                                bar2.text.style.fontSize = '2rem';
+                                bar2.animate(delrts_peran);  // Number from 0.0 to 1.0
+                                //pending
+
+                                var bar3 = new ProgressBar.Circle(container3, {
+                                    color: '#aaa',
+                                    // This has to be the same size as the maximum width to
+                                    // prevent clipping
+                                    strokeWidth: 12,
+                                    trailWidth: 1,
+                                    easing: 'easeInOut',
+                                    duration: 1400,
+                                    text: {
+                                        autoStyleContainer: false,
+                                        style: {
+                                            // Text color.
+                                            // Default: same as stroke color (options.color)
+                                            color: '#37474f',
+                                            position: 'absolute',
+                                            left: '45%',
+                                            top: '45%',
+                                            padding: 0,
+                                            margin: 0,
+                                            // You can specify styles which will be browser prefixed
+                                            transform: {
+                                                prefix: true,
+                                                value: 'translate(-50%, -50%)'
+                                            }
+                                        },
+                                    },
+                                    svgStyle: {
+                                        display: 'block',
+
+                                        // Important: make sure that your container has same
+                                        // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                        width: '85%'
+                                    },
+                                    style: {
+                                        // Text color.
+                                        // Default: same as stroke color (options.color)
+                                        color: '#f00',
+                                        position: 'absolute',
+                                        left: '45%',
+                                        top: '45%',
+                                        padding: 0,
+                                        margin: 0,
+                                        // You can specify styles which will be browser prefixed
+                                        transform: {
+                                            prefix: true,
+                                            value: 'translate(-50%, -50%)'
+                                        }
+                                    },
+                                    from: { color: '#e65100', width: 12 },
+                                    to: { color: '#e65100', width: 12 },
+                                    // Set default step function for all animate calls
+                                    step: function (state, circle) {
+                                        circle.path.setAttribute('stroke', state.color);
+                                        circle.path.setAttribute('stroke-width', state.width);
+
+                                        var value = (Math.round(unper_pointsan * 100) + '%');
+                                        if (value === 0) {
+                                            circle.setText('');
+                                        } else {
+                                            $('#pro_chart_per').html("<h6 style='text-align: center;width:10em;'>Un-Performed <span style='color:#e65100'>" + UnPerformed + "</span></h6>")
+                                            circle.setText(value);
+                                        }
+
+                                    }
+                                });
+
+
+                                bar3.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                                bar3.text.style.fontSize = '2rem';
+
+                                bar3.animate(unper_pointsan);  // Number from 0.0 to 1.0
+
+                                //Performed
+                                var bar4 = new ProgressBar.Circle(container4, {
+                                    color: '#aaa',
+                                    // This has to be the same size as the maximum width to
+                                    // prevent clipping
+                                    strokeWidth: 12,
+                                    trailWidth: 1,
+                                    easing: 'easeInOut',
+                                    duration: 1400,
+                                    text: {
+                                        autoStyleContainer: false,
+                                        style: {
+                                            // Text color.
+                                            // Default: same as stroke color (options.color)
+                                            color: '#37474f',
+                                            position: 'absolute',
+                                            left: '45%',
+                                            top: '45%',
+                                            padding: 0,
+                                            margin: 0,
+                                            // You can specify styles which will be browser prefixed
+                                            transform: {
+                                                prefix: true,
+                                                value: 'translate(-50%, -50%)'
+                                            }
+                                        },
+                                        //bar3.text.style.left = '45%';
+                                        //bar3.text.style.top = '45%';
+
+                                    },
+                                    svgStyle: {
+                                        display: 'block',
+
+                                        // Important: make sure that your container has same
+                                        // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                        width: '85%'
+                                    },
+                                    style: {
+                                        // Text color.
+                                        // Default: same as stroke color (options.color)
+                                        color: '#f00',
+                                        position: 'absolute',
+                                        left: '45%',
+                                        top: '45%',
+                                        padding: 0,
+                                        margin: 0,
+                                        // You can specify styles which will be browser prefixed
+                                        transform: {
+                                            prefix: true,
+                                            value: 'translate(-50%, -50%)'
+                                        }
+                                    },
+                                    from: { color: '#0277bd', width: 12 },
+                                    to: { color: '#0277bd', width: 12 },
+                                    // Set default step function for all animate calls
+                                    step: function (state, circle) {
+                                        circle.path.setAttribute('stroke', state.color);
+                                        circle.path.setAttribute('stroke-width', state.width);
+
+                                        var value = (Math.round(performed_pointsan * 100) + '%');
+                                        if (value === 0) {
+                                            circle.setText('');
+                                        } else {
+
+                                            $('#pro_chart_unper').html("<h6 style='text-align: center; width:10em;'>Performed <span style='color:#0277bd'>" + Performed + "</span></h6>")
+                                            circle.setText(value);
+                                        }
+
+                                    }
+                                });
+
+
+                                bar4.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                                bar4.text.style.fontSize = '2rem';
+
+
+                                bar4.animate(performed_pointsan);  // Number from 0.0 to 1.0
+
+                                // second_heading
+                                $('#second_heading').html("<h3 style='text-align:center; border: 1px solid black;margin: 1px;'>Consignment Statistic</h3>");
+                                $("#progress_charts").html("<div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/Box.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:12px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total CN Downloaded</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + TCNDownloaded + "</p></div></div></div><div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/RunsheetRep.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:12px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total Downloaded RS</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + DownloadedRunsheet + "</p></div></div></div><div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/pin.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:12px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total Touchpoints</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + touchpoints + "</p></div></div></div><div class='col-md-3'><div class='card mt-2'><div class='card-body' style='border: 1px solid black;'><div class='card-title'><img src='../images/clock.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:12px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total Time Taken</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + TotalTimeTaken + "</p></div></div></div>");
+                            }
+
+                        }
+
+                    }
+                });
+            }
+        });
+
+        });
+
+
+
+    </script>
+}
+
+
+@section styles{
+    <style>
+        .flip-card {
+            background-color: transparent;
+            width: 45%;
+            height: 100px;
+            perspective: 1000px;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
+
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        .flip-card-front {
+            /*background-color: #D66D75;*/
+            color: White;
+        }
+
+        .flip-card-back {
+            background-color: #2980b9;
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        #container {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+        }
+
+        #container1 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+        }
+
+        #container2 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+        }
+
+        #container3 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+        }
+
+        #container4 {
+            /*margin: 20px;*/
+            width: 200px;
+            height: 230px;
+            position: relative;
+        }
+
+        .select2-container .select2-selection--single {
+            height: 37px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 37px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            height: 37px !important;
+            line-height: 37px !important;
+        }
+    </style>
+}
+
+<div>
+    <h2 style="text-align:center;">Daily Performance Report</h2>  
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <label>Date</label>
+
+            @if (ViewBag.Date == null)
+            {
+                @Html.TextBox("date", DateTime.Now.ToString(), new { @class = "form-control", @id = "Date", @name = "Date", @type = "date" })
+            }
+            else
+            {
+                DateTime date = Convert.ToDateTime(ViewBag.Date);
+                @Html.TextBox("date", date, new { @class = "form-control", @id = "Date", @name = "Date", @type = "date" })
+            }
+
+        </div>
+        <div class="form-group col-md-4">
+            <label>Rider Name</label>
+            @if (ViewBag.err == null || ViewBag.err == "")
+            {
+                <select id="ddl_rider_name" class="form-control">
+                    <option selected value=''>Choose Rider</option>
+                </select>
+            }
+        </div>
+        <div class="col-md-4 mt-4">
+            <button type="button" class="btn btn-light" style="border:1px solid black;margin-top:5px; height:36px" id="btn_search">Search</button>
+        </div>
+    </div>
+
+    @* Progress Bar *@
+    <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600,800,900" rel="stylesheet" type="text/css">
+    <span id="main_heading"></span>
+    @*<span id="sub_sub_para"></span>*@
+    <div class="row col-md-12">
+        <div class="col-md-2" style="margin-top:5px;">
+            <div id="container">
+                <span id="pro_chart_del"></span>
+            </div>
+        </div>
+        <div class="col-md-2" style="margin-top:5px; margin-left:10px;">
+            <div id="container1">
+                <span id="pro_chart_undel"></span>
+            </div>
+        </div>
+        <div class="col-md-2" style="margin-top:5px; margin-left:10px;">
+            <div id="container2">
+                <span id="pro_chart_delrts"></span>
+            </div>
+        </div>
+        <div class="col-md-2" style="margin-top:5px; margin-left:10px;">
+            <div id="container3">
+                <span id="pro_chart_per"></span>
+            </div>
+        </div>
+        <div class="col-md-2" style="margin-top:5px; margin-left:10px;">
+            <div id="container4">
+                <span id="pro_chart_unper"></span>
+            </div>
+        </div>
+
+    </div>
+    <div id="wait" style="display:none;width:69px;height:89px;border:1px solid black;position:absolute;top:50%;left:50%;padding:2px;">
+        <img src="~/images/loader.gif" width="64" height="64" /><br>Loading..
+    </div>
+    @*<span id="second_heading"></span>*@
+    <div id="progress_charts" class="col-md-12 row">
+
+    </div>
+    @* Flip cards *@
+    @*<div class="row">
+            <div class="col-md-6">
+                <div class="row">
+                    <div class="flip-card mt-2" style="margin-left:20px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front" style="background: linear-gradient(to bottom, #43cea2 0%, #185a9d 100%)">
+                                <h2 style="margin-top:1em; text-align:center; font-size:2vw;font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif">Total Riders</h2>
+                            </div>
+                            <div class="flip-card-back">
+                                <h2 style="margin-top:0.5em; text-align:center; font-size:3vw; font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif" id="totalriders"></h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flip-card mt-2" style="margin-left:20px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front" style="background: linear-gradient(to bottom, #FFB75E 0%, #ED8F03 100%)">
+                                <p style="margin-top:1em; text-align:center;  font-size:2vw;font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif">Active Riders</p>
+                            </div>
+                            <div class="flip-card-back">
+                                <p style="margin-top:0.5em; text-align:center; font-size:3vw; font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif" id="activeriders">50</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="flip-card mt-3" style="margin-left:20px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front" style="background: linear-gradient(to bottom, #ff9966 0%, #ff5e62 100%)">
+                                <p style="margin-top:1em; text-align:center; font-size:2vw; font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif">Offline Riders</p>
+                            </div>
+                            <div class="flip-card-back">
+                                <p style="margin-top:0.5em; text-align:center; font-size:3vw;font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif" id="offlineriders"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flip-card mt-3" style="margin-left:20px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front" style=" background: linear-gradient(to bottom, #B24592 0%, #F15F79 100%)">
+                                <p style="margin-top:1em; text-align:center; font-size:2vw;font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif">Total Touchpoints</p>
+                            </div>
+                            <div class="flip-card-back">
+                                <p style="margin-top:0.5em; text-align:center; font-size:3vw; font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif" " id="routecount"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>*@
+</div>

@@ -1,0 +1,460 @@
+﻿@model IEnumerable<MRaabta.Models.CreditNotesModel>
+
+@{
+    var value = "";
+    ViewBag.Title = "Credit Notes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style>
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #formrow {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .rowitem {
+            width: calc(88% / 4) !important;
+            padding: 10px !important;
+        }
+
+        .rowitembtn {
+            /*display: flex;
+            flex-direction: row;
+            width: 12% !important;*/
+            padding-top: 35px !important;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .page-content {
+            /*          padding-left:10px !important;*/
+        }
+
+        #tbl_pickUp, #CreditNotesInsert, #errortable {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            #tbl_pickUp td, #tbl_pickUp th, #CreditNotesInsert td, #CreditNotesInsert th, #errortable td, #errortable th {
+                border: 1px solid #ddd;
+                text-align: center;
+                padding: 8px;
+            }
+
+            #tbl_pickUp tr:hover, #CreditNotesInsert tr:hover, #errortable tr:hover {
+                background-color: #ddd;
+            }
+
+            #tbl_pickUp th, #CreditNotesInsert th, #errortable th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: center;
+                background-color: #ddd;
+                color: black;
+            }
+
+        .cnlink {
+            text-decoration: underline;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            /*color: lightblue !important;*/
+        }
+
+        /* a:active {
+                text-decoration: underline;
+            }*/
+
+        .active {
+            background-color: #EA5B0C !important;
+        }
+
+        .active {
+            background-color: #fd7e14 !important;
+        }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loader">
+    </div>
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">@ViewBag.Title</h2>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="rowitem">
+                <label>Invoice No</label>
+                <input type="text" id="Invoice" name="Invoice" class="form-control" onchange="TextChange()" />
+                <label id="invoicerror" class="text-danger"><b></b></label>
+                <label>Press tab after typing Invoice No</label>
+            </div>
+            <div class="rowitem" id="amountdiv" style="display:none;">
+                <label>Amount</label>
+                <input type="text" id="Amount" name="Amount" class="form-control" onchange="DecimalNumberValidation()" />
+                <input type="hidden" id="hiddenamountsum" />
+                <label id="allowedamount"></label>
+                <label id="amounterror" class="text-danger"><b></b></label>
+            </div>
+            <div class="rowitem" id="voucherdatediv" style="display:none;">
+                <label>Voucher Date</label>
+                <input type="date" id="VoucherDate" name="VoucherDate" class="form-control" />
+                <label id="inputerror" class="text-danger"><b></b></label>
+                <input type="hidden" id="hiddenSaleDate" />
+                <input hidden id="IsCOD" />
+            </div>
+            <div class="rowitem" id="paymenttypediv" style="display:none;">
+                <label>Payment Type</label>
+                @Html.DropDownList("PaymentType", ViewBag.PaymentType as List<SelectListItem>, "Select Payment Type", new { @class = "form-control" })
+            </div>
+
+            <div class="rowitembtn">
+                <button type="button" id="sbtbtn" class="btn btn-primary float-right" style="background-color: #EA5B0C;display:none;">Submit</button>
+            </div>
+            <div class="rowitembtn">
+                &nbsp; &nbsp;
+                <a class="btn btn-primary float-right" id="edtbtn" style="background-color: #EA5B0C;">Edit</a>
+            </div>
+        </div>
+        @using (Html.BeginForm("UploadExcel", "CreditNotes", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            <div class="row mt-4">
+                <div class="rowitem">
+                    <label>Upload Excel File</label>
+                    <input type="file" id="postedFile" name="postedFile" required />
+                </div>
+                <div class="rowitembtn">
+                    <input type="submit" id="btnUpload" value="Upload Excel" style="background-color: #EA5B0C;" class="btn btn-primary" />
+                </div>
+                <br /><br />
+            </div>
+        }
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success alert-dismissable">
+                <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span>
+                <strong>@TempData["Message"]</strong>
+
+            </div>
+        }
+        @if (Model != null && Model.Any())
+        {
+            <button type="button" id="btnExport" onclick="getExport();">Export</button>
+            <button type="button" id="btnPrint" onclick="printData();">Print</button>
+            <br /><br />
+            <table id="CreditNotesInsert" cellpadding="0" cellspacing="0" border="1">
+                <thead>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Voucher Date</th>
+                        <th>Payment Type</th>
+                        <th>Amount</th>
+                        <th>Credit Client ID</th>
+                        <th>Branch</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td id="inv">@item.invoiceNumber</td>
+                            <td id="invdate">@item.invoiceDate.ToString("yyyy-MM-dd")</td>
+                            <td id="paymenttypeid">@item.paymenttypeid</td>
+                            <td id="totalamt">@item.totalAmount</td>
+                            <td id="creditclientid">@item.accountNo</td>
+                            <td id="branch">@item.branch</td>
+                            <td><button class="btn deletebtn"><i class="fa fa-close"></i></button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="rowitembtn">
+                <input type="submit" id="sbtbtnexcel" value="Save" style="background-color: #EA5B0C;float:right;" class="btn btn-primary" />
+            </div>
+            <br /><br /><br />
+            <table id="errortable">
+                <thead>
+                    <tr>
+                        <th>Invoice No</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody id="errordiv">
+                    @if (TempData["Htmlcode"] != null)
+                    {
+                        foreach (var item in TempData["Htmlcode"] as IEnumerable<MRaabta.Models.ExcelErrorModel>)
+                        {
+                            <tr>
+                    <td width="50%">@item.Invoice</td>
+                    <td width="50%">@item.Error</td></tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+
+        <div id="msgshow" style="display:none;"></div>
+        <div id="renderpartial" style="display:none;">
+            <table id="tbl_pickUp" class='table-bordered mt-4 table table_data' border='1' style='width:100%' nowrap>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Account No</th>
+                        <th>Branch</th>
+                        <th>Name</th>
+                        <th>Total Amount</th>
+                        <th>Invoice Date</th>
+                        <th>Created By</th>
+                        <th>Created On</th>
+                    </tr>
+                </thead>
+                <tbody id="tablediv">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+        $("#sbtbtnexcel").click(function () {
+            var rowCount = $("#errordiv tr").length;
+            if (rowCount > 0) {
+                alert("Resolve the errors in Excel file and reupload file again.");
+            }
+            else {
+                var data = [];
+                var table = document.getElementById("CreditNotesInsert");
+                for (var i = 1, row; row = table.rows[i]; i++) {
+                    //iterate through rows
+                    //rows would be accessed using the "row" variable assigned in the for loop
+                    data.push({
+                        invoiceNumber: table.rows[i].cells[0].innerHTML,
+                        VoucherDate: table.rows[i].cells[1].innerHTML,
+                        paymenttypeid: table.rows[i].cells[2].innerHTML,
+                        totalAmount: table.rows[i].cells[3].innerHTML,
+                        creditclientid: table.rows[i].cells[4].innerHTML,
+                        branch: table.rows[i].cells[5].innerHTML
+                    });
+                }
+
+                $.ajax
+                    ({
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        url: '@Url.Action("InsertBulkRecords", "CreditNotes")',
+                        data: JSON.stringify({ items: data }),
+                        dataType: "json",
+                        success: function (data) {
+                            if (window.history.replaceState) {
+                                window.history.replaceState(null, null, '@Url.Action("Index", "CreditNotes")');
+                            }
+                            location.reload();
+
+                            alert('Success');
+                        },
+                        error: function (x, e) {
+                            alert('Failed')
+                        }
+                    });
+            }
+                });
+        $("#CreditNotesInsert").on('click', '.deletebtn', function () {
+            $(this).closest('tr').remove();
+        });
+        function getExport() {
+            debugger
+            var htmltable = document.getElementById('CreditNotesInsert');
+            var html = htmltable.outerHTML;
+            window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
+        }
+
+        if (window.history.replaceState) {
+          window.history.replaceState(null, null, '@Url.Action("Index","CreditNotes")');
+        }
+
+        function printData() {
+            var divToPrint = document.getElementById("CreditNotesInsert");
+            newWin = window.open("");
+            newWin.document.write(divToPrint.outerHTML);
+            newWin.print();
+            newWin.close();
+        }
+        function DecimalNumberValidation() {
+            if (!(/^[-+]?\d*\.?\d*$/.test(document.getElementById('Amount').value))) {
+                $('#amounterror').text('Please enter only numbers into amount textbox.');
+                  }
+           else if (document.getElementById('IsCOD').value != "1") {
+                if (parseFloat($('#hiddenamountsum').val()) < parseFloat($('#Amount').val())) {
+                    $('#amounterror').text('Entered amount should be less than the sum of invoice amount minus credit note and redeem invoice amounts');
+                }
+            }
+            else {
+                $('#amounterror').text('');
+            }
+        }
+        function TextChange() {
+            document.getElementById('edtbtn').href ='@Url.Action("EditCreditNotes", "CreditNotes")?Invoice='+ $('#Invoice').val();
+            }
+        $(document).on("keydown", "input", function (e) {
+            if (e.which == 9) {
+                if (!(/^[-+]?\d*\.?\d*$/.test(document.getElementById('Invoice').value))) {
+                    $('#invoicerror').text('Please enter only numbers into Invoice textbox.');
+                }
+                else {
+                    $('#invoicerror').text('');
+                    GetDetail();
+                }
+            }
+        });
+        function GetDetail() {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GetDetail", "CreditNotes")',
+                data: JSON.stringify({
+                    Invoice: $("#Invoice").val()
+                    }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                    success: function (response) {
+                        if (response != "") {
+                            $("#tablediv").empty();
+                            var invamount = response.data[0].totalAmount;
+                            //console.log(invamount);
+                            var amountsum = 0; var stringamt = "";
+                            $.each(response.data, function (bb) {
+                               amountsum += response.data[bb].totalAmount;
+                                   var invoicedate = new Date(parseInt(response.data[bb].invoiceDate.substr(6)));
+                                invoicedate = invoicedate.getFullYear() + '-' + ("0" + (invoicedate.getMonth() + 1)).slice(-2) + '-' + ("0" + invoicedate.getDate()).slice(-2);
+                                var createddate = new Date(parseInt(response.data[bb].createdOn.substr(6)));
+                                createddate = createddate.getFullYear() + '-' + ("0" + (createddate.getMonth() + 1)).slice(-2) + '-' + ("0" + createddate.getDate()).slice(-2);
+                                if (response.data[bb].type == 'Invoice') {
+                                    stringamt = "+" + (Math.round(response.data[bb].totalAmount)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                                }
+                                else {
+                                    stringamt = "-" + (Math.round(response.data[bb].totalAmount)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                                }
+                                $("#tablediv").append("<tr><td>" +
+                                    response.data[bb].type + "</td><td> " + response.data[bb].accountNo + "</td><td> " + response.data[bb].branch +
+                                    "</td><td> " + response.data[bb].customername + "</td><td> " + stringamt +
+                                    "</td><td> " + invoicedate + "</td><td> " + response.data[bb].createdBy + "</td><td> " + createddate + "</td></tr>");
+                            });
+                            amountsum = invamount - amountsum;
+                            amountsum = invamount + amountsum;
+                            $('#hiddenamountsum').val(amountsum);
+                            $('#IsCOD').val(response.data[0].isCOD);
+                            if (response.data[0].isCOD != "1") {
+                                $('#allowedamount').text('Allowed amount: ' + amountsum.toFixed(2));
+                            }
+                            else { $('#allowedamount').text('');}
+                           // console.log($('#hiddenamountsum').val());
+                            document.getElementById('amountdiv').style.display = 'block';
+                            document.getElementById('voucherdatediv').style.display = 'block';
+                            document.getElementById('paymenttypediv').style.display = 'block';
+                            document.getElementById('sbtbtn').style.display = 'block';
+                            document.getElementById('edtbtn').style.display = 'block';
+                            document.getElementById('renderpartial').style.display = 'block';
+                            document.getElementById('edtbtn').href = '@Url.Action("EditCreditNotes", "CreditNotes")?Invoice='+ $('#Invoice').val();
+                        }
+                        else
+                        {
+                            document.getElementById('sbtbtn').style.display = 'none';
+                            alert("No Record found against the Invoice");
+                        }
+                },
+                failure: function (response) {
+                    alert("failure");
+                },
+                error: function (response) {
+                    alert("error");
+                }
+            });
+        }
+        $("#sbtbtn").click(function () {
+            //var input = document.getElementById('VoucherDate').value;
+            //debugger
+            //    var d = new Date(input);
+            //    if (!!d.valueOf()) {
+            //        year = d.getFullYear();
+            //        month = d.getMonth()+1;
+            //        day = d.getDate();
+            //    }
+            if (!(/^[-+]?\d*\.?\d*$/.test(document.getElementById('Amount').value))) {
+                $('#amounterror').text('Please enter only numbers into amount textbox.');
+                }
+            else if ($('#Invoice').val() == "" || $('#Amount').val() == "" || $('#VoucherDate').val() == "" || $('#PaymentType').val() == "") {
+                $('#inputerror').text('Select Input Values');
+            }
+            else if (parseFloat($('#hiddenamountsum').val()) < parseFloat($('#Amount').val()) && document.getElementById('IsCOD').value != "1") {
+                    $('#amounterror').text('Entered amount should be less than the sum of invoice amount minus credit note and redeem invoice amounts');
+                }
+            else {
+                $('#amounterror').text("");
+                $('#inputerror').text("");
+                debugger
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("UpdateDetail", "CreditNotes")',
+                    data: JSON.stringify({
+                        Invoice: $("#Invoice").val(),
+                        Amount: $("#Amount").val(),
+                        VoucherDate: $("#VoucherDate").val(),
+                        PaymentType: $("#PaymentType").val()
+                    }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "html",
+                    success: function (response) {
+                       console.log(response);
+                        if (response == '"Update Successful"' || response == '"Unsuccessful"') {
+                            $('#hiddenSaleDate').val($("#VoucherDate").val());
+                            var htmlappend = '<BR><BR><div class="alert alert-success alert-dismissable"><span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span><strong>' + response + '</strong> </div>';
+                            document.getElementById('renderpartial').style.display = 'block';
+                            $('#msgshow').html(htmlappend);
+                            $("#msgshow").show("slow").delay(3000).hide("slow");
+                            GetDetail();
+                        }
+                        else {
+                            alert(response);
+                        }
+                        $("#Invoice").val("");
+                        $("#Amount").val("");
+                        //$("#VoucherDate").val("");
+                      // $("#PaymentType").val("");
+                      // $("#hiddenSaleDate").val("");
+                        document.getElementById('sbtbtn').style.display = 'none';
+                        },
+                    failure: function (response) {
+                        alert("failure");
+                    },
+                    error: function (response) {
+                        alert("error");
+                    }
+                });
+            }
+            });
+    </script>
+}

@@ -1,0 +1,38 @@
+﻿@model IEnumerable<MRaabta.Models.Pickup_Child_details>
+
+
+@{
+    Layout = null;
+}
+
+<table class="table">
+    <tr>
+        <th>S No.</th>
+        <th>Consignment No</th>
+        <th>Weight</th>
+        <th>Pieces</th>
+        <th>CN Image</th>
+
+    </tr>
+    @{ int i = 0; }
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td> @{ i++; }   @i.ToString() </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.consignmentNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.weight)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.pieces)
+            </td>
+            <td>
+
+                <img class="zoom" style="padding:0px; height:50px;" src="@Url.Content("http://20.46.47.21/PickupAPI/CnImage/" + @item.consignmentNumber +".jpg")" alt="N/A" height="65" width="65" />
+            </td>
+        </tr>
+    }
+
+</table>

@@ -1,0 +1,579 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewBag.Title = "Index";
+}
+
+<div class="row">
+    <div class="col-12 text-right pr-5">
+        <button type="button" class="btn btn-outline-dark" value="List" id="btnToggle">Add</button>
+    </div>
+</div>
+
+<div class="row" id="listdiv">
+    <div class="col-12">
+        <h3 class="text-center">Pickup Requests</h3>
+    </div>
+    <div>
+        <table>
+            <tr>
+                <td>   <label><input type="radio" id="RB_Attandance" name="RB_Attandance" value="2"> All</label> </td>
+                <td>   <label><input type="radio" id="RB_AttandanceP" name="RB_Attandance" checked="checked" value="0"> Present</label> </td>
+                <td>   <label><input type="radio" id="RB_AttandanceA" name="RB_Attandance" value="1"> Absent</label> </td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-12 mt-3" id="tblreq">
+    </div>
+
+    <div id="div_courier" class="modal_div">
+
+        <!-- Modal content -->
+        <div class="modal_div-content">
+            <h6>Switch Rider<span class="close">&times;</span></h6>
+
+            <table>
+                <tr>
+                    <td>
+                        <label>Courier&nbsp;<span style="color:red">*</span></label>
+
+                        @if (ViewBag.err == null || ViewBag.err == "")
+                        {
+                            @Html.DropDownList("ddl_courier", ViewBag.Couriers as List<SelectListItem>, new { @class = "form-control" })
+                        }
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-dark" id="btn_updated" style="margin:27px 0 0 20px">Update</button>
+                    </td>
+                </tr>
+                <tr><td><br /></td></tr>
+                <tr><td colspan="2"><span><b>Note:</b> Rider will be updated for only one day.</span></td></tr>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<form id="f1" class="d-none">
+    <div class="row">
+        <div class="col-12">
+            <h3 class="text-center">Add Pickup Request</h3>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="row">
+            <div class="mt-1">
+                <label>Date&nbsp;</label>
+            </div>
+            <div class="col-6 ml-2">
+                @Html.Label("date", DateTime.Now.ToShortDateString(), new { @class = "form-control", @style = "width:15em; height:2em;" })
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3 text-center">
+        <div class="ml-3">
+            <span style="font-weight:bold;">One Time Pickup &nbsp;&nbsp;</span><input class="pickupType" name="pickupType" type="radio" value="OneTime" checked />
+        </div>
+        <div class="col-md-8 mb-2" style="margin-left:2.5em;">
+            <span style="font-weight:bold;">Schedule Pickup &nbsp;&nbsp;</span><input class="pickupType" name="pickupType" type="radio" value="Schedule" />
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="row form-group col-5">
+            <div class="col-2">
+                <label for="inputState">Customer&nbsp;<span style="color:red;">*</span></label>
+            </div>
+            <div class="col-4" style="margin-left:1.8em">
+                @if (ViewBag.err == null || ViewBag.err == "")
+                {
+                    @Html.DropDownList(".Customer", ViewBag.Customers as List<SelectListItem>, "Select Customer", new { @class = "form-control", @style = "width:18em;" })
+                }
+            </div>
+        </div>
+        @*<div class="col-4">
+                <label>Customer&nbsp;<span style="color:red;">*</span><span style="margin-left:1.9em;"></span></label>
+                @Html.DropDownList("Customer", ViewBag.Customers as List<SelectListItem>, "Select Customer", new { @class = "form-control", @style = "width:17.65em; height:2.2em;" })
+            </div>
+            <div class="col-4" style="margin-left:4.5em">
+                <label>Location&nbsp;<span style="color:red">*</span><span style="margin-left:2.4em;"></span></label>
+                <select id="LocationId" name="LocationId" class="form-control" style="width:16.6em;  height:5em; margin-left:1em">
+                    <option value=""></option>
+                </select>
+            </div>*@
+        <div class="row form-group col-6 ml-4">
+            <div class="col-2">
+                <label for="inputState">Location&nbsp;</label>
+            </div>
+            <div class="col-4">
+                @if (ViewBag.err == null || ViewBag.err == "")
+                {
+                    <select id="LocationId" name="LocationId" style="width:18em;">
+                        <option value=""></option>
+                    </select>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="row ml-3">
+            <label id="pdlabel">Pickup Date&nbsp;<span style="color:red">*</span></label>
+            <div class="col-md-6" style="margin-left:2em">
+                @Html.TextBox("date", DateTime.Now.ToString(), new {@id = "PickupDate", @name = "PickupDate", @type = "date", @style = "width:18em;" })
+                @*@Html.TextBox("date", DateTime.Now.ToShortDateString(), new { @id = "PickupDate", @name = "PickupDate", @style = "width:18em;" })*@
+            </div>
+
+            @*<input type="date" class="form-control" id="PickupDate" name="PickupDate" />*@
+        </div>
+        <div class="row col-7 ml-auto" id="ptDiv" @*style="margin-left:5.5em"*@>
+            <label>Pickup Time&nbsp;<span style="color:red">*</span></label>
+            <div class="input-group clockpicker col-md-6">
+                <input id="PickupTime" name="PickupTime" type="text" value="09:30" style="width:18em;">
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-time"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4 d-none" id="pdDiv">
+        <div class="col-12">
+            <h5>Pickup Days</h5>
+        </div>
+        <div class="col-6">
+            <label>Monday</label>
+            <input type="checkbox" id="Mon" value="Mon" class="form-check" />
+        </div>
+        <div class="col-4">
+            <label>Pickup Time</label>
+            <input type="time" id="MonTime" class="form-control" />
+        </div>
+        <div class="col-6 mt-3">
+            <label>Tuesday</label>
+            <input type="checkbox" id="Tues" value="Tue" class="form-check" />
+        </div>
+        <div class="col-4 mt-3">
+            <label>Pickup Time</label>
+            <input type="time" id="TuesTime" class="form-control" />
+        </div>
+        <div class="col-6 mt-3">
+            <label>Wednesday</label>
+            <input type="checkbox" id="Wed" value="Wed" class="form-check" />
+        </div>
+        <div class="col-4 mt-3">
+            <label>Pickup Time</label>
+            <input type="time" id="WedTime" class="form-control" />
+        </div>
+        <div class="col-6 mt-3">
+            <label>Thursday</label>
+            <input type="checkbox" id="Thu" value="Thu" class="form-check" />
+        </div>
+        <div class="col-4 mt-3">
+            <label>Pickup Time</label>
+            <input type="time" id="ThuTime" class="form-control" />
+        </div>
+        <div class="col-6 mt-3">
+            <label>Friday</label>
+            <input type="checkbox" id="Fri" value="Fri" class="form-check" />
+        </div>
+        <div class="col-4 mt-3">
+            <label>Pickup Time</label>
+            <input type="time" id="FriTime" class="form-control" />
+        </div>
+        <div class="col-6 mt-3">
+            <label>Saturday</label>
+            <input type="checkbox" id="Sat" value="Sat" class="form-check" />
+        </div>
+        <div class="col-4 mt-3">
+            <label>Pickup Time</label>
+            <input type="time" id="SatTime" class="form-control" />
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="row form-group col-5 mt-3">
+            <div class="col-2">
+                <label for="inputState">Courier&nbsp;<span style="color:red">*</span></label>
+            </div>
+            <div class="col-4" style="margin-left:1.8em">
+                @if (ViewBag.err == null || ViewBag.err == "")
+                {
+                    @Html.DropDownList("CourierId", ViewBag.Couriers as List<SelectListItem>, new { @style = "width:18em;" })
+                }
+            </div>
+        </div>
+        @*<div class="form-group col-6">
+                <label>Courier&nbsp;<span style="color:red">*</span></label>
+                @Html.DropDownList("CourierId", ViewBag.Couriers as List<SelectListItem>, new { @class = "form-control",@id="inputState", @style = "width:20em; height:10em" })
+            </div>*@
+        <div class="row form-group col-5 mt-3 ml-4">
+            <div class="col-2">
+                <label for="inputState">Priority&nbsp;<span style="color:red">*</span></label>
+            </div>
+            <div class="col-4 ml-3">
+                @if (ViewBag.err == null || ViewBag.err == "")
+                {
+                    @Html.DropDownList("Priority", ViewBag.Priorities as List<SelectListItem>, new { @style = "width:18em;" });
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <label>Comments</label>
+            <textarea class="form-control" id="Comments" name="Comments"></textarea>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12 text-center">
+            <button id="btnSave" type="button" class="btn btn-outline-primary">Save</button>
+        </div>
+    </div>
+    <label id="lbl_ID" style="visibility:hidden"></label>
+    <label id="lbl_courierID" style="visibility:hidden"></label>
+</form>
+@section scripts{
+    <script src="~/Scripts/bootstrap-clockpicker.js"></script>
+    <link href="~/Scripts/bootstrap-clockpicker.css" rel="stylesheet" />
+    <script>
+      $('.clockpicker').clockpicker({
+            placement: 'bottom',
+            align: 'left',
+            donetext: 'Done'
+        });
+        var dataexists = '@ViewBag.err';
+           if (dataexists != "") {
+          swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+                }, function() {
+                    window.location = "../Login";
+                });
+    }
+        // Get the modal
+        var modal = document.getElementById("div_courier");
+
+        // Get the button that opens the modal
+        var btn = document.getElementById("btn_Update");
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks the button, open the modal
+
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        function openRiderDialog(id, courierID) {
+
+            var modal = document.getElementById("div_courier");
+            modal.style.display = "block";
+            var lbl_ID = document.getElementById("lbl_ID");
+            var lbl_courierID = document.getElementById("lbl_courierID");
+            lbl_ID.Value = id;
+            lbl_courierID.Value = courierID;
+        }
+        debugger;
+        $("input[name='RB_Attandance']").click(function () {
+            var att = 0;
+            if ($('input[id="RB_Attandance"]:checked').val() === '2') { att = 2; }
+            if ($('input[id="RB_AttandanceP"]:checked').val() === '0') { att = 0; }
+            if ($('input[id="RB_AttandanceA"]:checked').val() === '1') { att = 1; }
+            getRequests(att);
+            });
+
+
+
+        $('#btn_updated').click(function (e) {
+            e.preventDefault();
+            var lbl_ID = document.getElementById("lbl_ID");
+            var lbl_courierID = document.getElementById("lbl_courierID");
+            var CourierId = $('#ddl_courier').val();
+            var id = lbl_ID.Value;
+            var att = 0;
+            if ($('input[id="RB_Attandance"]:checked').val() === '2') { att = 2; }
+            if ($('input[id="RB_AttandanceP"]:checked').val() === '0') { att = 0; }
+            if ($('input[id="RB_AttandanceA"]:checked').val() === '1') { att = 1; }
+
+               $.ajax({
+                type: 'post',
+                   url: '@Url.Action("UpdateRider","PickUpRequest")',
+                   data: 'CourierId=' + CourierId + '&id=' + id + '&DefaultCourier=' + lbl_courierID.Value,
+                dataType: 'json',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        debugger;
+                        var modal = document.getElementById("div_courier");
+                        modal.style.display = "none";
+                        refresh();
+                        getRequests(att);
+                    }
+                    swal(rs.msg);
+                }
+            });
+        });
+
+
+
+        function confirmDelete(ID) {
+            if (confirm('Are you sure you want to Delete this record completely?')) {
+                // Do nothing!
+                var att = 0;
+                if ($('input[name="RB_Attandance"]:checked').val() === '1') { att = 1; }
+                $.ajax({
+                    type: 'post',
+                    url: '@Url.Action("confirmDelete", "PickUpRequest")' + '?id=' + ID,
+                dataType: 'json',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        refresh();
+                        getRequests(att);
+                    }
+                    swal(rs.msg);
+                }
+                    });
+                }
+        };
+
+       var refresh = () => {
+            $('#pdDiv').addClass('d-none');
+            $('#pdlabel').html('Pickup Date');
+            document.getElementById('f1').reset();
+        };
+
+        var getLocations = (id) => {
+
+            if (dataexists == "") {
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("GetLocations","PickUpRequest")' + '?id=' + id,
+                    dataType: 'json',
+                    success: (rs) => {
+                        var html = ``;
+                        for (let x of rs) {
+                            html += `<option value="${x.Value}">${x.Text}</option>`;
+                        }
+                        $('#LocationId').html(html);
+                    }
+                });
+            }
+        };
+
+             var getRequests = (att) => {
+                 if (dataexists == "") {
+                     $.ajax({
+                         type: 'get',
+                         url: '@Url.Action("GetRequests","PickUpRequest")',
+                         data: {
+                             att: att
+                         },
+                         dataType: 'html',
+                         success: (rs) => {
+                             $('#tblreq').html(rs);
+                         }
+                     });
+                 }
+        };
+
+        var saveRequest = (data) => {
+            debugger
+            var att = 0;
+            if ($('input[name="RB_Attandance"]:checked').val() === '1') { att = 1; }
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("Add","PickUpRequest")',
+                data: JSON.stringify({ model: data }),
+                dataType: 'json',
+                contentType:'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        debugger;
+                        refresh();
+                        getRequests(att);
+                        $('#btnToggle').click();
+                    }
+                    swal(rs.msg);
+                }
+            });
+        };
+
+
+        $(function () {
+            var att = 0;
+            if ($('input[name="RB_Attandance"]:checked').val() === '1') { att = 1; }
+            getRequests(att);
+
+            $('#btnToggle').click(function () {
+                var val = $(this).val();
+                if (val === 'List') {
+                    $('#listdiv').addClass('d-none');
+                    $('#f1').removeClass('d-none');
+                    $(this).text('Back');
+                    $(this).val('Form');
+                } else {
+                    $('#f1').addClass('d-none');
+                    $('#listdiv').removeClass('d-none');
+                    $(this).text('Add');
+                    $(this).val('List');
+                }
+            });
+
+            $('#Customer').change(function () {
+                var id = parseInt($(this).val());
+                getLocations(id ? id : 0);
+            });
+
+            $('.pickupType').change(function () {
+                var val = $(this).val();
+                if (val === 'OneTime') {
+                    $('#pdlabel').html('Pickup Date');
+                    $('#ptDiv').removeClass('d-none');
+                    $('#pdDiv').addClass('d-none');
+                } else {
+                    $('#pdlabel').html('Start Date');
+                    $('#ptDiv').addClass('d-none');
+                    $('#pdDiv').removeClass('d-none');
+                }
+            });
+
+
+            $('#btnSave').click(function (e) {
+                debugger;
+                e.preventDefault();
+
+                var data = {
+                    IsRoutine: $('input[name="pickupType"]:checked').val() === 'Schedule' ? true : false,
+                    PickUpRequestDays : []
+                };
+
+                if (!$('#Customer').val()) {
+                    swal("Select Customer");
+                    return;
+                }
+
+                if (!$('#LocationId').val()) {
+                    debugger;
+                    swal("Select Location");
+                    return;
+                } else {
+                    data.LocationId = $('#LocationId').val();
+                }
+
+                if ($('input[name="pickupType"]:checked').val() === 'OneTime' && !$('#PickupDate').val()) {
+                    swal("Select Pickup Date");
+                    return;
+                } else if ($('input[name="pickupType"]:checked').val() === 'Schedule' && !$('#PickupDate').val()) {
+                    swal("Select Start Date");
+                    return;
+                } else {
+                    data.PickupDate = $('#PickupDate').val();
+                }
+
+                if ($('input[name="pickupType"]:checked').val() === 'OneTime' && !$('#PickupTime').val()) {
+                    swal("Select Pickup Time");
+                    return;
+                } else {
+                    data.PickupTime = $('input[name="pickupType"]:checked').val() === 'OneTime' ? $('#PickupTime').val() : null;
+                }
+
+
+                if ($('input[name="pickupType"]:checked').val() === 'Schedule') {
+
+                    if ($('#Mon').is(':checked')) {
+                        if (!$('#MonTime').val()) {
+                            swal('Select Monday Time');
+                            return;
+                        } else {
+                            data.PickUpRequestDays.push({
+                                Day: $('#Mon').val(),
+                                Time: $('#MonTime').val()
+                            });
+                        }
+                    }
+
+                    if ($('#Tues').is(':checked')) {
+                        if (!$('#TuesTime').val()) {
+                            swal('Select Tuesday Time');
+                            return;
+                        } else {
+                            data.PickUpRequestDays.push({
+                                Day: $('#Tues').val(),
+                                Time: $('#TuesTime').val()
+                            });
+                        }
+                    }
+
+                    if ($('#Wed').is(':checked')) {
+                        if (!$('#WedTime').val()) {
+                            swal('Select Wednesday Time');
+                            return;
+                        } else {
+                            data.PickUpRequestDays.push({
+                                Day: $('#Wed').val(),
+                                Time: $('#WedTime').val()
+                            });
+                        }
+                    }
+
+                    if ($('#Thu').is(':checked')) {
+                        if (!$('#ThuTime').val()) {
+                            swal('Select Thursday Time');
+                            return;
+                        } else {
+                            data.PickUpRequestDays.push({
+                                Day: $('#Thu').val(),
+                                Time: $('#ThuTime').val()
+                            });
+                        }
+                    }
+
+                    if ($('#Fri').is(':checked')) {
+                        if (!$('#FriTime').val()) {
+                            swal('Select Friday Time');
+                            return;
+                        } else {
+                            data.PickUpRequestDays.push({
+                                Day: $('#Fri').val(),
+                                Time: $('#FriTime').val()
+                            });
+                        }
+                    }
+
+                    if ($('#Sat').is(':checked')) {
+                        if (!$('#SatTime').val()) {
+                            swal('Select Saturday Time');
+                            return;
+                        } else {
+                            data.PickUpRequestDays.push({
+                                Day: $('#Sat').val(),
+                                Time: $('#SatTime').val()
+                            });
+                        }
+                    }
+
+                }
+
+                data.CourierId = $('#CourierId').val();
+                data.Priority = $('#Priority').val();
+                data.Comments = $('#Comments').val();
+
+                saveRequest(data);
+
+            });
+
+        });
+
+
+
+    </script>
+}

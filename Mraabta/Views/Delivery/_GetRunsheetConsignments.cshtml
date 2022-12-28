@@ -1,0 +1,199 @@
+﻿@model IEnumerable<MRaabta.Models.DebreifingAllModel>
+
+
+<input type="hidden" value="" id="hdnId" />
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Edit Consignment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label>Select Reason</label><br>
+                <select class="form-control" id="ddlReason" style="max-width:100%">
+                    @foreach (var item in ViewBag.Reasons as List<MRaabta.Models.DropDownModel>)
+                    {
+                        <option value="@item.Text">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnUpdate">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="relationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Edit Consignment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label>Select Relation</label><br>
+                <select class="form-control" id="ddlRelation" style="max-width:100% !important">
+                    @foreach (var item in ViewBag.Relations as List<MRaabta.Models.DropDownModel>)
+                    {
+                        <option value="@item.Text">@item.Text</option>
+                    }
+                </select><br>
+                <label>Receiver</label>
+                <input type="text" class="form-control" id="txtReceiver" style="max-width:100% !important">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnUpdate2">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModalCenter2" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Consignment <span id="modalCn"></span> Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="tableView">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" style="font-size:20px">
+    <div class="col-6" style="display:flex;align-items:center">
+        <b>Runsheet: </b> @ViewBag.RunsheetID &nbsp;&nbsp;&nbsp;<a class="btn btn-sm btn-outline-secondary" target="_blank" href="@Url.Action("Index","RunsheetPrintView",new { rs = ViewBag.RunsheetID })">View Runsheet</a><br>
+    </div>
+    @if ((bool)ViewBag.Edit)
+    {
+        <div class="col-6 text-right">
+            <button class="btn" type="button" id="btnVerifyAll">Verify All</button>
+        </div>
+    }
+</div>
+
+<div class="row mt-2">
+    <div class="col-12" style="overflow:scroll;height:92vh" id="tablecontainer">
+        @if ((bool)ViewBag.Edit)
+        {
+            <table class="table table-bordered" id="tblDetail">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Consignment No.</th>
+                        <th>Status</th>
+                        <th>Delivered Date & Time</th>
+                        <th>Consignee</th>
+                        <th>Consignee Number</th>
+                        <th>Consignee Address</th>
+                        <th>Verify</th>
+                        <th>Comments</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tblDetailBody">
+                    @{
+                        var i = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr data-id="@item.ConsignId" data-sts="@item.StatusId" data-verify="@item.Verify" @(item.StatusId == 1 ? "class=dvclass" : item.StatusId == 2 ? "class=undvclass" : item.StatusId == 3 ? "class=rtsclass" : "")>
+                                <td style="vertical-align:middle" class="text-center">@i</td>
+                                <td style="vertical-align: middle" class="text-center"><a href="#" class="btnView" data-view="@Json.Encode(item)">@item.CN</a></td>
+                                <td>@(string.IsNullOrEmpty(item.Status) ? "Pending" : item.Status )</td>
+                                <td style="vertical-align: middle" class="text-center">@(item.PerformedOn.HasValue ? item.PerformedOn.Value.ToString("dd-MMM-yyyy HH:mm") : "")</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneeName</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneePhone</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneeAddress</td>
+                                @if (item.StatusId > 0)
+                                {
+                                    if (!item.Verify)
+                                    {
+                                        <td style="vertical-align: middle" class="text-center"><input type="checkbox" class="chkvrfy checkbox"></td>
+                                        <td style="vertical-align: middle" class="text-center"><textarea class="form-control" style="width:200px;height:100px"></textarea></td>
+                                        <td style="vertical-align: middle" class="text-center"><button class="btnSubmit btn btn-sm" data-id="@item.ConsignId" disabled>Submit</button></td>
+                                    }
+                                    else
+                                    {
+                                        <td style="vertical-align: middle" class="text-center"><input type="checkbox" class="chkvrfy checkbox" checked disabled></td>
+                                        <td style="vertical-align: middle" class="text-center"><textarea class="form-control" style="width:200px;height:100px" disabled>@item.Comments</textarea></td>
+                                        <td></td>
+                                    }
+                                }
+                                else
+                                {
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                }
+
+                                @if (item.StatusId > 0)
+                                {
+                                    <td style="vertical-align: middle" class="text-center"><button class="btnEdit btn btn-sm" data-id="@item.ConsignId" data-reason="@item.Reason" data-relation="@item.Relation" data-receiver="@item.Receiver" value="@item.StatusId">Edit</button></td>
+                                }
+                                else
+                                {
+                                    <td></td>
+                                }
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <table class="table table-bordered" id="tblDetail">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Consignment No.</th>
+                        <th>Status</th>
+                        <th>Delivered Date & Time</th>
+                        <th>Consignee</th>
+                        <th>Consignee Number</th>
+                        <th>Consignee Address</th>
+                        <th>Verify</th>
+                        <th>Comments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var i = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr @(item.StatusId == 1 ? "class=dvclass" : item.StatusId == 2 ? "class=undvclass" : item.StatusId == 3 ? "class=rtsclass" : "")>
+                                <td style="vertical-align:middle" class="text-center">@i</td>
+                                <td style="vertical-align: middle" class="text-center"><a href="#" class="btnView" data-view="@Json.Encode(item)">@item.CN</a></td>
+                                <td>@item.Status</td>
+                                <td style="vertical-align: middle" class="text-center">@(item.PerformedOn.HasValue ? item.PerformedOn.Value.ToString("dd-MMM-yyyy HH:mm") : "")</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneeName</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneePhone</td>
+                                <td style="vertical-align: middle" class="text-center">@item.ConsigneeAddress</td>
+                                <td>@(item.Verify ? "Yes" : "No")</td>
+                                <td>@item.Comments</td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

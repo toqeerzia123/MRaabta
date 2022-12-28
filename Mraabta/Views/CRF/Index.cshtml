@@ -1,0 +1,1746 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    body {
+        font-family: Calibri;
+    }
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    fieldset {
+        border: 2px solid black !important;
+        padding: 10px !important;
+    }
+
+    legend {
+        width: auto !important;
+        margin-left: 20px !important;
+        font-weight: bolder;
+    }
+
+    .material-switch>input[type="checkbox"] {
+        display: none;
+    }
+
+    .material-switch>label {
+        cursor: pointer;
+        height: 0px;
+        position: relative;
+        width: 40px;
+    }
+
+    .material-switch>label::before {
+        background: rgb(0, 0, 0);
+        box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+        content: '';
+        height: 16px;
+        margin-top: -8px;
+        position: absolute;
+        opacity: 0.3;
+        transition: all 0.4s ease-in-out;
+        width: 40px;
+    }
+
+    .material-switch>label::after {
+        background: #6c757d;
+        border-radius: 16px;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+        content: '';
+        height: 24px;
+        left: -4px;
+        margin-top: -8px;
+        position: absolute;
+        top: -4px;
+        transition: all 0.3s ease-in-out;
+        width: 24px;
+    }
+
+    .material-switch>input[type="checkbox"]:checked+label::before {
+        background: inherit;
+        opacity: 0.5;
+    }
+
+    .material-switch>input[type="checkbox"]:checked+label::after {
+        background: orangered;
+        left: 20px;
+    }
+
+
+    .btn-secondary:not(:disabled):not(.disabled):active,
+    .btn-secondary:not(:disabled):not(.disabled).active,
+    .show>.btn-secondary.dropdown-toggle {
+        background-color: orangered !important;
+    }
+
+    .table th,
+    .table td {
+        vertical-align: middle;
+        text-align: center !important;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script src="https://unpkg.com/react-input-mask/dist/react-input-mask.min.js"></script>
+<script>
+    const industries =  @Html.Raw(Json.Encode(ViewBag.Industries));
+    const branches =  @Html.Raw(Json.Encode(ViewBag.Branches));
+    const banks =  @Html.Raw(Json.Encode(ViewBag.Banks));
+    const customerProducts =  @Html.Raw(Json.Encode(ViewBag.CustomerProducts));
+    const groups =  @Html.Raw(Json.Encode(ViewBag.Groups));
+    const saveUrl = '@Url.Action("Save","CRF")';
+    const printUrl = '@Url.Action("Print","CRF")';
+</script>
+<script type="text/babel">
+
+    const d = {
+        Id: 0,
+        IsSingle: '1',
+        GroupId: '',
+        BusinessName: '',
+        IndustryId: '',
+        ContactPerson: '',
+        Designation: '',
+        PhoneNo: '',
+        FaxNo: '',
+        CNIC: '',
+        Email: '',
+        NTNRegistered: false,
+        NTNNumber: '',
+        GSTRegistered: false,
+        GSTNumber: '',
+        CityId: '',
+        PostalCode: '',
+        Area: '',
+        SectorOrZone: '',
+        Street: '',
+        PlotNo: '',
+        BuildingName: '',
+        FloorNo: '',
+        HouseOrOfficeNo: '',
+        BeneficiaryName: '',
+        BeneficiaryRelation: '',
+        IBAN: '',
+        BankId: '',
+        BankBranchCode: '',
+        BankBranchCity: '',
+        ExpectedRevenue: '',
+        IsFAF: true,
+        IsFAC: false,
+        FuelFactor: '',
+        InvoicingScheduler: '',
+        IsAutoRecovery: null,
+        CreditTermsOrDays: '',
+        SalesDecision: '2',
+        BillingInstruction: '2',
+        AnnualRateRevision: '',
+        EInvoicing: false,
+        PrintInvoice: false,
+        MinimumBilling: '',
+        RecoveryMode: '',
+        TaxExcemption: false,
+    };
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processDecimal = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9.]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlpha = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processEmail = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^a-zA-Z0-9-_.@@]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlphaWithSpace = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z ]/g, "");
+        e.target.value = numbers;
+    }
+
+    const Context = React.createContext(null);
+
+    const CustomerInfo = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            updateData
+        } = React.useContext(Context);
+
+        return (
+            <React.Fragment>
+                <fieldset>
+                    <legend>Customer Information</legend>
+                    <div className="row">
+                        <div className="col-lg-6 col-sm-12"></div>
+                        <div className="col-lg-3 col-sm-12">
+                            <label>Type</label>
+                            <select className="form-control" value={data.IsSingle} onChange={(e) => updateData('IsSingle', e.target.value)}>
+                                <option value="1">Single</option>
+                                <option value="0">Group</option>
+                            </select>
+                        </div>
+                        {
+                            data.IsSingle == 0 &&
+                            <div className="col-lg-3 col-sm-12">
+                                <label>Group</label>
+                                <select className="form-control" value={data.GroupId} onChange={(e) => updateData('GroupId', e.target.value)}>
+                                    <option value="">Select Group</option>
+                                    {
+                                        groups.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Business Name</label>
+                            <input type="text" className="form-control" value={data.BusinessName} onChange={(e) => updateData('BusinessName', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Industry</label>
+                            <select className="form-control" value={data.IndustryId} onChange={(e) => updateData('IndustryId', e.target.value)}>
+                                <option value="">Select Industry</option>
+                                {
+                                    industries.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Contact Person</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.ContactPerson} onChange={(e) => updateData('ContactPerson', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Designation</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.Designation} onChange={(e) => updateData('Designation', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Phone No</label>
+                            <ReactInputMask className="form-control" mask="9999-9999999" value={data.PhoneNo} onChange={(e) => updateData('PhoneNo', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Fax Number</label>
+                            <input type="text" className="form-control" onInput={process} value={data.FaxNo} onChange={(e) => updateData('FaxNo', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Email</label>
+                            <input type="email" className="form-control" onInput={processEmail} value={data.Email} onChange={(e) => updateData('Email', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>CNIC</label>
+                            <ReactInputMask className="form-control" mask="99999-9999999-9" value={data.CNIC} onChange={(e) => updateData('CNIC', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg">
+                            <label>NTN Registered</label><br />
+                            <div className="material-switch pull-left">
+                                <input id="NTNRegistered" type="checkbox" checked={data.NTNRegistered} onChange={(e) => updateData('NTNRegistered', e.target.checked)} />
+                                <label htmlFor="NTNRegistered" className="label-primary"></label>
+                            </div>
+                        </div>
+                        <div className="col-lg">
+                            <label>NTN No</label>
+                            <ReactInputMask mask="9999999-9" className="form-control" onInput={process} readOnly={!data.NTNRegistered} value={data.NTNNumber} onChange={(e) => updateData('NTNNumber', e.target.value)} />
+                        </div>
+                        <div className="col-lg">
+                            <label>GST Registered</label><br />
+                            <div className="material-switch pull-left">
+                                <input id="GSTRegistered" type="checkbox" checked={data.GSTRegistered} onChange={(e) => updateData('GSTRegistered', e.target.checked)} />
+                                <label htmlFor="GSTRegistered" className="label-primary"></label>
+                            </div>
+                        </div>
+                        <div className="col-lg">
+                            <label>GST No</label>
+                            <input type="text" className="form-control" onInput={process} readOnly={!data.GSTRegistered} value={data.GSTNumber} onChange={(e) => updateData('GSTNumber', e.target.value)} />
+                        </div>
+                    </div>
+                    <hr />
+                    <div className="row mt-3">
+                        <div className="col">
+                            <h5>Customer Address</h5>
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>City</label>
+                            <select className="form-control" value={data.CityId} onChange={(e) => updateData('CityId', e.target.value)}>
+                                <option value="">Select City</option>
+                                {
+                                    branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Postal Code</label>
+                            <input type="text" className="form-control" onInput={process} value={data.PostalCode} onChange={(e) => updateData('PostalCode', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Area</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.Area} onChange={(e) => updateData('Area', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Sector/Zone</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.SectorOrZone} onChange={(e) => updateData('SectorOrZone', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Street</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.Street} onChange={(e) => updateData('Street', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Plot No</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.PlotNo} onChange={(e) => updateData('PlotNo', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Building Name</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.BuildingName} onChange={(e) => updateData('BuildingName', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Floor No</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.FloorNo} onChange={(e) => updateData('FloorNo', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>House/Office No</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.HouseOrOfficeNo} onChange={(e) => updateData('HouseOrOfficeNo', e.target.value)} />
+                        </div>
+                    </div>
+                </fieldset>
+            </React.Fragment>
+        )
+    }
+
+    const ContactPersons = () => {
+
+        const {
+            data,
+            loading,
+            setLoading,
+            contactPersons,
+            setContactPersons
+        } = React.useContext(Context);
+
+        const [cp, setCp] = React.useState({
+            ContactPersonName: '',
+            Designation: '',
+            MobileNo: '',
+            Email: '',
+        });
+
+        const [sameAsAbove, setSameAsAbove] = React.useState(false);
+
+
+        const updateCp = (key, val) => setCp({ ...cp, [key]: val });
+
+        const addContactPersons = (obj) => {
+            let x = [...contactPersons];
+            x.unshift(obj);
+            setContactPersons(x);
+        };
+
+        const add = () => {
+            if (!validate())
+                return;
+
+            addContactPersons(cp);
+            setCp({
+                ContactPersonName: '',
+                Designation: '',
+                MobileNo: '',
+                Email: '',
+            });
+            setSameAsAbove(false);
+        }
+
+        const remove = (index) => {
+            let x = [...contactPersons];
+            x.splice(index, 1);
+            setContactPersons(x);
+        }
+
+        React.useEffect(() => {
+            if (sameAsAbove) {
+                const y = {
+                    ...cp,
+                    ContactPersonName: data.ContactPerson,
+                    Designation: data.Designation,
+                    MobileNo: data.PhoneNo,
+                    Email: data.Email
+                }
+                setCp(y);
+            } else {
+                setCp({
+                    ContactPersonName: '',
+                    Designation: '',
+                    MobileNo: '',
+                    Email: '',
+                });
+            }
+        }, [sameAsAbove])
+
+
+        const validate = () => {
+            let sts = true;
+            for (let x in cp) {
+                if (!cp[x] || cp[x].trim() === '') {
+                    alert(`${x} is Required`);
+                    sts = false;
+                    break;
+                } else {
+                    if (x === 'MobileNo' && cp[x].replace('_', '').replace('-', '').length != 11) {
+                        alert(`${x} is Required`);
+                        sts = false;
+                        break;
+                    }
+                }
+            }
+            return sts;
+        }
+
+        return (
+            <React.Fragment>
+                <fieldset>
+                    <legend>Contact Persons Information</legend>
+                    {
+                        contactPersons.length == 0 ?
+                            <div className="row">
+                                <div className="col">
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <label className="text-nowrap mr-3"><h5>Same as above</h5></label><br />
+                                        <div className="material-switch pull-left">
+                                            <input id="saa2" type="checkbox" checked={sameAsAbove} onChange={(e) => setSameAsAbove(e.target.checked)} />
+                                            <label htmlFor="saa2" className="label-primary"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> : ''
+                    }
+                    <div className="row">
+                        <div className="col-lg col-sm-12">
+                            <label>Contact Person</label>
+                            <input type="text" className="form-control" readOnly={sameAsAbove} onInput={processAlphaWithSpace} value={cp.ContactPersonName} onChange={(e) => updateCp('ContactPersonName', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Designation</label>
+                            <input type="text" className="form-control" readOnly={sameAsAbove} onInput={processAlphaWithSpace} value={cp.Designation} onChange={(e) => updateCp('Designation', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Phone No</label>
+                            <ReactInputMask className="form-control" readOnly={sameAsAbove} mask="9999-9999999" value={cp.MobileNo} onChange={(e) => updateCp('MobileNo', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Email</label>
+                            <input type="email" className="form-control" onInput={processEmail} readOnly={sameAsAbove} value={cp.Email} onChange={(e) => updateCp('Email', e.target.value)} />
+                        </div>
+                        <div className="col-lg-1 col-sm-12 text-center">
+                            <button type="button" style={{ marginTop: 30 }} className="btn btn-secondary btn-sm" onClick={add}><i className="fa fa-plus-circle"></i></button>
+                        </div>
+                    </div>
+                    {
+                        contactPersons.length > 0 ?
+                            <div className="row mt-3" style={{ padding: 15 }}>
+                                <table className="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Contact Person</th>
+                                            <th>Designation</th>
+                                            <th>Phone No</th>
+                                            <th>Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {
+                                            contactPersons.map((x, index) =>
+                                                <tr key={index}>
+                                                    <td className="text-center">
+                                                        <button type="button" className="btn btn-danger btn-sm" onClick={(e) => remove(index)}><i className="fa fa-minus-circle"></i></button>
+                                                    </td>
+                                                    <td>{x.ContactPersonName}</td>
+                                                    <td>{x.Designation}</td>
+                                                    <td>{x.MobileNo}</td>
+                                                    <td>{x.Email}</td>
+                                                </tr>)
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            : ''
+                    }
+                </fieldset>
+            </React.Fragment>
+        )
+    }
+
+    const PickupLocations = () => {
+
+        const {
+            data,
+            loading,
+            setLoading,
+            pickupLocations,
+            setPickupLocations,
+        } = React.useContext(Context);
+
+        const [pl, setPl] = React.useState({
+            LocationName: '',
+            ContactPersonName: '',
+            MobileNo: '',
+            Email: '',
+            CityId: '',
+            Area: '',
+            SectorORZone: '',
+            Street: '',
+            PlotNumber: '',
+            BuildingName: '',
+            FloorNO: '',
+            HouseOrOfficeNo: ''
+        });
+
+        const [sameAsAbove, setSameAsAbove] = React.useState(false);
+
+        const updatePl = (key, val) => setPl({ ...pl, [key]: val });
+
+        const addPickupLocation = (obj) => {
+            let x = [...pickupLocations];
+            x.unshift(obj);
+            setPickupLocations(x);
+        };
+
+        const add = () => {
+
+            if (!validate())
+                return;
+
+            addPickupLocation(pl);
+            setPl({
+                LocationName: '',
+                ContactPersonName: '',
+                MobileNo: '',
+                Email: '',
+                CityId: '',
+                Area: '',
+                SectorORZone: '',
+                Street: '',
+                PlotNumber: '',
+                BuildingName: '',
+                FloorNO: '',
+                HouseOrOfficeNo: ''
+            });
+            setSameAsAbove(false);
+        }
+
+        const remove = (index) => {
+            let x = [...pickupLocations];
+            x.splice(index, 1);
+            setPickupLocations(x);
+        }
+
+        React.useEffect(() => {
+            if (sameAsAbove) {
+                const y = {
+                    ...pl,
+                    ContactPersonName: data.ContactPerson,
+                    MobileNo: data.PhoneNo,
+                    Email: data.Email,
+                    CityId: data.CityId,
+                    Area: data.Area,
+                    SectorORZone: data.SectorOrZone,
+                    Street: data.Street,
+                    PlotNumber: data.PlotNo,
+                    BuildingName: data.BuildingName,
+                    FloorNO: data.FloorNo,
+                    HouseOrOfficeNo: data.HouseOrOfficeNo
+                }
+                setPl(y);
+            } else {
+                setPl({
+                    LocationName: '',
+                    ContactPersonName: '',
+                    MobileNo: '',
+                    Email: '',
+                    CityId: '',
+                    Area: '',
+                    SectorORZone: '',
+                    Street: '',
+                    PlotNumber: '',
+                    BuildingName: '',
+                    FloorNO: '',
+                    HouseOrOfficeNo: ''
+                });
+            }
+        }, [sameAsAbove])
+
+        const validate = () => {
+            let sts = true;
+            for (let x in pl) {
+                if (!pl[x] || pl[x].trim() === '') {
+                    alert(`${x} is Required`);
+                    sts = false;
+                    break;
+                } else {
+                    if (x === 'MobileNo' && pl[x].replace('_', '').replace('-', '').length != 11) {
+                        alert(`${x} is Required`);
+                        sts = false;
+                        break;
+                    }
+                }
+            }
+            return sts;
+        }
+
+        return (
+            <React.Fragment>
+                <fieldset>
+                    <legend>Pickup Locations Details</legend>
+                    {
+                        pickupLocations.length == 0 ?
+                            <div className="row">
+                                <div className="col">
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <label className="text-nowrap mr-3"><h5>Same as above</h5></label><br />
+                                        <div className="material-switch pull-left">
+                                            <input id="saa" type="checkbox" checked={sameAsAbove} onChange={(e) => setSameAsAbove(e.target.checked)} />
+                                            <label htmlFor="saa" className="label-primary"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> : ''
+                    }
+
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Location Name</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={pl.LocationName} onChange={(e) => updatePl('LocationName', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Contact Person</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} readOnly={sameAsAbove} value={pl.ContactPersonName} onChange={(e) => updatePl('ContactPersonName', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Phone No</label>
+                            <ReactInputMask className="form-control" mask="9999-9999999" readOnly={sameAsAbove} value={pl.MobileNo} onChange={(e) => updatePl('MobileNo', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Email</label>
+                            <input type="email" className="form-control" onInput={processEmail} readOnly={sameAsAbove} value={pl.Email} onChange={(e) => updatePl('Email', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>City</label>
+                            <select className="form-control" disabled={sameAsAbove} value={pl.CityId} onChange={(e) => updatePl('CityId', e.target.value)}>
+                                <option value="">Select City</option>
+                                {
+                                    branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Area</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} readOnly={sameAsAbove} value={pl.Area} onChange={(e) => updatePl('Area', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Sector/Zone</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} readOnly={sameAsAbove} value={pl.SectorORZone} onChange={(e) => updatePl('SectorORZone', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Street</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} readOnly={sameAsAbove} value={pl.Street} onChange={(e) => updatePl('Street', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Plot No</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} readOnly={sameAsAbove} value={pl.PlotNumber} onChange={(e) => updatePl('PlotNumber', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Building Name</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} readOnly={sameAsAbove} value={pl.BuildingName} onChange={(e) => updatePl('BuildingName', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Floor NO</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} readOnly={sameAsAbove} value={pl.FloorNO} onChange={(e) => updatePl('FloorNO', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>House/Office No</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} readOnly={sameAsAbove} value={pl.HouseOrOfficeNo} onChange={(e) => updatePl('HouseOrOfficeNo', e.target.value)} />
+                        </div>
+                        <div className="col-lg-1 col-sm-12 text-center">
+                            <button type="button" style={{ marginTop: 30 }} className="btn btn-secondary btn-sm" onClick={add}><i className="fa fa-plus-circle"></i></button>
+                        </div>
+                    </div>
+                    {
+                        pickupLocations.length > 0 ?
+                            <div className="row mt-3" style={{ padding: 15 }}>
+                                <table className="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Location Name</th>
+                                            <th>Contact Person</th>
+                                            <th>Phone No</th>
+                                            <th>Email</th>
+                                            <th>City</th>
+                                            <th>Area</th>
+                                            <th>Sector/Zone</th>
+                                            <th>Street</th>
+                                            <th>Plot No</th>
+                                            <th>Building Name</th>
+                                            <th>Floor NO</th>
+                                            <th>House/Office No</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {
+                                            pickupLocations.map((x, index) =>
+                                                <tr key={index}>
+                                                    <td className="text-center">
+                                                        <button type="button" className="btn btn-danger btn-sm" onClick={(e) => remove(index)}><i className="fa fa-minus-circle"></i></button>
+                                                    </td>
+                                                    <td>{x.LocationName}</td>
+                                                    <td>{x.ContactPersonName}</td>
+                                                    <td>{x.MobileNo}</td>
+                                                    <td>{x.Email}</td>
+                                                    <td>{x.CityId}</td>
+                                                    <td>{x.Area}</td>
+                                                    <td>{x.SectorORZone}</td>
+                                                    <td>{x.Street}</td>
+                                                    <td>{x.PlotNumber}</td>
+                                                    <td>{x.BuildingName}</td>
+                                                    <td>{x.FloorNO}</td>
+                                                    <td>{x.HouseOrOfficeNo}</td>
+                                                </tr>)
+                                        }
+                                    </tbody>
+                                </table>
+                            </div> : ''
+                    }
+
+                </fieldset>
+            </React.Fragment>
+        )
+    }
+
+    const BankDetails = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            updateData
+        } = React.useContext(Context);
+
+        return (
+            <React.Fragment>
+                <fieldset>
+                    <legend>Bank Details</legend>
+                    <div className="row">
+                        <div className="col-lg col-sm-12">
+                            <label>Beneficiary Name</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.BeneficiaryName} onChange={(e) => updateData('BeneficiaryName', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Beneficiary Relation</label>
+                            <input type="text" className="form-control" onInput={processAlphaWithSpace} value={data.BeneficiaryRelation} onChange={(e) => updateData('BeneficiaryRelation', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>IBAN</label>
+                            <ReactInputMask mask="aa99 aaaa 9999 9999 9999 9999" className="form-control" value={data.IBAN} onChange={(e) => updateData('IBAN', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Bank</label>
+                            <select className="form-control" value={data.BankId} onChange={(e) => updateData('BankId', e.target.value)}>
+                                <option value="">Select Bank</option>
+                                {
+                                    banks.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Bank Branch Code</label>
+                            <input type="text" className="form-control" onInput={processAlpha} value={data.BankBranchCode} onChange={(e) => updateData('BankBranchCode', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Bank Branch City</label>
+                            <select className="form-control" value={data.BankBranchCity} onChange={(e) => updateData('BankBranchCity', e.target.value)}>
+                                <option value="">Select Bank</option>
+                                {
+                                    branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+            </React.Fragment>
+        )
+    }
+
+    const Rates = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            updateData,
+            rates,
+            setRates,
+            products,
+            setProducts
+        } = React.useContext(Context);
+
+        const updateFuelFactorType = (val) => {
+            let x = { ...data };
+            if (val == 'IsFAF') {
+                x['IsFAF'] = true;
+                x['IsFAC'] = false;
+                x['FuelFactor'] = "";
+            } else if (val == 'IsFAC') {
+                x['IsFAF'] = false;
+                x['IsFAC'] = true;
+            }
+            setData(x);
+        }
+
+        // const addRemoveRates = (sts, id, name, index) => {
+        //     let x = [...rates];
+        //     if (sts == true) {
+        //         const z = {
+        //             ProductId: id,
+        //             ProductName: name,
+        //             Overnight: false,
+        //             SecondDay: false,
+        //             ECargo: false,
+        //             Flyer: false,
+        //             FlyerWind: false,
+        //             AddFactor: '',
+        //             MinWeight: '',
+        //             ExpectedRev: '',
+        //             ZeroToPoint5KGWC: '',
+        //             ZeroToPoint5KGSZ: '',
+        //             ZeroToPoint5KGDZ: '',
+        //             Point5To1KGWC: '',
+        //             Point5To1KGSZ: '',
+        //             Point5To1KGDZ: '',
+        //             AddKGWC: '',
+        //             AddKGSZ: '',
+        //             AddKGDZ: '',
+        //             SecDayMin: '',
+        //             SecDayAdd: '',
+        //             ZoneAMin: '',
+        //             ZoneAAdd: '',
+        //             ZoneBMin: '',
+        //             ZoneBAdd: '',
+        //             FlyerS: '',
+        //             FlyerM: '',
+        //             FlyerL: '',
+        //             FlyerXL: '',
+        //             FlyerWinS: '',
+        //             FlyerWinM: '',
+        //             FlyerWinL: '',
+        //             FlyerWinXL: '',
+        //         };
+        //         x.push(z);
+        //     } else {
+        //         const index = x.findIndex(e => e.ProductId == id);
+        //         x.splice(index, 1);
+        //     }
+
+        //     setRates(x);
+
+        //     const pd = [...products];
+        //     pd[index]['Selected'] = sts;
+        //     setProducts(pd);
+        // }
+
+        const addRemoveRates = (sts, id, index) => {
+            let x = [...rates];
+            const pd = [...products];
+            const z = {
+                Overnight: false,
+                SecondDay: false,
+                ECargo: false,
+                Flyer: false,
+                FlyerWind: false,
+                AddFactor: '',
+                MinWeight: '',
+                ExpectedRev: '',
+                ZeroToPoint5KGWC: '',
+                ZeroToPoint5KGSZ: '',
+                ZeroToPoint5KGDZ: '',
+                Point5To1KGWC: '',
+                Point5To1KGSZ: '',
+                Point5To1KGDZ: '',
+                AddKGWC: '',
+                AddKGSZ: '',
+                AddKGDZ: '',
+                SecDayMin: '',
+                SecDayAdd: '',
+                ZoneAMin: '',
+                ZoneAAdd: '',
+                ZoneBMin: '',
+                ZoneBAdd: '',
+                FlyerS: '',
+                FlyerM: '',
+                FlyerL: '',
+                FlyerXL: '',
+                FlyerWinS: '',
+                FlyerWinM: '',
+                FlyerWinL: '',
+                FlyerWinXL: '',
+            };
+
+            if ([1, 3].includes(id)) {
+                if (sts == true) {
+                    x.push({ ...z, ProductId: 1, ProductName: 'Domestic' });
+                    x.push({ ...z, ProductId: 3, ProductName: 'Express Cargo' });
+                    x = x.filter(y => y.ProductId != 2);
+                } else {
+                    x = x.filter(y => ![1, 2, 3, 5].includes(y.ProductId));
+                }
+                for (let o of pd) {
+                    if (sts) {
+                        if ([1, 3].includes(o.ProductId))
+                            o.Selected = true;
+                        else if (o.ProductId == 2)
+                            o.Selected = false;
+                    } else {
+                        if ([1, 2, 3, 5].includes(o.ProductId))
+                            o.Selected = false;
+                    }
+                }
+            } else if (id == 2) {
+                if (sts == true) {
+                    x.push({ ...z, ProductId: 2, ProductName: 'COD' });
+                    x = x.filter(y => ![1, 3].includes(y.ProductId));
+                } else {
+                    x = x.filter(y => ![1, 2, 3, 5].includes(y.ProductId));
+                }
+                for (let o of pd) {
+                    if (sts) {
+                        if (o.ProductId == 2)
+                            o.Selected = true;
+                        else if ([1, 3].includes(o.ProductId))
+                            o.Selected = false;
+                    } else {
+                        if ([1, 2, 3, 5].includes(o.ProductId))
+                            o.Selected = false;
+                    }
+                }
+            } else {
+                if (pd.some(u => [1, 2, 3].includes(u.ProductId) && u.Selected)) {
+                    if (sts == true)
+                        x.push({ ...z, ProductId: 5, ProductName: 'Packing Material' });
+                    else
+                        x = x.filter(y => y.ProductId != 5);
+                    for (let o of pd) {
+                        if (o.ProductId == 5)
+                            o.Selected = sts;
+                    }
+                } else {
+                    alert('Invalid Selection');
+                }
+            }
+            setRates(x);
+            setProducts(pd);
+        }
+
+        React.useEffect(() => {
+            const dd = { ...data };
+            if (products.some(x => x.ProductId == 1 && x.Selected)) {
+                dd.InvoicingScheduler = 'M';
+                dd.IsAutoRecovery = false;
+            }
+            else if (products.some(x => x.ProductId == 2 && x.Selected)) {
+                dd.InvoicingScheduler = 'W';
+                dd.IsAutoRecovery = true;
+            } else {
+                dd.InvoicingScheduler = '';
+                dd.IsAutoRecovery = null;
+            }
+            setData(dd);
+        }, [products])
+
+        const updateRates = (index, key, val) => {
+            let x = [...rates];
+            x[index][key] = val;
+            setRates(x);
+        }
+
+        const updateServiceType = (index, service, val) => {
+            let x = [...rates];
+            if (service == 'Overnight') {
+                x[index]['Overnight'] = val;
+                x[index]['AddFactor'] = val ? '0.5' : '';
+                x[index]['MinWeight'] = '';
+                x[index]['ZeroToPoint5KGWC'] = '';
+                x[index]['ZeroToPoint5KGSZ'] = '';
+                x[index]['ZeroToPoint5KGDZ'] = '';
+                x[index]['Point5To1KGWC'] = '';
+                x[index]['Point5To1KGSZ'] = '';
+                x[index]['Point5To1KGDZ'] = '';
+                x[index]['AddKGWC'] = '';
+                x[index]['AddKGSZ'] = '';
+                x[index]['AddKGDZ'] = '';
+            } else if (service == 'SecondDay') {
+                x[index]['SecondDay'] = val;
+                x[index]['MinWeight'] = val ? '3' : '';
+                x[index]['SecDayMin'] = '';
+                x[index]['SecDayAdd'] = '';
+            } else if (service == 'ECargo') {
+                x[index]['ECargo'] = val;
+                x[index]['MinWeight'] = val ? '5' : '';
+                x[index]['ZoneAMin'] = '';
+                x[index]['ZoneAAdd'] = '';
+                x[index]['ZoneBMin'] = '';
+                x[index]['ZoneBAdd'] = '';
+            }
+            else if (service == 'Flyer') {
+                x[index]['Flyer'] = val;
+                x[index]['FlyerS'] = '';
+                x[index]['FlyerM'] = '';
+                x[index]['FlyerL'] = '';
+                x[index]['FlyerXL'] = '';
+            }
+            else if (service == 'FlyerWind') {
+                x[index]['FlyerWind'] = val;
+                x[index]['FlyerWinS'] = '';
+                x[index]['FlyerWinM'] = '';
+                x[index]['FlyerWinL'] = '';
+                x[index]['FlyerWinXL'] = '';
+            }
+
+            setRates(x);
+        }
+
+        const inlineStyle = { display: 'flex', flexDirection: 'column', width: '100%', minWidth: '7vw', justifyContent: 'center', alignItems: 'center' };
+        const inlineStyle2 = { display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'center', alignItems: 'center' };
+
+
+        return (
+            <React.Fragment>
+                <fieldset>
+                    <legend>Rates</legend>
+                    <div className="row">
+                        <div className="col-lg col-sm-12">
+                            <h5 className="pull-left">Products </h5>
+                            {
+                                products.map((c, index) =>
+                                    <div className="material-switch pull-left" key={index}>
+                                        <b className="pull-left ml-3 mr-2">{c.ProductName} :</b>
+                                        <input id={c.ProductName} type="checkbox" checked={c.Selected} onChange={(e) => addRemoveRates(e.target.checked, c.ProductId, index)} />
+                                        <label htmlFor={c.ProductName} className="label-primary"></label>
+                                    </div>)
+                            }
+                        </div>
+                    </div>
+
+                    <div className="row mt-3">
+                        <div className="col-lg">
+                            <div className="table-responsive">
+                                <table className="table table-bordered">
+                                    <tbody>
+                                        {
+                                            rates.map((x, index) => {
+                                                if ([1, 2].includes(x.ProductId)) {
+                                                    return <React.Fragment key={index}>
+                                                        <tr>
+                                                            <th colSpan="2">{x.ProductName}</th>
+                                                            <th colSpan="3">0 KG - 0.5 KG</th>
+                                                            <th colSpan="3">0.5 KG - 1 KG</th>
+                                                            <th colSpan="3">Add. KG</th>
+                                                            <th colSpan="2">2nd Day</th>
+                                                            <th>Expected Revenue</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <div className="text-left" style={inlineStyle}>
+                                                                    <b>Overnight</b>
+                                                                    <div className="material-switch pull-left ml-2">
+                                                                        <input id={x.ProductName + 'Overnight' + index} type="checkbox" checked={x.Overnight} onChange={(e) => updateServiceType(index, 'Overnight', e.target.checked)} />
+                                                                        <label htmlFor={x.ProductName + 'Overnight' + index} className="label-primary"></label>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div style={inlineStyle}>
+                                                                    Add Factor
+                                                                    <div className="btn-group btn-group-toggle ml-2" data-toggle="buttons">
+                                                                        <label className={`btn btn-secondary ${(x.AddFactor == '0.5') ? 'active' : ''}`}>
+                                                                            <input disabled={!x.Overnight} type="radio" name={x.ProductName + 'addfactor' + index} autoComplete="off" onClick={(e) => updateRates(index, 'AddFactor', '0.5')} />0.5 KG</label>
+                                                                        <label className={`btn btn-secondary ${(x.AddFactor == '1') ? 'active' : ''}`}>
+                                                                            <input disabled={!x.Overnight} type="radio" name={x.ProductName + 'addfactor' + index} autoComplete="off" onClick={(e) => updateRates(index, 'AddFactor', '1')} />1 KG</label>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <th>WC</th>
+                                                            <th>SZ</th>
+                                                            <th>DZ</th>
+                                                            <th>WC</th>
+                                                            <th>SZ</th>
+                                                            <th>DZ</th>
+                                                            <th>WC</th>
+                                                            <th>SZ</th>
+                                                            <th>DZ</th>
+                                                            <th>Min</th>
+                                                            <th>Add</th>
+                                                            <th rowSpan="2">
+                                                                <input style={{ width: '3.5rem' }} onInput={processDecimal} type="text" value={x.ExpectedRev} onChange={(e) => updateRates(index, 'ExpectedRev', e.target.value)} className="form-control" />
+                                                            </th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <div className="text-left" style={inlineStyle}>
+                                                                    <b>Second Day</b>
+                                                                    <div className="material-switch pull-left ml-2">
+                                                                        <input id={x.ProductName + 'sd' + index} type="checkbox" checked={x.SecondDay} onChange={(e) => updateServiceType(index, 'SecondDay', e.target.checked)} />
+                                                                        <label htmlFor={x.ProductName + 'sd' + index} className="label-primary"></label>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div style={inlineStyle}>
+                                                                    Min Weight
+                                                                    <div className="btn-group btn-group-toggle ml-2" data-toggle="buttons">
+                                                                        <label className={`btn btn-secondary ${(x.MinWeight == '3') ? 'active' : ''}`}>
+                                                                            <input disabled={!x.SecondDay} type="radio" name={x.ProductName + 'mw' + index} autoComplete="off" onClick={(e) => updateRates(index, 'MinWeight', '3')} />3 KG</label>
+                                                                        <label className={`btn btn-secondary ${(x.MinWeight == '5') ? 'active' : ''}`}>
+                                                                            <input disabled={!x.SecondDay} type="radio" name={x.ProductName + 'mw' + index} autoComplete="off" onClick={(e) => updateRates(index, 'MinWeight', '5')} />5 KG</label>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.ZeroToPoint5KGWC} onChange={(e) => updateRates(index, 'ZeroToPoint5KGWC', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.ZeroToPoint5KGSZ} onChange={(e) => updateRates(index, 'ZeroToPoint5KGSZ', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.ZeroToPoint5KGDZ} onChange={(e) => updateRates(index, 'ZeroToPoint5KGDZ', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.Point5To1KGWC} onChange={(e) => updateRates(index, 'Point5To1KGWC', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.Point5To1KGSZ} onChange={(e) => updateRates(index, 'Point5To1KGSZ', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.Point5To1KGDZ} onChange={(e) => updateRates(index, 'Point5To1KGDZ', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.AddKGWC} onChange={(e) => updateRates(index, 'AddKGWC', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.AddKGSZ} onChange={(e) => updateRates(index, 'AddKGSZ', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.Overnight} value={x.AddKGDZ} onChange={(e) => updateRates(index, 'AddKGDZ', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.SecondDay} value={x.SecDayMin} onChange={(e) => updateRates(index, 'SecDayMin', e.target.value)} type="text" className="form-control" /></td>
+                                                            <td><input style={{ width: '3.5rem' }} onInput={processDecimal} readOnly={!x.SecondDay} value={x.SecDayAdd} onChange={(e) => updateRates(index, 'SecDayAdd', e.target.value)} type="text" className="form-control" /></td>
+                                                        </tr>
+                                                    </React.Fragment>
+                                                } else if (x.ProductId == 3) {
+                                                    return <React.Fragment key={index}>
+                                                        <tr>
+                                                            <th colSpan="2">{x.ProductName}</th>
+                                                            <th colSpan="2">Zone A</th>
+                                                            <th colSpan="2">Zone B</th>
+                                                            <th colSpan="7"></th>
+                                                            <th>Expected Revenue</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td rowSpan="2">
+                                                                <div className="text-left" style={inlineStyle}>
+                                                                    <b>E. Cargo</b>
+                                                                    <div className="material-switch pull-left ml-2">
+                                                                        <input id={'ec' + index} type="checkbox" checked={x.ECargo} onChange={(e) => updateServiceType(index, 'ECargo', e.target.checked)} />
+                                                                        <label htmlFor={'ec' + index} className="label-primary"></label>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td rowSpan="2">
+                                                                <div style={inlineStyle}>
+                                                                    Min Weight
+                                                                    <div className="btn-group btn-group-toggle ml-2" data-toggle="buttons">
+                                                                        <label className={`btn btn-secondary ${(x.MinWeight == '5') ? 'active' : ''}`}>
+                                                                            <input disabled={!x.ECargo} type="radio" name={x.ProductName + 'mw' + index} autoComplete="off" onClick={(e) => updateRates(index, 'MinWeight', '5')} />5 KG</label>
+                                                                        <label className={`btn btn-secondary ${(x.MinWeight == '10') ? 'active' : ''}`}>
+                                                                            <input disabled={!x.ECargo} type="radio" name={x.ProductName + 'mw' + index} autoComplete="off" onClick={(e) => updateRates(index, 'MinWeight', '10')} />10 KG</label>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <th>Min</th>
+                                                            <th>Add</th>
+                                                            <th>Min</th>
+                                                            <th>Add</th>
+                                                            <th colSpan="7" rowSpan="2"></th>
+                                                            <th rowSpan="2">
+                                                                <div style={inlineStyle2}><input style={{ width: '3.5rem' }} onInput={processDecimal} value={x.ExpectedRev} onChange={(e) => updateRates(index, 'ExpectedRev', e.target.value)} type="text" className="form-control" /></div>
+                                                            </th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.ECargo} onInput={processDecimal} value={x.ZoneAMin} onChange={(e) => updateRates(index, 'ZoneAMin', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.ECargo} onInput={processDecimal} value={x.ZoneAAdd} onChange={(e) => updateRates(index, 'ZoneAAdd', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.ECargo} onInput={processDecimal} value={x.ZoneBMin} onChange={(e) => updateRates(index, 'ZoneBMin', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.ECargo} onInput={processDecimal} value={x.ZoneBAdd} onChange={(e) => updateRates(index, 'ZoneBAdd', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                        </tr>
+                                                    </React.Fragment>
+                                                } else if (x.ProductId == 5) {
+                                                    return <React.Fragment key={index}>
+                                                        <tr>
+                                                            <th colSpan="2">{x.ProductName}</th>
+                                                            <th colSpan="4">Flyer</th>
+                                                            <th colSpan="4">Flyer (Window)</th>
+                                                            <th colSpan="4"></th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td rowSpan="2">
+                                                                <div className="text-left" style={inlineStyle}>
+                                                                    <b>Flyer</b>
+                                                                    <div className="material-switch pull-left ml-2">
+                                                                        <input id={'fly' + index} type="checkbox" checked={x.Flyer} onChange={(e) => updateServiceType(index, 'Flyer', e.target.checked)} />
+                                                                        <label htmlFor={'fly' + index} className="label-primary"></label>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td rowSpan="2">
+                                                                <div className="text-left" style={inlineStyle}>
+                                                                    <b>Flyer (Window)</b>
+                                                                    <div className="material-switch pull-left ml-2">
+                                                                        <input id={'flyw' + index} type="checkbox" checked={x.FlyerWind} onChange={(e) => updateServiceType(index, 'FlyerWind', e.target.checked)} />
+                                                                        <label htmlFor={'flyw' + index} className="label-primary"></label>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <th>S</th>
+                                                            <th>M</th>
+                                                            <th>L</th>
+                                                            <th>XL</th>
+                                                            <th>S</th>
+                                                            <th>M</th>
+                                                            <th>L</th>
+                                                            <th>XL</th>
+                                                            <th colSpan="4" rowSpan="2"></th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.Flyer} onInput={processDecimal} value={x.FlyerS} onChange={(e) => updateRates(index, 'FlyerS', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.Flyer} onInput={processDecimal} value={x.FlyerM} onChange={(e) => updateRates(index, 'FlyerM', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.Flyer} onInput={processDecimal} value={x.FlyerL} onChange={(e) => updateRates(index, 'FlyerL', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.Flyer} onInput={processDecimal} value={x.FlyerXL} onChange={(e) => updateRates(index, 'FlyerXL', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.FlyerWind} onInput={processDecimal} value={x.FlyerWinS} onChange={(e) => updateRates(index, 'FlyerWinS', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.FlyerWind} onInput={processDecimal} value={x.FlyerWinM} onChange={(e) => updateRates(index, 'FlyerWinM', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.FlyerWind} onInput={processDecimal} value={x.FlyerWinL} onChange={(e) => updateRates(index, 'FlyerWinL', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                            <td><div style={inlineStyle2}><input readOnly={!x.FlyerWind} onInput={processDecimal} value={x.FlyerWinXL} onChange={(e) => updateRates(index, 'FlyerWinXL', e.target.value)} style={{ width: '3.5rem' }} type="text" className="form-control" /></div></td>
+                                                        </tr>
+                                                    </React.Fragment>
+                                                }
+                                            })
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Fuel Factor</label><br />
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                            }}>
+                                <div className="btn-group btn-group-toggle" data-toggle="buttons">
+                                    <label className={`btn btn-secondary ${(data.IsFAF) ? 'active' : ''}`}>
+                                        <input type="radio" name="fftype" autoComplete="off" defaultChecked={true} onClick={(e) => updateFuelFactorType(e.target.checked ? 'IsFAF' : '')} />FAF</label>
+                                    <label className={`btn btn-secondary ${(data.IsFAC) ? 'active' : ''}`}>
+                                        <input type="radio" name="fftype" autoComplete="off" onClick={(e) => updateFuelFactorType(e.target.checked ? 'IsFAC' : '')} />FAC</label>
+                                </div>
+                                <input className="form-control ml-3" readOnly={data.IsFAF} onInput={processDecimal} value={data.FuelFactor} onChange={(e) => updateData('FuelFactor', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Invoicing Scheduler</label><br />
+                            <div className="btn-group btn-group-toggle" data-toggle="buttons">
+                                <label className={`btn btn-secondary ${(data.InvoicingScheduler == 'B') ? 'active' : ''}`}>
+                                    <input type="radio" name="invoicingScheduler" autoComplete="off" onClick={(e) => updateData('InvoicingScheduler', 'B')} disabled={true} />Bi Weekly</label>
+                                <label className={`btn btn-secondary ${(data.InvoicingScheduler == 'W') ? 'active' : ''}`}>
+                                    <input type="radio" name="invoicingScheduler" autoComplete="off" onClick={(e) => updateData('InvoicingScheduler', 'W')} disabled={true} />Weekly</label>
+                                <label className={`btn btn-secondary ${(data.InvoicingScheduler == 'M') ? 'active' : ''}`}>
+                                    <input type="radio" name="invoicingScheduler" autoComplete="off" onClick={(e) => updateData('InvoicingScheduler', 'M')} disabled={true} />Monthly</label>
+                            </div>
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Recovery Type</label><br />
+                            <div className="btn-group btn-group-toggle" data-toggle="buttons">
+                                <label className={`btn btn-secondary ${(data.IsAutoRecovery) ? 'active' : ''}`}>
+                                    <input type="radio" name="isAutoRecovery" autoComplete="off" onClick={(e) => updateData('IsAutoRecovery', true)} disabled={true} />Auto</label>
+                                <label className={`btn btn-secondary ${(data.IsAutoRecovery == false) ? 'active' : ''}`}>
+                                    <input type="radio" name="isAutoRecovery" autoComplete="off" onClick={(e) => updateData('IsAutoRecovery', false)} disabled={true} />Manual</label>
+                            </div>
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Credit Terms/Days</label>
+                            <input className="form-control" onInput={process} value={data.CreditTermsOrDays} onChange={(e) => updateData('CreditTermsOrDays', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg col-sm-12">
+                            <label>Sales Decision</label>
+                            <select className="form-control" value={data.SalesDecision} onChange={(e) => updateData('SalesDecision', e.target.value)}>
+                                <option value="1">Centralized</option>
+                                <option value="2">Decentralized</option>
+                            </select>
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Billing Instruction</label>
+                            <select className="form-control" value={data.BillingInstruction} onChange={(e) => updateData('BillingInstruction', e.target.value)}>
+                                <option value="1">Centralized</option>
+                                <option value="2">Decentralized</option>
+                            </select>
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Annual Rate Revision</label>
+                            <input className="form-control" onInput={processDecimal} value={data.AnnualRateRevision} onChange={(e) => updateData('AnnualRateRevision', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Minimum Billing</label>
+                            <input className="form-control" onInput={processDecimal} value={data.MinimumBilling} onChange={(e) => updateData('MinimumBilling', e.target.value)} />
+                        </div>
+                        <div className="col-lg col-sm-12">
+                            <label>Recovey Mode</label>
+                            <select className="form-control" value={data.RecoveryMode} onChange={(e) => updateData('RecoveryMode', e.target.value)}>
+                                <option value="1">Cash</option>
+                                <option value="2">Bank</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-lg-1 col-sm-12">
+                            <label className="text-nowrap">E-Invoicing</label><br />
+                            <div className="material-switch pull-left">
+                                <input id="EInvoicing" type="checkbox" checked={data.EInvoicing} onChange={(e) => updateData('EInvoicing', e.target.checked)} />
+                                <label htmlFor="EInvoicing" className="label-primary"></label>
+                            </div>
+                        </div>
+                        <div className="col-lg-1 col-sm-12">
+                            <label className="text-nowrap">Print Invoice</label><br />
+                            <div className="material-switch pull-left">
+                                <input id="PrintInvoice" type="checkbox" checked={data.PrintInvoice} onChange={(e) => updateData('PrintInvoice', e.target.checked)} />
+                                <label htmlFor="PrintInvoice" className="label-primary"></label>
+                            </div>
+                        </div>
+                        <div className="col-lg-1 col-sm-12">
+                            <label className="text-nowrap">Tax Excemption</label><br />
+                            <div className="material-switch pull-left">
+                                <input id="TaxExcemption" type="checkbox" checked={data.TaxExcemption} onChange={(e) => updateData('TaxExcemption', e.target.checked)} />
+                                <label htmlFor="TaxExcemption" className="label-primary"></label>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </React.Fragment>
+        )
+    }
+
+    const App = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            contactPersons,
+            setContactPersons,
+            pickupLocations,
+            setPickupLocations,
+            rates,
+            setRates,
+            products,
+            setProducts
+        } = React.useContext(Context);
+
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(10px)'
+            }
+        }
+
+        const reset = () => {
+            setData(d);
+            setContactPersons([]);
+            setPickupLocations([]);
+            const cp = customerProducts.map(y => {
+                return { ...y, Selected: false };
+            });
+            setProducts(cp);
+            setRates([]);
+        }
+
+        const save = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(saveUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: { ...data, ContactPersons: contactPersons, PickupLocations: pickupLocations, Rates: rates } })
+                });
+
+                setLoading(false);
+
+                if (response.status === 200) {
+                    const rs = await response.json();
+                    alert(rs.msg);
+                    if (rs.sts == 0) {
+                        reset();
+                        //window.open(`${printUrl}/${rs.id}`, '_blank');
+                    }
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            }
+        }
+
+        const onSave = async () => {
+            if (validate()) {
+                await save();
+            }
+        }
+
+
+        const validate = () => {
+            if (!data.BusinessName) {
+                alert('BusinessName is Required');
+                return false;
+            } else {
+                const fl = data.BusinessName.trim()[0];
+                if (fl.toLowerCase() == fl.toUpperCase()) {
+                    alert('BusinessName first character must be letter');
+                    return false;
+                }
+            }
+            if (!data.IndustryId) {
+                alert('IndustryId is Required');
+                return false;
+            }
+            if (!data.ContactPerson) {
+                alert('ContactPerson is Required');
+                return false;
+            }
+            if (!data.Designation) {
+                alert('Designation is Required');
+                return false;
+            }
+            if (!data.PhoneNo) {
+                alert('PhoneNo is Required');
+                return false;
+            }
+            if (!data.FaxNo) {
+                alert('FaxNo is Required');
+                return false;
+            }
+            if (!data.CNIC) {
+                alert('CNIC is Required');
+                return false;
+            }
+            if (!data.Email) {
+                alert('Email is Required');
+                return false;
+            }
+            if (data.NTNRegistered) {
+                if (!data.NTNNumber) {
+                    alert('NTNNumber is Required');
+                    return false;
+                }
+            }
+            if (data.GSTRegistered) {
+                if (!data.GSTNumber) {
+                    alert('GSTNumber is Required');
+                    return false;
+                }
+            }
+            if (!data.CityId) {
+                alert('CityId is Required');
+                return false;
+            }
+            if (!data.PostalCode) {
+                alert('PostalCode is Required');
+                return false;
+            }
+            if (!data.Area) {
+                alert('Area is Required');
+                return false;
+            }
+            if (!data.SectorOrZone) {
+                alert('SectorOrZone is Required');
+                return false;
+            }
+            if (!data.Street) {
+                alert('Street is Required');
+                return false;
+            }
+            if (!data.PlotNo) {
+                alert('PlotNo is Required');
+                return false;
+            }
+            if (!data.BuildingName) {
+                alert('BuildingName is Required');
+                return false;
+            }
+            if (!data.FloorNo) {
+                alert('FloorNo is Required');
+                return false;
+            }
+            if (!data.HouseOrOfficeNo) {
+                alert('HouseOrOfficeNo is Required');
+                return false;
+            }
+            if (contactPersons.length == 0) {
+                alert('Please Add Contact Person');
+                return false;
+            }
+            if (pickupLocations.length == 0) {
+                alert('Please Add Pickup Location');
+                return false;
+            }
+            //Bank Validation on COD Product Selection Start
+            if (products.some(y => y.ProductId == 2 && y.Selected)) {
+                if (!data.BeneficiaryName) {
+                    alert('BeneficiaryName is Required');
+                    return false;
+                }
+                if (!data.BeneficiaryRelation) {
+                    alert('BeneficiaryRelation is Required');
+                    return false;
+                }
+                if (!data.IBAN) {
+                    alert('IBAN is Required');
+                    return false;
+                }
+                if (!data.BankId) {
+                    alert('BankId is Required');
+                    return false;
+                }
+                if (!data.BankBranchCode) {
+                    alert('BankBranchCode is Required');
+                    return false;
+                }
+                if (!data.BankBranchCity) {
+                    alert('BankBranchCity is Required');
+                    return false;
+                }
+            }
+            //Bank Validation on COD Product Selection End
+
+            if (rates.length == 0) {
+                alert('Select Atleast 1 Product');
+                return false;
+            } else {
+                for (const r of rates) {
+                    if ([1, 2].includes(r.ProductId)) {
+                        if (!r.Overnight && !r.SecondDay) {
+                            alert('Select Atleast 1 Service');
+                            return false;
+                        } else {
+                            if (r.Overnight && (!r.ZeroToPoint5KGWC || !r.ZeroToPoint5KGSZ || !r.ZeroToPoint5KGDZ || !r.Point5To1KGWC || !r.Point5To1KGSZ || !r.Point5To1KGDZ || !r.AddKGWC || !r.AddKGSZ || !r.AddKGDZ)) {
+                                alert('Enter Overnight Tariff');
+                                return false;
+                            }
+                            if (r.SecondDay && (!r.SecDayAdd || !r.SecDayMin)) {
+                                alert('Enter SecondDay Tariff');
+                                return false;
+                            }
+                        }
+                        if (!r.ExpectedRev) {
+                            alert('Enter Expected Revenue');
+                            return false;
+                        }
+                    } else if (r.ProductId == 3) {
+                        if (!r.ECargo) {
+                            alert('Select Atleast 1 Service');
+                            return false;
+                        } else {
+                            if (r.ECargo && (!r.ZoneAAdd || !r.ZoneAMin || !r.ZoneBAdd || !r.ZoneBMin)) {
+                                alert('Enter ECargo Tariff');
+                                return false;
+                            }
+                        }
+                        if (!r.ExpectedRev) {
+                            alert('Enter Expected Revenue');
+                            return false;
+                        }
+                    }
+                    else if (r.ProductId == 5) {
+                        if (!r.Flyer && (!r.FlyerWind)) {
+                            alert('Select Atleast 1 Service');
+                            return false;
+                        } else {
+                            if (r.Flyer && (!r.FlyerS || !r.FlyerM || !r.FlyerL || !r.FlyerXL)) {
+                                alert('Enter Flyer Tariff');
+                                return false;
+                            }
+
+                            if (r.FlyerWind && (!r.FlyerWinS || !r.FlyerWinM || !r.FlyerWinL || !r.FlyerWinXL)) {
+                                alert('Enter Flyer (Window) Tariff');
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (data.IsFAC) {
+                if (!data.FuelFactor) {
+                    alert('FuelFactor is Required');
+                    return false;
+                }
+            }
+            if (!data.CreditTermsOrDays) {
+                alert('CreditTermsOrDays is Required');
+                return false;
+            }
+            if (!data.AnnualRateRevision) {
+                alert('AnnualRateRevision is Required');
+                return false;
+            }
+            if (!data.MinimumBilling) {
+                alert('MinimumBilling is Required');
+                return false;
+            }
+            return true;
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>CRF</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+
+                            </div>
+                        </div>
+                        <CustomerInfo /><br />
+                        <ContactPersons /><br />
+                        <PickupLocations /><br />
+                        {
+                            products.some(x => x.ProductId == 2 && x.Selected) && <React.Fragment><BankDetails /><br /></React.Fragment>
+                        }
+                        <Rates /><br />
+                        <div className="row mt-3">
+                            <div className="col text-right">
+                                <button type="button" className="btn btn-secondary" onClick={onSave}>Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+
+        const [data, setData] = React.useState(d);
+        const [contactPersons, setContactPersons] = React.useState([]);
+        const [pickupLocations, setPickupLocations] = React.useState([]);
+        const [rates, setRates] = React.useState([]);
+        const [loading, setLoading] = React.useState(false);
+        const [products, setProducts] = React.useState(customerProducts);
+
+        const updateData = (key, value) => setData({ ...data, [key]: value });
+
+        return (
+            <Context.Provider value={{
+                loading,
+                setLoading,
+                data,
+                setData,
+                contactPersons,
+                setContactPersons,
+                pickupLocations,
+                setPickupLocations,
+                updateData,
+                rates,
+                setRates,
+                products,
+                setProducts
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

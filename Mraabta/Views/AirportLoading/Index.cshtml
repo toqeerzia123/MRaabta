@@ -1,0 +1,1390 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style>
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+}
+
+<div id="root"></div>
+
+@section scripts{
+    <script src="~/Scripts/dexie.js"></script>
+    <script>
+    const origin = @Html.Raw(Json.Encode(ViewBag.Origin));
+    const Routes =  @Html.Raw(Json.Encode(ViewBag.Routes));
+    const TransportType =  @Html.Raw(Json.Encode(ViewBag.TransportType));
+    const VehicleType =  @Html.Raw(Json.Encode(ViewBag.VehicleType));
+    const Vehicles =  @Html.Raw(Json.Encode(ViewBag.Vehicles));
+    const cnlength =  @Html.Raw(Json.Encode(ViewBag.CNLengths));
+    const branches =  @Html.Raw(Json.Encode(ViewBag.Branches));
+    const loadingData =  @Html.Raw(Json.Encode(ViewBag.LoadingData));
+    const loadingDetailsURL = '@Url.Action("LoadingDetails", "AirportLoading")';
+    const fetchTouchpointsUrl = '@Url.Action("GetTouchpointsAndDestinations","AirportLoading")';
+    const fetchBagUrl = '@Url.Action("GetBagInfo", "AirportLoading")';
+    const fetchCNUrl = '@Url.Action("GetCNInfo", "AirportLoading")';
+    const postUrl = '@Url.Action("PostLoading", "AirportLoading")';
+    const searchLoadingUrl = '@Url.Action("Search", "AirportLoading")';
+    const printLoadingUrl = '@Url.Action("Print", "AirportLoading")';
+    const runnerRouteUrl = '@Url.Action("GetRunnerRoutes", "AirportLoading")';
+    const loadingId = @ViewBag.LoadingId;
+    </script>
+    <script type="text/babel">
+
+    var db = new Dexie("AirLoadingDB");
+
+    db.version(2).stores({
+        loadings: "LoadingNo,BagsCount,CNsCount,TotalWeight,Route,Origin,Description,Courier,SealNo,TransportType,VehicleRegNo,Sort",
+        loadingDetails: "BagCN,LoadingNo,OriginId,Origin,DestinationId,Destination,Pcs,Weight,SealNo,IsBag,Status,Remarks,Sort"
+    });
+
+
+    async function AddLoadings(obj) {
+        if (loadingData.id == 0) {
+            const { IsOld, ...rest } = obj;
+            await db.loadings.add(rest);
+        }
+    }
+
+   async function DeleteLoading(pk) {
+        if (loadingData.id == 0) {
+            await db.loadings.where('LoadingNo').equals(pk).delete();
+            await db.loadingDetails.where('LoadingNo').equals(pk).delete();
+        }
+    }
+
+    async function AddLoadingDetails(obj) {
+        if (loadingData.id == 0) {
+            const { IsOld, ...rest } = obj;
+            await db.loadingDetails.add(rest);
+        }
+    }
+
+    async function UpdateLoadingDetails(obj) {
+        if (loadingData.id == 0) {
+            const { IsOld, ...rest } = obj;
+            await db.loadingDetails.update(rest.BagCN, rest);
+        }
+    }
+
+    async function DeleteLoadingDetails(pk) {
+        if (loadingData.id == 0)
+            await db.loadingDetails.where('BagCN').equals(pk).delete();
+    }
+
+    async function ClearLoadingDetails() {
+        if (loadingData.id == 0)
+            await db.loadingDetails.clear();
+    }
+
+    async function ClearLoadings() {
+        if (loadingData.id == 0)
+            await db.loadings.clear();
+    }
+    async function CountLoadings() {
+        return await db.loadings.count();
+    }
+
+    async function CountLoadingDetails() {
+        return await db.loadingDetails.count();
+    }
+
+    async function GetLoadings() {
+        return await db.loadings.orderBy('Sort').reverse().toArray();
+    }
+
+    async function GetLoadingDetails() {
+        return await db.loadingDetails.orderBy('Sort').reverse().toArray();
+    }
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processDecimal = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9.]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlpha = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlphaWithSpace = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z ]/g, "");
+        e.target.value = numbers;
+    }
+
+    function compareValues(key, order = 'asc') {
+        return function innerSort(a, b) {
+            if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+                // property doesn't exist on either object
+                return 0;
+            }
+
+            const varA = (typeof a[key] === 'string')
+                ? a[key].toUpperCase() : a[key];
+            const varB = (typeof b[key] === 'string')
+                ? b[key].toUpperCase() : b[key];
+
+            let comparison = 0;
+            if (varA > varB) {
+                comparison = 1;
+            } else if (varA < varB) {
+                comparison = -1;
+            }
+            return (
+                (order === 'desc') ? (comparison * -1) : comparison
+            );
+        };
+    }
+
+    const Context = React.createContext(null);
+
+        const LoadingGrid = () => {
+
+        const {
+            loading,
+            setLoading,
+            loadingGrid,
+            setLoadingGrid,
+            detailGrid,
+            setDetailGrid,
+        } = React.useContext(Context);
+
+        const onRemove = async (index, lno) => {
+            let x = [...loadingGrid];
+            x.splice(index, 1);
+            const z = detailGrid.filter((y) => y.LoadingNo != lno);
+            setLoadingGrid(x);
+            setDetailGrid(z);
+            await DeleteLoading(lno);
+        }
+
+        return (
+
+            <div className="table-responsive mt-4" style={{ background: 'rgba(255,255,255,.5)', padding: '10px', borderRadius: '5px' }}>
+                <table className="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Unloading No</th>
+                            <th>Bags Count</th>
+                            <th>CNs Count</th>
+                            <th>Weight</th>
+                            <th>Route</th>
+                            <th>Origin</th>
+                            <th>Description</th>
+                            <th>Courier</th>
+                            <th>SealNo</th>
+                            <th>Transport Type</th>
+                            <th>Vehicle No</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            loadingGrid.map((x, index) =>
+                                <tr key={index}>
+                                    <td>
+                                        <button type="button" className="btn btn-sm btn-danger" disabled={x.IsOld !== undefined && x.IsOld === true} onClick={(e) => onRemove(index, x.LoadingNo)}>X</button>
+                                    </td>
+                                    <td>{x.LoadingNo}</td>
+                                    <td>{x.BagsCount}</td>
+                                    <td>{x.CNsCount}</td>
+                                    <td>{x.TotalWeight}</td>
+                                    <td>{x.Route}</td>
+                                    <td>{x.Origin}</td>
+                                    <td>{x.Description}</td>
+                                    <td>{x.Courier}</td>
+                                    <td>{x.SealNo}</td>
+                                    <td>{x.TransportType}</td>
+                                    <td>{x.VehicleRegNo}</td>
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
+            </div>
+        )
+    }
+
+        const LoadingDetailGrid = () => {
+
+        const {
+            loading,
+            setLoading,
+            detailGrid,
+            setDetailGrid,
+            loadingGrid
+        } = React.useContext(Context);
+
+        const [scanType, setScanType] = React.useState(1);
+        const [lastScanBagCN, setLastScanBagCN] = React.useState('');
+        const [scanned, setScanned] = React.useState(false);
+        const [focused, setFocused] = React.useState(false);
+        const bagCNRef = React.useRef(null);
+
+        const updateGrid = async (index, key, val) => {
+            let x = [...detailGrid];
+            x[index][key] = val;
+            setDetailGrid(x);
+            await UpdateLoadingDetails(x[index]);
+        }
+
+        const scanTypeChanged = (checked, val) => {
+            if (checked) {
+                setScanType(val);
+            }
+        }
+
+        const detailSummaryStyle = {
+            display: 'flex',
+            alignItems: 'center'
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                bagCNRef.current.blur();
+            }
+        }
+
+        const fetchCNInfo = (cn) => {
+            if (!detailGrid.some((x) => x.BagCN == cn)) {
+                setScanned(true);
+                const url = `${fetchCNUrl}?cn=${cn}`
+                fetch(url)
+                    .then(
+                        function (response) {
+                            if (response.status !== 200) {
+                                alert('Looks like there was a problem. Status Code: ' + response.status);
+                                setFocused(focused === true ? false : true);
+                                setScanned(false);
+                                return;
+                            }
+
+                            response.json().then(async function (rs) {
+                                if (rs.type == 0) {
+                                    let obj = [...detailGrid];
+                                    let z = null;
+                                    if (rs.CN) {
+                                        z = {
+                                            LoadingNo: 0,
+                                            BagCN: rs.CN,
+                                            OriginId: rs.OriginId,
+                                            Origin: rs.Origin,
+                                            DestinationId: rs.DestinationId,
+                                            Destination: rs.Destination,
+                                            Pcs: parseInt(rs.Pieces),
+                                            Weight: rs.Weight,
+                                            ServiceType: rs.ServiceType,
+                                            CNType: '',
+                                            SealNo: "",
+                                            IsBag: false,
+                                            Status: 7,
+                                            Remarks: "",
+                                            Sort: obj.length + 1
+                                        };
+                                    } else {
+                                        z = {
+                                            LoadingNo: 0,
+                                            BagCN: cn,
+                                            OriginId: +userBranch.Value,
+                                            Origin: userBranch.Text,
+                                            DestinationId: +userBranch.Value,
+                                            Destination: userBranch.Text,
+                                            Pcs: 1,
+                                            Weight: '0.5',
+                                            ServiceType: '',
+                                            CNType: '',
+                                            SealNo: "",
+                                            IsBag: false,
+                                            Status: 7,
+                                            Remarks: "",
+                                            Sort: obj.length + 1
+                                        };
+                                    }
+                                    obj.unshift(z);
+                                    setDetailGrid(obj);
+                                    await AddLoadingDetails(z);
+                                    setFocused(focused === true ? false : true);
+                                    setScanned(false);
+                                    setLastScanBagCN(cn);
+                                } else {
+                                    setFocused(focused === true ? false : true);
+                                    setScanned(false);
+                                    alert(rs.msg);
+                                }
+                            });
+                        }
+                    )
+                    .catch(function (err) {
+                        alert('Fetch Error :-S', err);
+                        setFocused(focused === true ? false : true);
+                        setScanned(false);
+                    });
+            } else {
+                alert('Bag/Consigment Already Exists');
+                setFocused(focused === true ? false : true);
+                setScanned(false);
+            }
+        }
+
+        const fetchBagInfo = (bagno) => {
+            setScanned(true);
+            if (!detailGrid.some((x) => x.BagCN == bagno)) {
+                const url = `${fetchBagUrl}?bagno=${bagno}`
+                fetch(url)
+                    .then(
+                        function (response) {
+                            if (response.status !== 200) {
+                                alert('Looks like there was a problem. Status Code: ' +
+                                    response.status);
+                                setFocused(focused === true ? false : true);
+                                setScanned(false);
+                                return;
+                            }
+
+                            response.json().then(async function (rs) {
+                                if (rs.type == 0) {
+                                    let obj = [...detailGrid];
+                                    let z = {
+                                        LoadingNo: 0,
+                                        BagCN: rs.data.Bag,
+                                        OriginId: rs.data.OriginId,
+                                        Origin: rs.data.OriginName,
+                                        DestinationId: rs.data.DestinationId,
+                                        Destination: rs.data.DestinationName,
+                                        Pcs: 0,
+                                        Weight: rs.data.Weight,
+                                        ServiceType: '',
+                                        CNType: '',
+                                        SealNo: rs.data.SealNo,
+                                        IsBag: true,
+                                        Status: 7,
+                                        Remarks: "",
+                                        Sort: obj.length + 1
+                                    };
+                                    obj.unshift(z);
+                                    setDetailGrid(obj);
+                                    await AddLoadingDetails(z);
+                                    setFocused(focused === true ? false : true);
+                                    setScanned(false);
+                                    setLastScanBagCN(bagno);
+                                } else {
+                                    setFocused(focused === true ? false : true);
+                                    setScanned(false);
+                                    alert(rs.msg);
+                                }
+                            });
+                        }
+                    )
+                    .catch(function (err) {
+                        alert('Fetch Error :-S', err);
+                        setFocused(focused === true ? false : true);
+                        setScanned(false);
+                    });
+            } else {
+                alert('Bag/Consigment Already Exists');
+                setFocused(focused === true ? false : true);
+                setScanned(false);
+            }
+        }
+
+
+        const validateCN = (val) => {
+
+            const prefix = cnlength.filter(x => x.Prefix == val.substring(0, x.PrefixLength))[0];
+
+            if (prefix) {
+                if (prefix.Length == val.length) {
+                    fetchCNInfo(val);
+                } else {
+                    alert('Prefix length not found');
+                    setFocused(focused === true ? false : true);
+                }
+            } else {
+                alert('Prefix not found');
+                setFocused(focused === true ? false : true);
+            }
+        }
+
+        const onScanExcess = (val) => {
+            if (scanType == 1) {
+                fetchBagInfo(val);
+            } else {
+                validateCN(val);
+            }
+        }
+
+        const onBagCNScanBlur = (e) => {
+            const val = e.target.value;
+            if (val) {
+                const index = detailGrid.findIndex((x) => x.BagCN == val && ((x.IsBag && scanType == 1) || (!x.IsBag && scanType == 2)));
+                if (index >= 0) {
+                    if (detailGrid[index].IsOld === undefined || detailGrid[index].IsOld === false) {
+                        if ([5, 7].includes(detailGrid[index].Status)) {
+                            alert('Already Scanned');
+                            setFocused(focused === true ? false : true);
+                        } else {
+                            updateGrid(index, 'Status', 5);
+                            setLastScanBagCN(val);
+                            setFocused(focused === true ? false : true);
+                        }
+                    } else {
+                        setFocused(focused === true ? false : true);
+                    }
+                } else {
+                    onScanExcess(val);
+                }
+            }
+        }
+
+        const onRemove = async (index, sts) => {
+            if (sts == 5) {
+                updateGrid(index, 'Status', 6);
+            } else {
+                let x = [...detailGrid];
+                const key = x[index].BagCN;
+                x.splice(index, 1);
+                setDetailGrid(x);
+                await DeleteLoadingDetails(key);
+            }
+        }
+
+        React.useEffect(() => {
+            bagCNRef.current.value = '';
+            bagCNRef.current.focus();
+        }, [focused])
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}>
+                        Type :
+                        <input type="radio" className="ml-1 mr-1" name="type" checked={scanType == 1} onChange={(e) => scanTypeChanged(e.target.checked, 1)} />Bag
+                        <input type="radio" className="ml-1 mr-1" name="type" checked={scanType == 2} onChange={(e) => scanTypeChanged(e.target.checked, 2)} />CN
+                    </div>
+                    <div className="col-lg-3 col-sm-12 form-inline" style={detailSummaryStyle}>
+                        {scanType == 1 ? "Bag" : "CN"}: <input type="text" ref={bagCNRef} onInput={process} onKeyPress={keypressHandler} onBlur={onBagCNScanBlur} className="form-control ml-2" readOnly={scanned} />
+                    </div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Short</b> : {detailGrid.filter((x) => x.Status == 6).length}</div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Recieved</b> : {detailGrid.filter((x) => x.Status == 5).length}</div>
+                    <div className="col-lg-2 col-sm-12" style={detailSummaryStyle}><b>Excess</b> : {detailGrid.filter((x) => x.Status == 7).length}</div>
+                </div>
+                <div className="table-responsive mt-4" style={{ background: 'rgba(255,255,255,.5)', padding: '10px', borderRadius: '5px' }}>
+                    <table className="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>S.No</th>
+                                <th>Type</th>
+                                <th>Bag/CN</th>
+                                <th>Unloading No</th>
+                                <th>Status</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Seal No</th>
+                                <th>Pieces</th>
+                                <th>Weight</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                detailGrid.map((x, index) =>
+                                    <tr key={index} style={lastScanBagCN == x.BagCN ? { background: 'rgba(0,128,0,.5)', color: 'white' } : null}>
+                                        <td>
+                                            {x.Status != 6 ? <button type="button" className="btn btn-sm btn-danger" disabled={x.IsOld !== undefined && x.IsOld === true} onClick={(e) => onRemove(index, x.Status)}>X</button> : ''}
+                                        </td>
+                                        <td>{index + 1}</td>
+                                        <td>{x.IsBag ? 'Bag' : 'Out Piece'}</td>
+                                        <td>{x.BagCN}</td>
+                                        <td>{x.LoadingNo == 0 ? '' : x.LoadingNo}</td>
+                                        <td>
+                                            <div style={{ minWidth: '7rem' }}>
+                                                {
+                                                    function () {
+                                                        if (x.Status == 5) {
+                                                            return 'Recieved';
+                                                        } else if (x.Status == 6) {
+                                                            return 'Short Recieved';
+                                                        } else if (x.Status == 7) {
+                                                            return 'Excess Recieved';
+                                                        }
+                                                    }()
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>{x.Origin}</td>
+                                        <td>{x.Destination}</td>
+                                        <td>{x.IsBag ? <input type="text" value={x.SealNo} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={processAlphaWithSpace} style={{ minWidth: '7rem', maxWidth: '7rem' }} className="form-control" onChange={(e) => updateGrid(index, 'SealNo', e.target.value)} /> : ''}</td>
+                                        <td>{!x.IsBag ? <input type="text" style={{ minWidth: '4.2rem', maxWidth: '4.2rem' }} value={x.Pcs} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={process} maxLength="4" className="form-control" onChange={(e) => {
+                                            const val = e.target.value ? +e.target.value : 0
+                                            updateGrid(index, 'Pcs', val);
+                                        }} /> : ''}</td>
+                                        <td><input type="text" style={{ minWidth: '4.2rem', maxWidth: '4.2rem' }} value={x.Weight} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={processDecimal} maxLength="5" className="form-control" onChange={(e) => updateGrid(index, 'Weight', e.target.value)} /></td>
+                                        <td><input type="text" value={x.Remarks} onInput={processAlphaWithSpace} className="form-control" readOnly={x.IsOld !== undefined && x.IsOld === true} onChange={(e) => updateGrid(index, 'Remarks', e.target.value)} /></td>
+                                    </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    function MainForm() {
+        const {
+            mainData,
+            setMainData,
+            loading,
+            setLoading,
+            touchpoints,
+            setTouchpoints,
+            destination,
+            setDestination,
+            runnerRoutes,
+            setRunnerRoutes,
+            loadingGrid,
+            setLoadingGrid,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const [rented, setRented] = React.useState(false);
+        const [bag, setBag] = React.useState(true);
+        const cnRef = React.useRef(null);
+        const destRef = React.useRef(null);
+        const [scanned, setScanned] = React.useState(false);
+        const loadingRef = React.useRef(null);
+
+        const LoadingGrid = () => {
+
+        const {
+            loading,
+            setLoading,
+            loadingGrid,
+            setLoadingGrid,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const onRemove = async (index, lno) => {
+            let x = [...loadingGrid];
+            x.splice(index, 1);
+            const z = detailGrid.filter((y) => y.LoadingNo != lno);
+            setLoadingGrid(x);
+            setDetailGrid(z);
+            await DeleteLoading(lno);
+        }
+
+        return (
+            <div className="table-responsive">
+                <table className="table table-bordered">
+                    <thead>
+                        <tr>
+                                <th></th>
+                                <th>S.No</th>
+                                <th>Type</th>
+                                <th>Bag/CN</th>
+                                <th>Unloading No</th>
+                                <th>Status</th>
+                                <th>Origin</th>
+                                <th>Destintion</th>
+                                <th>Seal No</th>
+                                <th>Pieces</th>
+                                <th>Weight</th>
+                                <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            loadingGrid.map((x, index) =>
+                                <tr key={index}>
+                                    <td>
+                                        <button type="button" className="btn btn-sm btn-danger" disabled={x.IsOld !== undefined && x.IsOld === true} onClick={(e) => onRemove(index, x.LoadingNo)}>X</button>
+                                    </td>
+                                    <td>{index + 1}</td>
+                                     <td>{x.IsBag ? 'Bag' : 'Out Piece'}</td>
+                                        <td>{x.BagCN}</td>
+                                        <td>{x.LoadingNo == 0 ? '' : x.LoadingNo}</td>
+                                        <td>
+                                            <div style={{ minWidth: '7rem' }}>
+                                                {
+                                                    function () {
+                                                        if (x.Status == 5) {
+                                                            return 'Recieved';
+                                                        } else if (x.Status == 6) {
+                                                            return 'Short Recieved';
+                                                        } else if (x.Status == 7) {
+                                                            return 'Excess Recieved';
+                                                        }
+                                                    }()
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>{x.Origin}</td>
+                                        <td>{x.Destination}</td>
+                                        <td>{x.SealNo}</td>
+                                        <td>{x.Pcs}</td>
+                                        <td>{x.Weight}</td>
+                                        <td>{x.Remarks}</td>
+                                        <td>{x.IsBag ? <input type="text" value={x.SealNo} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={processAlphaWithSpace} style={{ minWidth: '7rem', maxWidth: '7rem' }} className="form-control" onChange={(e) => updateGrid(index, 'SealNo', e.target.value)} /> : ''}</td>
+                                        <td>{!x.IsBag ? <input type="text" style={{ minWidth: '4.2rem', maxWidth: '4.2rem' }} value={x.Pcs} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={process} maxLength="4" className="form-control" onChange={(e) => {
+                                            const val = e.target.value ? +e.target.value : 0
+                                            updateGrid(index, 'Pcs', val);
+                                        }} /> : ''}</td>
+                                        <td><input type="text" style={{ minWidth: '4.2rem', maxWidth: '4.2rem' }} value={x.Weight} readOnly={x.IsOld !== undefined && x.IsOld === true} onInput={processDecimal} maxLength="5" className="form-control" onChange={(e) => updateGrid(index, 'Weight', e.target.value)} /></td>
+                                        <td><input type="text" value={x.Remarks} onInput={processAlphaWithSpace} className="form-control" readOnly={x.IsOld !== undefined && x.IsOld === true} onChange={(e) => updateGrid(index, 'Remarks', e.target.value)} /></td>
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
+            </div>
+        )
+    }
+
+
+        React.useEffect(() => {
+            let x = { ...mainData };
+
+            if (touchpoints.length > 0) {
+                x.Touchpoint = touchpoints[0].Value;
+            }
+
+            if (destination.length > 0) {
+                x.Destination = destination[0].Value;
+            }
+
+            setMainData(x);
+        }, [touchpoints, destination]);
+
+
+        React.useEffect(() => {
+            if (mainData.RouteId)
+                fetchRunnerRoutes(mainData.RouteId);
+        }, [mainData.RouteId]);
+
+
+        const styles = {
+            mainDiv: {
+                width: '100%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))',
+                gridAutoRows: '100px',
+                columnGap: '5px',
+                gridRowGap: '5px',
+            }
+        }
+
+        const fetchTouchpoints = (routeId) => {
+            const url = `${fetchTouchpointsUrl}?routeId=${routeId}`
+            fetch(url)
+                .then(
+                    function (response) {
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' +
+                                response.status);
+                            return;
+                        }
+
+                        // Examine the text in the response
+                        response.json().then(function (data) {
+                            setTouchpoints(data.tp);
+                            setDestination(data.dest);
+                        });
+                    }
+                )
+                .catch(function (err) {
+                    console.log('Fetch Error :-S', err);
+                });
+        }
+
+        const fetchRunnerRoutes = (routeId) =>
+        {
+            const url = `${runnerRouteUrl}?routeId=${routeId}`
+            fetch(url).then(
+                    function (response) {
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' +
+                                response.status);
+                            return;
+                        }
+
+                        // Examine the text in the response
+                        response.json().then(function (rs) {
+                            if (rs.sts == 0) {
+                                setRunnerRoutes(rs.data);
+                            } else {
+                                alert(rs.msg);
+                                setRunnerRoutes([]);
+                            }
+                        });
+                    }
+                )
+                .catch(function (err) {
+                    console.log('Fetch Error :-S', err);
+                });
+        }
+
+        const onRouteChanged = (e) =>
+        {
+            const id = e.target.value;
+            if (id) {
+                updateMainData('RouteId', e);
+                fetchTouchpoints(id);
+            }
+        }
+
+        const vehicleModeChanged = (e) => {
+            updateMainData('IsRented', e);
+        }
+
+        const onScanTypeChanged = (e) => {
+            const val = e.target.value;
+            if (val == 1)
+                setBag(true)
+            else
+                setBag(false)
+        }
+
+        const process = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+        const processAlpha = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9a-zA-Z]/g, "");
+            e.target.value = numbers;
+        }
+
+        const processAlphaWithDash = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9a-zA-Z-]/g, "");
+            e.target.value = numbers;
+        }
+
+        const clearCNBag = (el) => {
+            cnRef.current.value = '';
+            cnRef.current.focus();
+            setScanned(true);
+        }
+
+        const validateCN = (val) => {
+            let prefixFound = false;
+            let lengthFound = false;
+
+            if (val[0] == 5 && val.length != 15) {
+                alert('Invalid Length of COD Consignment');
+                cnRef.current.value = '';
+                cnRef.current.focus();
+                setScanned(false);
+                return;
+            }
+
+            for (let x of cnlength) {
+                let prefix = val.substring(0, x.PrefixLength);
+                if (prefix == x.Prefix) {
+                    prefixFound = true;
+                    if (val.length == x.Length) {
+                        lengthFound = true;
+                        break;
+                    }
+                }
+            }
+
+            if (prefixFound) {
+                if (lengthFound) {
+                    fetchCNInfo(val);
+                } else {
+                    alert('Invalid Length');
+                    cnRef.current.value = '';
+                    cnRef.current.focus();
+                    setScanned(false);
+                }
+            } else {
+                alert('Prefix not found');
+                cnRef.current.value = '';
+                cnRef.current.focus();
+                setScanned(false);
+            }
+        }
+
+
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                cnRef.current.blur();
+            }
+        };
+
+        const updateMainData = (key, e) => {
+            var val = e.target.value;
+            if (key == 'IsRented') {
+                val = (val == 'true');
+            }
+            let obj = Object.assign({}, mainData);
+            obj[key] = val;
+            setMainData(obj);
+        }
+
+        const clearMainData = () => {
+            let data = {
+                RouteId: '',
+                Touchpoint: '',
+                Destination: '',
+                TransportType: '27',
+                VehicleType: '',
+                VehicleId: '',
+                IsRented: 'false',
+                VehicleRegNo: '',
+                Description: '',
+                CourierName: '',
+                LoadingSealNo: ''
+            }
+            setMainData(data);
+        }
+
+
+
+         const fetchLoading = (lid) => {
+            setLoading(true);
+
+            const url = `${loadingDetailsURL}?lid=${lid}`;
+            fetch(url)
+                .then(
+                    function (response) {
+                            setLoading(false);
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' +
+                                response.status);
+                            return;
+                        }
+
+                        // Examine the text in the response
+                        response.json().then(async function (rs) {
+                            if (rs.sts == 1)
+                            {
+                                    if (rs.data)
+                                    {
+                                        let lg = [...loadingGrid];
+                                        let dg = [...detailGrid];
+
+                                        if (!dg.some(x => rs.data.LoadingInfoDetails.map((y) => y.BagCN).includes(x.BagCN)))
+                                        {
+                                            const obj = { ...rs.data, Sort: lg.length + 1 };
+                                            lg.unshift(obj);
+                                            setLoadingGrid(lg);
+                                            await AddLoadings(obj);
+                                            for (let item of rs.data.LoadingInfoDetails)
+                                            {
+                                                const z = { ...item, Sort: dg.length + 1 };
+                                                dg.unshift(z);
+                                                await AddLoadingDetails(z);
+                                            }
+                                            setDetailGrid(dg);
+                                        }
+                                        else
+                                        {
+                                        alert('Bag/CN already found in previous Loading');
+                                        }
+                                     }
+                            }
+                            loadingRef.current.value = '';
+                            loadingRef.current.focus();
+                        });
+                    }
+                ).catch(function (err) {
+                        setLoading(false);
+                    console.log('Fetch Error :-S', err);
+                });
+        }
+
+        const resetForm = () => {
+            setLoadingGrid([]);
+            setDetailGrid([]);
+        }
+
+        const formValidation = () => {
+            if (!mainData.RouteId) {
+                alert('Select Route');
+                return false;
+            }
+
+            if (!mainData.Touchpoint) {
+                alert('Select Touchpoint');
+                return false;
+            }
+
+            if (!mainData.Destination) {
+                alert('Select Destination');
+                return false;
+            }
+
+            if (!mainData.TransportType) {
+                alert('Select Transport Type');
+                return false;
+            }
+
+            @*if (!mainData.VehicleType) {
+                alert('Select Vehicle Type');
+                return false;
+            }
+
+            if ((mainData.IsRented == false || mainData.IsRented == 'false') && !mainData.VehicleId) {
+                alert('Select Vehicle');
+                return false;
+            }
+
+            if ((mainData.IsRented == true || mainData.IsRented == 'true') && !mainData.VehicleRegNo) {
+                alert('Enter Vehicle RegNo');
+                return false;
+            }
+
+            if (!mainData.CourierName) {
+                alert('Enter Courier Name');
+                return false;
+            }*@
+            return true;
+        }
+
+        const onLoadingBlur = (e) =>
+        {
+            const val = e.target.value;
+            if (formValidation())
+            {
+                if (val)
+                {
+                    if (!mainData.GridData.some((x) => x.LoadingNo == val))
+                    {
+                        fetchLoading(val);
+                    }
+                    else
+                    {
+                        alert('Loading number already exists');
+                        loadingRef.current.value = '';
+                        loadingRef.current.focus();
+                    }
+                }
+            }
+        }
+
+        const postLoading = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(postUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: mainData })
+                });
+                setLoading(false);
+                if (response.status === 200) {
+                    const rs = await response.json();
+                    alert(rs.msg);
+                    if (rs.sts == 0) {
+                        await ClearLoading(mainData.Destination, mainData.IsRented ? mainData.VehicleRegNo : mainData.VehicleId);
+                        clearMainData();
+                        window.open(`${printLoadingUrl}?id=${rs.id}`, '_blank');
+                    }
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            }
+        }
+
+        const postUnloading = (data) => {
+            setLoading(true);
+            fetch(postUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({  model: data })
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        alert('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(async function (rs) {
+                        alert(rs.msg);
+                        if (rs.sts == 0) {
+                            await ClearLoadings();
+                            await ClearLoadingDetails();
+                            resetForm();
+                            alert('Saved Successfully');
+
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                alert('Fetch Error :-S', err);
+            });
+        }
+
+        const saveLoading = async () => {
+
+            if (loadingGrid.length > 0 && detailGrid.length > 0) {
+                const invalidData = detailGrid.some(x => (!x.IsBag && (x.Pcs <= 0 || x.Weight <= 0)) || (x.IsBag && x.Weight <= 0));
+                if (!invalidData)
+                   {
+                    const data = {
+                        RouteId: mainData.RouteId,
+                        Touchpoint: mainData.Touchpoint,
+                        Destination: mainData.Destination,
+                        TransportType: mainData.TransportType,
+                        VehicleType: mainData.VehicleType,
+                        VehicleId: mainData.VehicleId,
+                        VehicleType: mainData.VehicleType,
+                        VehicleRegNo: mainData.VehicleRegNo,
+                        Description: mainData.Description,
+                        CourierName: mainData.CourierName,
+                        LoadingSealNo: mainData.LoadingSealNo,
+                        IsRented: mainData.IsRented,
+                        UnloadingDetail: detailGrid
+                    };
+                    postUnloading(data);
+                } else {
+                    alert('Invalid pieces or weight found');
+                }
+            } else {
+                alert('Please add loadings');
+            }
+
+        }
+
+        React.useEffect(() => {
+         const confirmRestore = async () => {
+                const c = await CountLoadings();
+                const b = await CountLoadingDetails();
+                if (c > 0 && b > 0) {
+                    if (confirm("Unsaved data found want to save? If cancel data will be removed.")) {
+                        const loadingData = await GetLoadings();
+                        const loadingDetailsData = await GetLoadingDetails();
+                        setLoadingGrid(loadingData);
+                        setDetailGrid(loadingDetailsData);
+                    } else {
+                        await ClearLoadings();
+                        await ClearLoadingDetails();
+                    }
+                } else {
+                    await ClearLoadings();
+                    await ClearLoadingDetails();
+                }
+            };
+
+            if (loadingData.id == 0) {
+                confirmRestore();
+            }
+
+            return () => console.log('unmounting...');
+        }, []);
+
+        return (
+            <div style={styles.mainDiv}>
+                <div>
+                    <label>Route</label><br />
+                    <select className="form-control" onChange={onRouteChanged} value={mainData.RouteId} disabled={loadingData.id > 0}>
+                        <option value="">Select Route</option>
+                        {
+                            Routes.map((x, index) =>
+                                <option key={index} value={x.Value}>{x.Text}</option>)
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Touchpoints</label><br />
+                    <select className="form-control" value={mainData.Touchpoint} disabled={loadingData.id > 0} onChange={(e) =>
+                        updateMainData('Touchpoint', e)}>
+                        <option value="">Select Touchpoint</option>
+                        {
+                            touchpoints.map((x, index) =>
+                                <option key={index} value={x.Value}>{x.Text}</option>)
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Destination</label><br />
+                    <select className="form-control" ref={destRef} value={mainData.Destination} disabled={loadingData.id > 0} onChange={(e) =>
+                        updateMainData('Destination', e)}>
+                        <option value="">Select Destination</option>
+                        {
+                            destination.map((x, index) =>
+                                <option key={index} value={x.Value}>{x.Text}</option>)
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Transport Type</label><br />
+                    <select className="form-control" value={mainData.TransportType} disabled={loadingData.id > 0} onChange={(e) =>
+                        updateMainData('TransportType', e)}>
+                        <option value="">Select Transport Type</option>
+                        {
+                            TransportType.map((x, index) =>
+                                <option key={index} value={x.Value}>{x.Text}</option>)
+                        }
+                    </select>
+                </div>
+                @*<div>
+                    <label>Vehicle Type</label><br />
+                    <select className="form-control" value={mainData.VehicleType} disabled={loadingData.id > 0} onChange={(e) =>
+                        updateMainData('VehicleType', e)}>
+                        <option value="">Select Vehicle Type</option>
+                        {
+                            VehicleType.map((x, index) =>
+                                <option key={index} value={x.Value}>{x.Text}</option>)
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Vehicle Mode</label><br />
+                    <div style={{ marginTop: '10px' }}>
+                        <div className="form-check form-check-inline">
+                            <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" disabled={loadingData.id > 0} checked={!mainData.IsRented} value="false" onChange={(e) => updateMainData('IsRented', e)} />
+                            <label className="form-check-label" htmlFor="inlineRadio1">Vehicle</label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" disabled={loadingData.id > 0} checked={mainData.IsRented} value="true" onChange={(e) => updateMainData('IsRented', e)} />
+                            <label className="form-check-label" htmlFor="inlineRadio2">Rented</label>
+                        </div>
+                    </div>
+                </div>
+                {
+                    mainData.IsRented == 'false' || !mainData.IsRented ?
+                        <div>
+                            <label>Vehicles</label><br />
+                            <select className="form-control" value={mainData.VehicleId} disabled={loadingData.id > 0} onChange={(e) =>
+                                updateMainData('VehicleId', e)}>
+                                <option value="">Select Vehicles</option>
+                                {
+                                    Vehicles.map((x, index) =>
+                                        <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                        : <div>
+                            <label>Vehicle Reg No:</label><br />
+                            <input type="text" className="form-control" value={mainData.VehicleRegNo} onBlur={onVehicleRegNoBlur} readOnly={loadingData.id > 0} onChange={(e) => updateMainData('VehicleRegNo', e)} />
+                        </div>
+                }*@
+                <div>
+                    <label>Description</label><br />
+                    <input type="text" className="form-control" value={mainData.Description} readOnly={loadingData.id > 0} onChange={(e) => updateMainData('Description', e)} />
+                </div>
+                @*<div>
+                    <label>Courier Name</label><br />
+                    <input type="text" className="form-control" value={mainData.CourierName} readOnly={loadingData.id > 0} onChange={(e) => updateMainData('CourierName', e)} />
+                </div>
+                <div>
+                    <label>Loading Seal No</label><br />
+                    <input type="text" className="form-control" value={mainData.LoadingSealNo} readOnly={loadingData.id > 0} onInput={processAlphaWithDash} onChange={(e) => updateMainData('LoadingSealNo', e)} />
+                </div>*@
+                <div>
+                    <label>Total Weight</label><br />
+                    <input type="text" className="form-control" readOnly value={
+                        detailGrid.reduce((sum, o) => {
+                            return sum + parseFloat(o.Weight)
+                        }, 0)
+                    } />
+                </div>
+                <br/>
+                <div>
+                    <label>Unloading No</label><br />
+                    <input type="text" className="form-control" onInput={process} ref={loadingRef} onKeyPress={keypressHandler} onBlur={onLoadingBlur} readOnly={scanned} />
+                </div>
+                <div>
+                </div>
+                <div style={{ justifySelf: "end", alignSelf: "center" }}>
+                    <button className="btn btn-secondary" onClick={saveLoading}>Save</button>
+                </div>
+            </div>
+        )
+    }
+
+    function App() {
+        const {
+            loading,
+            setLoading,
+            mainData, setMainData,
+            touchpoints,
+            setTouchpoints,
+            destination,
+            setDestination,
+            loadingGrid,
+            setLoadingGrid,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+
+        React.useEffect(() => {
+            if (loadingData.id > 0) {
+                var x = { ...mainData };
+                x.RouteId = loadingData.loading.RouteId;
+                x.Touchpoint = loadingData.loading.Touchpoint;
+                x.Destination = loadingData.loading.Destination;
+                x.TransportType = loadingData.loading.TransportType;
+                x.VehicleType = loadingData.loading.VehicleType;
+                x.VehicleId = loadingData.loading.VehicleId;
+                x.IsRented = loadingData.loading.IsRented;
+                x.VehicleRegNo = loadingData.loading.VehicleRegNo;
+                x.Description = loadingData.loading.Description;
+                x.CourierName = loadingData.loading.CourierName;
+                x.LoadingSealNo = loadingData.loading.LoadingSealNo;
+                x.GridData = unloadingData.details;
+                setMainData(x);
+                setTouchpoints(loadingData.touchpoints);
+                setDestination(loadingData.destinations);
+            }
+        }, [])
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '1000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.8)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(15px)'
+            }
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>Airport Loading</h2>
+                            </div>
+                        </div>
+                        <MainForm />
+                    </div>
+                        {
+                            loadingGrid.length > 0 ? <LoadingGrid /> : ''
+                        }
+
+                    <div className="table-responsive" style={{ background: 'rgba(255,255,255,.5)', padding: '10px', borderRadius: '5px' }}>
+                    <br/>
+                        {
+
+                            detailGrid.length > 0 ?  <LoadingDetailGrid /> : ''
+                        }
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+        const [loadingGrid, setLoadingGrid] = React.useState([]);
+        const [detailGrid, setDetailGrid] = React.useState([]);
+
+        let data = {
+            Id: loadingData.id,
+            RouteId: '',
+            Touchpoint: '',
+            Destination: '',
+            TransportType: '27',
+            VehicleType: '',
+            VehicleId: '',
+            IsRented: false,
+            VehicleRegNo: '',
+            Description: '',
+            CourierName: '',
+            LoadingSealNo: '',
+            loadingGrid,
+            setLoadingGrid,
+            detailGrid,
+            setDetailGrid,
+            GridData: []
+        }
+
+        const [loading, setLoading] = React.useState(false);
+        const [mainData, setMainData] = React.useState(data);
+        const [touchpoints, setTouchpoints] = React.useState([]);
+        const [destination, setDestination] = React.useState([]);
+        const [runnerRoutes, setRunnerRoutes] = React.useState([]);
+        return (
+            <Context.Provider value={{
+                mainData,
+                setMainData,
+                loading,
+                setLoading,
+                touchpoints,
+                setTouchpoints,
+                destination,
+                setDestination,
+                runnerRoutes,
+                setRunnerRoutes,
+                loadingGrid,
+                setLoadingGrid,
+                detailGrid,
+                setDetailGrid
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+         <Store>
+                <App />
+            </Store>,
+        document.querySelector('#root')
+    );
+    </script>
+}

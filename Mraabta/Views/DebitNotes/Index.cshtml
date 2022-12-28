@@ -1,0 +1,370 @@
+﻿@{
+ViewBag.Title = "Index";
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<div class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">Debit Notes</h2>
+            </div>
+        </div>
+        <div id="root"></div>
+    </div>
+</div>
+
+
+@section scripts{
+<script type="text/javascript" src="~/Scripts/xlsx.full.min.js"></script>
+<script type="text/javascript" src="~/Scripts/jszip.js"></script>
+<script>
+    const saveUrl = '@Url.Action("InsertDebitNote", "DebitNotes")';
+    const uploadFileUrl = '@Url.Action("UploadBulkDN", "DebitNotes")';
+</script>
+<script type="text/babel">
+    const d = {
+        ClientID: '',
+        VoucherDate: '',
+        Amount: '',
+        Company: ''
+    };
+
+    const App = () => {
+
+        const [loading, setLoading] = React.useState(false);
+
+        const [data, setData] = React.useState(d);
+        const [datafile, setdatafile] = React.useState("");
+
+        const updateData = (key, val) => {
+            let x = { ...data, [key]: val };
+            setData(x);
+        }
+        const updateFile = (val) => {
+            setdatafile(val);
+        }
+        const [grid, setgrid] = React.useState([]);
+        const onRemove = (i) => {
+            let x = [...grid];
+            x.splice(i, 1);
+            setgrid(x);
+        }
+
+
+        const UploadProcess = () => {
+            var fileUpload = document.getElementById("DNFile");
+            let file = fileUpload.files[0];
+            try {
+                if (file.name.toLowerCase().includes('.xlsx')) {
+                    if (typeof (FileReader) != "undefined") {
+                        var reader = new FileReader();
+                        if (reader.readAsBinaryString) {
+                            reader.onload = function (e) {
+                                if (file.name.toLowerCase().includes('.xlsx')) {
+                                    let dt = GetDataFromExcel(e.target.result);
+                                    setgrid(dt);
+                                    document.getElementById("DNFile").value = "";
+                                }
+                            };
+                            reader.readAsBinaryString(file);
+                        }
+                    } else {
+                        alert('This browser does not support HTML5.');
+                    }
+                } else {
+                    alert('Invalid file download sample file and then upload it.');
+                }
+            } catch (err) {
+                alert('Upload Excel File');
+            }
+        };
+
+        const validExcelCheck = (data) => {
+            let sts = true;
+            let msg = '';
+            var workbook = XLSX.read(data, {
+                type: 'binary'
+            });
+
+            //get the name of First Sheet.
+            var Sheet = workbook.SheetNames[0];
+
+            console.log(Sheet);
+
+            //Read all rows from First Sheet into an JSON array.
+            var excelRows = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[Sheet]);
+
+            if (excelRows.length > 0) {
+                const requiredCols = [
+                    'ConsigneeName',
+                    'ConsigneeAddress',
+                    'ConsigneeMobileNumber',
+                    'ConsigneeEmail',
+                    'DestinationCity',
+                    'Pieces',
+                    'Weight',
+                    'CODAmount',
+                    'CustomerReferenceNumber',
+                    'SpecialHandling',
+                    'ServiceType',
+                    'ProductDetails',
+                    'Remarks'
+                ];
+
+                const newData = excelRows.map(y => {
+                    return {
+                        ConsigneeName: y.ConsigneeName,
+                        ConsigneeAddress: y.ConsigneeAddress,
+                        ConsigneeMobileNumber: y.ConsigneeMobileNumber,
+                        ConsigneeEmail: y.ConsigneeEmail,
+                        DestinationCity: y.DestinationCity,
+                        Pieces: y.Pieces,
+                        Weight: y.Weight,
+                        CODAmount: y.CODAmount,
+                        CustomerReferenceNumber: y.CustomerReferenceNumber,
+                        SpecialHandling: y.SpecialHandling,
+                        ServiceType: y.ServiceType,
+                        ProductDetails: y.ProductDetails,
+                        Remarks: y.Remarks,
+                    };
+                });
+
+                const filekeys = Object.keys(newData[0]);
+                for (var i = 0; i < requiredCols.length; i++) {
+                    if (requiredCols[i] != filekeys[i]) {
+                        sts = false;
+                        msg = 'Invalid Excel File';
+                        break;
+                    }
+                }
+
+                for (let x of excelRows) {
+
+                    if (x.Weight && isNaN(x.Weight)) {
+                        sts = false;
+                        msg = 'Invalid data in Weight';
+                        break;
+                    }
+
+                    if (x.Pieces && isNaN(x.Pieces)) {
+                        sts = false;
+                        msg = 'Invalid data in Pieces';
+                        break;
+                    }
+
+                    if (x.CODAmount && isNaN(x.CODAmount)) {
+                        sts = false;
+                        msg = 'Invalid data in COD Amount';
+                        break;
+                    }
+                }
+            }
+
+            return { sts, msg };
+        }
+
+        const GetDataFromExcel = (data) => {
+
+            let dt = [];
+            var workbook = XLSX.read(data, {
+                type: 'binary'
+            });
+
+            //get the name of First Sheet.
+            var Sheet = workbook.SheetNames[0];
+
+            //Read all rows from First Sheet into an JSON array.
+            var excelRows = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[Sheet]);
+
+            for (let x of excelRows) {
+
+                dt.push(x);
+            }
+
+            return dt;
+        };
+
+        const process = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+        const processNum = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9.]/g, "");
+            e.target.value = numbers;
+        }
+
+        const save = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(saveUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ClientID: data.ClientID,
+                        VoucherDate: data.VoucherDate,
+                        Amount: data.Amount,
+                        Company: data.Company
+                    })
+                });
+
+                setLoading(false);
+
+                if (response.status === 200) {
+                    const rs = await response.json();
+                    alert(rs);
+                    setData({
+                        ClientID: '',
+                        VoucherDate: data.VoucherDate,
+                        Amount: '',
+                        Company: data.Company
+                    });
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            }
+        }
+
+        const uploadFile = async () => {
+            try {
+                let x = [...grid];
+                debugger
+                setLoading(true);
+                const response = await fetch(uploadFileUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        data: [...grid]
+                    })
+                });
+
+                setLoading(false);
+
+                if (response.status === 200) {
+                    const rs = await response.json();
+                    alert(rs);
+                    setgrid([]);
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            }
+        }
+
+        const overlayStyle = {
+            width: '100vw',
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 10000,
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)'
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+
+                <React.Fragment>
+                    <div className="row mt-12">
+                        <div className="col-lg-2 col-sm-12">
+                            <label>ClientID</label>
+                            <input type="numeric" name="ClientID" id="ClientID" required="required" className="form-control" value={data.ClientID} onInput={process} onChange={(x) => updateData('ClientID', x.target.value)} />
+                        </div>
+                        <div className="col-lg-2 col-sm-12">
+                            <label>Voucher Date</label>
+                            <input type="date" name="VoucherDate" id="VoucherDate" required="required" className="form-control" value={data.VoucherDate} onChange={(x) => updateData('VoucherDate', x.target.value)} />
+                        </div>
+                        <div className="col-lg-2 col-sm-12">
+                            <label>Amount</label>
+                            <input type="numeric" name="Amount" id="Amount" required="required" className="form-control" value={data.Amount} onInput={processNum} onChange={(x) => updateData('Amount', x.target.value)} />
+                        </div>
+                        <div className="col-lg-2 col-sm-12">
+                            <label>Company</label>
+                            <select className="form-control" id="Company" name="Company" required="required" value={data.Company} onChange={(x) => updateData('Company', x.target.value)}>
+                                <option value="">Select Company</option>
+                                <option value={1}>M&P Express Logistics (Private) Limited</option>
+                                <option value={2}>M&P Logistics (Private) Limited</option>
+                                <option value={3}>Logex (Pvt.) Ltd.</option>
+                                <option value={4}>FedEx</option>
+                            </select>
+                        </div>
+                        <div className="col-lg-2 col-sm-12"></div>
+                        <div className="col-lg-2 col-sm-2 text-right" style={{ padding: '25px' }}>
+                            <button type="button" className="btn btn-secondary" onClick={save} disabled={(data.ClientID == '' || data.Amount == '' || data.VoucherDate == '' || data.Company == '')}>Save</button>
+                        </div>
+                    </div>
+                    <div className="row mt-12">
+                        <div className="col-lg-2 col-sm-12">
+                            <label>File Upload</label>
+                            <input type="file" name="DNFile" id="DNFile" required="required" className="form-control" />
+                            <a href='docs/DebitNotesSample.xlsx' style={{ margin: '20px' }} target='_blank'>Download Sample File</a>
+                        </div>
+                        <div className="col-lg-2 col-sm-2 text-right" style={{ padding: '25px' }}>
+                            <button type="button" className="btn btn-secondary" onClick={UploadProcess}>Preview</button>
+                        </div>
+                    </div>
+                    <table className="table table-bordered mt-3">
+                        <thead className="text-center">
+                            <tr>
+                                <th> S.No</th>
+                                <th> ClientID</th>
+                                <th> VoucherDate</th>
+                                <th> Amount</th>
+                                <th> Company</th>
+                                <th> Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailtable">
+                            {
+                                grid.map((x, index) =>
+                                    <tr key={index} className="text-center">
+                                        <td>{(index + 1)}</td>
+                                        <td>{x.clientid}</td>
+                                        <td>{x.voucherdate}</td>
+                                        <td>{x.amount}</td>
+                                        <td>{x.companyid}</td>
+                                        <td>
+                                            <button className="btn btn-danger btn-sm" onClick={(e) => onRemove(index)}>Remove</button>
+
+                                        </td>
+                                    </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                    <div>
+                        <button style={{ float: 'right' }} type="button" className="btn btn-secondary" onClick={uploadFile} disabled={grid.length <= 0}>Save</button>
+                        <br /><br />
+                    </div>
+                </React.Fragment >
+            </div >
+        )
+    }
+
+    ReactDOM.render(
+        <App />,
+        document.querySelector('#root')
+    );
+</script>
+}

@@ -1,0 +1,294 @@
+﻿@model IEnumerable<MRaabta.Models.RetailCODCRFNewModel>
+@{
+    ViewBag.Title = "Retail COD Profile Verification";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style>
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #formrow {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .rowitem {
+            width: calc(88% / 4) !important;
+            padding: 10px !important;
+        }
+
+        .rowitembtn {
+            display: flex;
+            flex-direction: row;
+            width: 12% !important;
+            padding: 10px !important;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .page-content {
+            /*          padding-left:10px !important;*/
+        }
+
+        #AccountDetails {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            #AccountDetails td, #AccountDetails th {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+
+            #AccountDetails tr:hover {
+                background-color: #ddd;
+            }
+
+            #AccountDetails th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: left;
+                background-color: #ddd;
+                color: black;
+            }
+
+        a:not([href]):not([tabindex]) {
+            color: #FFF !important;
+            }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loader">
+    </div>
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">@ViewBag.Title</h2>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-lg-3 col-sm-12">
+                <label>Zone</label>
+                @Html.DropDownList("zoneCode", (SelectList)ViewBag.Zone, "Select Zone", new { @class = "form-control" })
+            </div>
+            <div class="col-lg-3 col-sm-12">
+                <label>Branch</label>
+                @Html.DropDownList("branchCode", (SelectList)ViewBag.Branch, "Select Branch", new { @class = "form-control js-example-basic-multiple", @multiple = "true" })
+            </div>
+            <div class="col-lg-3 col-sm-12">
+                <label>Account No</label>
+                <input type="text" id="AccountNo" name="AccountNo" class="form-control" />
+            </div>
+            <div class="col-lg-3 col-sm-12">
+                <label>Customer Name</label>
+                <input type="text" id="CustomerName" name="CustomerName" class="form-control" />
+            </div>
+           
+         
+
+        </div>
+        <div class="row mt-4">
+            <div class="col-lg-3 col-sm-12" >  </div> 
+        <div class="col-lg-3 col-sm-12" > </div> 
+        <div class="col-lg-3 col-sm-12" > </div> 
+       
+             <div class="col-lg-3 col-sm-12" >
+                <button type="button" id="sbtbtn" class="btn btn-primary" style="float:right; background-color: #EA5B0C;">Search</button>
+            </div>
+            </div>
+
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div id="renderpartial"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@section scripts{
+    <script type="text/javascript" src="//code.jquery.com/ui/1.11.1/jquery-ui.js">
+    </script>
+    <script src="https://code.jquery.com/jquery-migrate-3.0.0.min.js"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            $(function () {
+                $(".js-example-basic-multiple").select2({
+                    placeholder: "Select Branch"
+                });
+            });
+            $("#branchCode").append("<option value='Select All'>Select All Branches</option>");
+            $("#sbtbtn").click(function () {
+                var bac = ""; var zone=0;
+                if ($('#branchCode :selected').length >= 1) {
+                    $('#branchCode :selected').each(function (i, selected) {
+                        bac += $(selected).val() + ",";
+                    });
+                } else {
+                    bac = "";
+                }
+                if ($("#zoneCode").val() == "") {
+                    zone = 0;
+                }
+                else {
+                    zone = $("#zoneCode").val();
+                }
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetReport", "RetailCODCRF")',
+                    data: JSON.stringify({
+                        zoneCode: zone,
+                        branchCode: bac,
+                        accountNo: $("#AccountNo").val(),
+                        customerName: $("#CustomerName").val()
+                    }),
+                   
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "html",
+                    success: function (response) {
+                        $('#renderpartial').html(response);
+                        $('body table.table_data').each(function () {
+                            debugger;
+                            var currentPage = 0;
+                            var numPerPage = 100;
+                            var $table = $(this);
+                            $table.bind('repaginate', function () {
+                                $table.find('tbody tr').hide().slice(currentPage * numPerPage, (currentPage + 1) * numPerPage).show();
+                            });
+                            $table.trigger('repaginate');
+                            var numRows = $table.find('tbody tr').length;
+                            var numPages = Math.ceil(numRows / numPerPage);
+                            var $pager = $('<div class="pager"></div>');
+                            for (var page = 0; page < numPages; page++) {
+                                $('<span class="btn btn-primary page-number" style="background-color: #EA5B0C;"></span>').text(page + 1).bind('click', {
+                                    newPage: page
+                                }, function (event) {
+                                    currentPage = event.data['newPage'];
+                                    $table.trigger('repaginate');
+                                    $(this).addClass('active').siblings().removeClass('active');
+                                }).appendTo($pager).addClass('clickable');
+                            }
+
+                            $pager.insertAfter($table).find('span.page-number:first').addClass('active');
+
+
+                        });
+                    },
+                    failure: function (response) {
+                        alert("failure");
+                    },
+                    error: function (response) {
+                        alert("Select Zone & Branch");
+                    }
+                });
+            });
+
+            $('#zoneCode').on('change', function () {
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetBranches", "RetailCODCRF")',
+                    data: JSON.stringify({
+                        zoneCode: $("#zoneCode").val()
+                    }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                        $("#branchCode").empty();
+                        $("#branchCode").append("<option value='Select All'>Select All Branches</option>");
+                        $.each(data, function (index, item) {
+                            $("#branchCode").append($('<option></option>').text(item.Text).val(item.Value));
+                        });
+                    },
+                    failure: function (response) {
+                        alert("failure");
+                    },
+                    error: function (response) {
+                        alert("error");
+                    }
+                });
+            });
+
+            $('body').on('click','#btnsubmit',function () {
+                var accountno = $(this).closest("tr").find("td").eq(3).html();
+                var approve = $(this).closest("tr").find("td").eq(8).html();
+                var bac = "";
+                if ($('#branchCode :selected').length > 1) {
+                    $('#branchCode :selected').each(function (i, selected) {
+                        bac += $(selected).val() + ",";
+                    });
+                } else {
+                    $('#branchCode :selected').each(function (i, selected) {
+                        bac = $(selected).val() + ",";
+                    });
+                }
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("ApproveCODCRF", "RetailCODCRF")',
+                    data: JSON.stringify({
+                        accountno: accountno,
+                        approve: approve,
+                        zoneCode: $("#zoneCode").val(),
+                        branchCode: bac,
+                        account: $("#AccountNo").val(),
+                        customerName: $("#CustomerName").val()
+                    }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "html",
+                    success: function (response) {
+                        $('#renderpartial').html(response);
+                        $('body table.table_data').each(function () {
+                            var currentPage = 0;
+                            var numPerPage = 100;
+                            var $table = $(this);
+                            $table.bind('repaginate', function () {
+                                $table.find('tbody tr').hide().slice(currentPage * numPerPage, (currentPage + 1) * numPerPage).show();
+                            });
+                            $table.trigger('repaginate');
+                            var numRows = $table.find('tbody tr').length;
+                            var numPages = Math.ceil(numRows / numPerPage);
+                            var $pager = $('<div class="pager"></div>');
+                            for (var page = 0; page < numPages; page++) {
+                                $('<span class="btn btn-primary page-number" style="background-color: #EA5B0C;"></span>').text(page + 1).bind('click', {
+                                    newPage: page
+                                }, function (event) {
+                                    currentPage = event.data['newPage'];
+                                    $table.trigger('repaginate');
+                                    $(this).addClass('active').siblings().removeClass('active');
+                                }).appendTo($pager).addClass('clickable');
+                            }
+
+                            $pager.insertAfter($table).find('span.page-number:first').addClass('active');
+                        });
+                    },
+                    failure: function (response) {
+                        alert("failure");
+                    },
+                    error: function (response) {
+                        alert("response");
+                    }
+                });
+        });
+        });
+
+    </script>
+}

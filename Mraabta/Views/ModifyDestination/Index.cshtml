@@ -1,0 +1,258 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    #formrow {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .rowitem {
+        width: calc(88% / 4) !important;
+        padding: 10px !important;
+    }
+
+    .rowitembtn {
+        display: flex;
+        flex-direction: row;
+        width: 12% !important;
+        padding: 10px !important;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+</style>
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+            <!--begin::Row-->
+            <div class="row">
+                <div class="col-12" >
+                    <div class="text-center" >
+                        <h3><b>Modify Destination</b></h3>
+                    </div>
+                    <div id="root">
+                    </div>
+                </div>
+            </div>
+        </div>    
+</main>
+
+@section styles{
+    <style>
+        #root {
+            padding: 15px;
+        }
+
+        .form-control {
+            border: 1px solid #969799 !important;
+        }
+
+            .form-control:focus {
+                border: 1px solid #f46425 !important;
+            }
+    </style>
+}
+
+@section scripts{
+    <script>
+        const branches = @Html.Raw(Json.Encode(ViewBag.Branches));
+        const url = '@Url.Action("Save","ModifyDestination")';
+        const checkCnUrl = '@Url.Action("CheckCNStatus", "ModifyDestination")';
+    </script>
+    <script type="text/babel">
+
+    const TrackingDetails = (props) =>
+    {
+        return <table className="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th>S No.</th>
+                        <th>Consignment Number</th>
+                        <th>Destination</th>
+                        <th>Date Time</th>
+                    </tr>
+                    {
+                        props.data.map((x, index) => <tr key={index}>
+                                <td>{++index}</td>
+                                <td>{x.CN}</td>
+                                <td>{x.Destination}</td>
+                                <td>{x.CREATEDON}</td>
+                            </tr>
+                        )
+                    }
+                </tbody>
+            </table>
+    }
+
+    const App = () => {
+          const [formData, setFormData] = React.useState({
+            City: 0,
+            cn: ''
+        });
+        const [cn, setCn] = React.useState('');
+        const [trackingDetail, setTrackingDetail] = React.useState(null);
+        const [loading, setLoading] = React.useState(false);
+        const [isOpen, setIsOpen] = React.useState(false);
+
+        const getBookingReport = () => {
+
+            setLoading(true);
+            fetch(`${url}?cn=${cn}&City=${formData.City}`).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            setTrackingDetail(rs.data);
+                            setIsOpen(false);
+                            setCn('');
+                            setLoading(false);
+                            alert(rs.msg);
+                        } else {
+                            setTrackingDetail(null);
+                            setIsOpen(false);
+                            setLoading(false);
+                            setCn('');
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+         const checkCns = (cn) => {
+            fetch(`${checkCnUrl}?cn=${cn}`).then(
+                function (response) {
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 4) {
+                            setTrackingDetail(rs.data);
+                            setIsOpen(true);
+                        }
+                        else if (rs.sts == 3){
+                            alert(rs.msg);
+                            setTrackingDetail(null);
+                            setIsOpen(true);
+                        }
+                        else {
+                            setTrackingDetail(null);
+                            setIsOpen(false);
+                            setCn('');
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const process = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+        const changeFormData = (key, val) => {
+            let x = { ...formData, [key]: val };
+            setFormData(x);
+        }
+
+        const overlayStyle = {
+            width: '100vw',
+            height: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 10000,
+            background: 'rgba(0,0,0,.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)'
+        }
+
+        return (
+            <div style={{ position: 'relative'}}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+
+                <React.Fragment>
+                    <div className="row" >
+                        <div className="col-md-3 col-sm-12">
+                            <label>Consignment Number</label>
+                            <input type="text" className="form-control" onInput={process} value={cn} onBlur={(x) => {
+                            const val = x.target.value;
+                            if (val.length > 0)
+                                checkCns(val);
+                        }} onChange={(x) => setCn(x.target.value)} />
+                        </div>
+                    { isOpen ?
+                        <div className="col-md-3 col-sm-12">
+                            <label>Destination</label>
+                            <select className="form-control" value={formData.City}  onChange={(x) => {
+                                changeFormData('City', x.target.value)
+                            }}>
+                                <option value="0">-- Select --</option>
+                                {
+                                    branches.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                                }
+                            </select>
+                        </div>
+                    : null
+                    }
+        { isOpen ?
+                        <div className="col-md-3 col-sm-12">
+                            <button type="button" className="btn btn-primary" style={{ marginTop: 25, background: '#f46425', border: '#a53200' }} onClick={(x) => {
+                                if (cn & formData.City!=0) {
+                                    getBookingReport();
+                                } else {
+                                    alert('Enter Consignment Number / Destination');
+                                }
+                            }}>Save</button>
+                        </div>
+        : null
+                    }
+                    </div>
+                    <br />
+                    {
+                        trackingDetail ? <TrackingDetails data={trackingDetail} /> : ''
+                    }
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    ReactDOM.render(<App />,
+        document.querySelector('#root')
+    )
+    </script>
+}

@@ -1,0 +1,145 @@
+﻿@model IEnumerable<dynamic>
+
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    ViewBag.Title = "Index";
+}
+
+@using (Html.BeginForm("Index", "PendingData", FormMethod.Post))
+{
+    <div class="row">
+        <div class="col-12 text-center">
+            <h3>Pending Data</h3>
+        </div>
+
+        <div class="col-3 mt-3">
+            <label>Select Date</label>
+            <input id="date" name="date" type="date" class="form-control" value="@DateTime.Now.ToString("dd-MMM-yyyy")" style="height:1.8em;" required>
+        </div>
+        <div class="col-3 mt-3">
+            <label>Select Account</label>
+            @if (ViewBag.err == null || ViewBag.err == "")
+            {
+                @Html.DropDownList("accountCode", ViewBag.Accounts as List<SelectListItem>, "Select Account", new { @class = "form-control" })
+            }
+        </div>
+        <div class="col-3 mt-3">
+            <label>Select Rider</label>
+            @if (ViewBag.err == null || ViewBag.err == "")
+            {
+                @Html.DropDownList("riderCode", ViewBag.Riders as List<SelectListItem>, "Select Rider", new { @class = "form-control", @id = "riderCode" })
+            }
+        </div>
+        <div class="col-3 mt-3">
+            <button style="margin-top:27px !important" type="submit" class="btn btn-outline-dark">Show</button>
+        </div>
+    </div>
+}
+
+
+<div class="row mt-4" style="padding-right: 30px;padding-left: 15px;">
+    @{
+        //var price = 20;
+        //var riderCode = 20;
+
+    }
+    @if (Model != null && Model.Any())
+    {
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Account No</th>
+                    <th>Client Name</th>
+                    <th>Rider Code</th>
+                    <th>Rider Name</th>
+                    <th>Location Name</th>
+                    @*<th>User Name</th>*@
+                    <th>Created On</th>
+                    <th>Total</th>
+                    <th>Feed</th>
+                    @*<th>Locked</th>
+                        <th>Lock By</th>*@
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.accountNo</td>
+                        <td>@item.ClientName</td>
+                        <td>@item.riderCode</td>
+                        <td>@item.riderName</td>
+                        <td>@item.LocationName</td>
+                        @*<td>@item.userName</td>*@
+                        <td>@item.createdOn</td>
+                        <td>@item.cnt</td>
+                        <td>@item.dne</td>
+                        @*<td>@item.islock</td>
+                            <td>@item.lockby</td>*@
+                        <td class="text-center">
+                            @if (item.islock == null)
+                            {
+                                <a href="@Url.Action("Index", "ConsigneeDetail", new { pickupId = item.PickUpId})" class="btn btn-primary btn-sm">Details</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @*else
+        {
+            <script type="text/javascript">
+                debugger;
+                var startDate = document.getElementById('date').value;
+                var riderCode = document.getElementById('riderCode').value;
+                if (startDate == null && riderCode == null) {
+
+                }
+                else {
+                     alert("No Record Found.");
+                }
+
+            </script>
+        }*@
+
+</div>
+
+@section scripts{
+    <script>
+        debugger
+
+        $(document).ready(function () {
+          var startDate = document.getElementById('date').value;
+            var riderCode = document.getElementById('riderCode').value;
+
+        })
+
+        var dataexists = '@ViewBag.err';
+          if (dataexists != "") {
+          swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+                }, function() {
+                    window.location = "../Login";
+                });
+    }
+                $(function () {
+            $('img').wrap('<span style="display:inline-block"></span>')
+            .css('display', 'block')
+            .parent()
+            .zoom({
+                magnify: 0.2
+            });
+        });
+        //$(function () {
+        //    $('#date').datepicker({
+        //        format: 'dd-M-yyyy'
+        //    });
+        //});
+    </script>
+}

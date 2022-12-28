@@ -1,0 +1,172 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    table {
+        font-size: 12px;
+    }
+</style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <h2 class="text-center">Search Unloadings</h2>
+        <div id="root"></div>
+    </div>
+</main>
+
+
+@section scripts{
+<script>
+    var currentdate = '@DateTime.Now.ToString("yyyy-MM-dd")';
+    var postUrl = '@Url.Action("GetUnloadings","Unloading")';
+    var hrefUrl = '@Url.Action("Print","Unloading")';
+    var editUrl = '@Url.Action("Index","Unloading")';
+</script>
+<script type="text/babel">
+
+    function Grid(props) {
+
+        return (
+            <div className="table-responsive">
+                {
+                    props.data.length == 0 ? '' :
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>SNo</th>
+                                    <th>Edit</th>
+                                    <th>Unloading No</th>
+                                    <th>Origin</th>
+                                    <th>Destination</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    props.data.map((x, index) =>
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td><a className="btn btn-sm btn-outline-secondary" target="_blank" href={editUrl + '?id=' + x.EncryptedId}>Edit</a></td>
+                                            <td><a target="_blank" href={hrefUrl + '?id=' + x.Id} style={{ color: 'blue', textDecoration: 'underline' }}>{x.Id}</a></td>
+                                            <td>{x.Origin}</td>
+                                            <td>{x.Destination}</td>
+                                            <td>{x.Date}</td>
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                }
+            </div>
+        );
+    }
+
+
+    function App() {
+
+        const [date, setDate] = React.useState(currentdate);
+
+        const [gridData, setGridData] = React.useState([]);
+
+        const [loading, setLoading] = React.useState(false);
+
+        const getUnloadings = () => {
+            setLoading(true);
+            fetch(postUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ date: date })
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 0) {
+                            if (rs.data.length > 0) {
+                                setGridData(rs.data);
+                            } else {
+                                alert('No Data Found');
+                                setGridData([]);
+                            }
+                        } else {
+                            alert(rs.msg);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const process = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+        const overlayStyle = {
+            position: 'fixed',
+            top: '0px',
+            left: '0px',
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'rgba(255,255,255,.8)',
+            zIndex: 10000,
+            backdropFilter: 'blur(15px)'
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={overlayStyle}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div>
+                    <div className="row">
+                        <div className="col-lg-3 col-sm-12">
+                            <label>Date</label>
+                            <input type="date" className="form-control" value={date} onChange={(x) => {
+                                setDate(x.target.value)
+                            }} />
+                        </div>
+                        <div className="col-lg-3 col-sm-12">
+                            <button style={{ marginTop: '1.5rem' }} type="button" className="btn btn-outline-secondary" onClick={getUnloadings}>Search</button>
+                        </div>
+                    </div>
+                    <br />
+                    <Grid data={gridData} />
+                </div>
+            </div>
+        );
+    }
+    ReactDOM.render(<App />, document.querySelector('#root'));
+</script>
+}

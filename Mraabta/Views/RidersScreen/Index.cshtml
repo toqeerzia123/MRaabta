@@ -1,0 +1,223 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Riders";
+}
+
+<main class="app-content">
+    <div class="row" style="background:rgba(255,255,255,.5);padding-top:10px">
+        <div class="col-12">
+            <h2 class="text-center">Riders</h2>
+            <br>
+            <table class="table table-bordered" id="tblmain">
+                <thead>
+                    <tr>
+                        <th>S.NO</th>
+                        <th>User ID</th>
+                        <th>Rider Name</th>
+                        <th>Rider Code</th>
+                        <th>Status</th>
+                        <th>Battery</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            Please Wait
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+@section styles{
+    <style>
+        .dataTables_filter {
+            width: 100% !important;
+            text-align: left !important;
+        }
+
+            .dataTables_filter input[type=search] {
+                background: rgba(255,255,255,.6) !important;
+            }
+
+        table.dataTable tbody tr {
+            background: none !important;
+        }
+    </style>
+}
+
+@section scripts{
+    <script type="text/javascript">
+        var gridData = [];
+        var coord = 0;
+
+        var refreshGrid = () => {
+            $('#tblmain').DataTable().destroy();
+            var rows = '';
+            let sno = 1;
+
+            gridData.map((x, index) => {
+                rows += `<tr>
+                                <td>${sno++}</td>
+                                <td>${x.UserId}</td>
+                                <td>${x.UserName}</td>
+                                <td>${x.RiderCode}</td>
+                                <td>${x.IsActive ? `Online` : `Offline`}</td>
+                                <td>${x.Battery}%</td>
+                                <td>${x.IsActive ? `<button value="${x.UserId}" type="button" class="btn btn-sm btn-outline-danger btnlogout">Logout</button>` : ``}</td>
+                                <td><button value="${x.UserId}" data-index='${index}' data-sts='${x.Status}' type="button" class="btn btn-sm btn-outline-danger btnStatus">${x.Status ? `Deactivate` : `Activate`}</button></td>
+                                <td><input type="text" class="form-control" value="${x.Password}"></td>
+                                <td><button value="${x.UserId}" class="btn btn-sm btn-outline-secondary btnChangePass" type="button">Change</button></td>
+                                <td><a class="btn btn-sm btn-outline-secondary" target="_blank" href="@Url.Action("Index","AddRider")?id=${x.UserId}">Edit</a></td>
+                                </tr>`;
+            });
+
+            $('#tbody').html(rows);
+            $('#tblmain').DataTable({
+                paging: false,
+                scrollY: 500,
+                "bInfo": false,
+                "language": {
+                    "search": "<b>Rider Code | Rider Name:</b>"
+                }
+            });
+            $('.dataTables_scrollBody').scrollTop(coord);
+        }
+
+        var getData = () => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("RiderActivity", "RidersScreen")',
+                dataType: 'json',
+                error: (rs) => {
+                    console.log(rs);
+                },
+                success: (rs) => {
+                    gridData = rs;
+                    var rows = '';
+                    let sno = 1;
+
+                    gridData.map((x, index) => {
+                        rows += `<tr>
+                                <td>${sno++}</td>
+                                <td>${x.UserId}</td>
+                                <td>${x.UserName}</td>
+                                <td>${x.RiderCode}</td>
+                                <td>${x.IsActive ? `Online` : `Offline`}</td>
+                                <td>${x.Battery}%</td>
+                                <td>${x.IsActive ? `<button value="${x.UserId}" data-index='${index}' type="button" class="btn btn-sm btn-outline-danger btnlogout">Logout</button>` : ``}</td>
+                                <td><button value="${x.UserId}" data-index='${index}' data-sts='${x.Status}' type="button" class="btn btn-sm btn-outline-danger btnStatus">${x.Status ? `Deactivate` : `Activate`}</button></td>
+                                <td><input type="text" class="form-control" value="${x.Password}"></td>
+                                <td><button value="${x.UserId}" class="btn btn-sm btn-outline-secondary btnChangePass" type="button">Change</button></td>
+                                <td><a class="btn btn-sm btn-outline-secondary" target="_blank" href="@Url.Action("Index","AddRider")?id=${x.UserId}">Edit</a></td>
+                                </tr>`;
+                    });
+
+
+                    $('#tbody').html(rows);
+                    $('#tblmain').DataTable({
+                        paging: false,
+                        scrollY: 500,
+                        "bInfo": false,
+                        "language": {
+                            "search": "<b>Rider Code | Rider Name:</b>"
+                        }
+                    });
+                }
+            });
+        };
+
+        var changePass = (uid,pass) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("ChangePass", "RidersScreen")',
+                data: JSON.stringify({ uid,pass }),
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.sts == 1) {
+                        alert("Password changed");
+                    } else {
+                        alert("Something went wrong");
+                    }
+                }
+            });
+        };
+
+
+        var logout = (uid,index) => {
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("Logout", "RidersScreen")' + '?uid=' + uid,
+                dataType: 'json',
+                success: (rs) => {
+                    if (rs.type == 0) {
+                        var obj = Object.assign([], gridData);
+                        obj[index].IsActive = false;
+                        gridData = obj;
+                        refreshGrid();
+                    }
+                    alert(rs.msg);
+                }
+            });
+        };
+
+        var changeStatus = (uid, sts ,index) => {
+            $.ajax({
+                type: 'post',
+                url: '@Url.Action("ChangeStatus", "RidersScreen")',
+                dataType: 'json',
+                data: JSON.stringify({uid,sts}),
+                contentType:'application/json; charset=utf-8',
+                success: (rs) => {
+                    if (rs.type == 0) {
+                        var obj = Object.assign([], gridData);
+                        obj[index].Status = sts;
+                        gridData = obj;
+                        refreshGrid();
+                    }
+                    alert(rs.msg);
+                }
+            });
+        };
+
+        $(function () {
+
+            getData();
+
+            $('body').on('click', '.btnlogout', function () {
+                coord = $('.dataTables_scrollBody').scrollTop();
+                var val = parseInt($(this).val());
+                var data = $(this).data();
+                logout(val,data.index);
+            });
+
+            $('body').on('click', '.btnStatus', function () {
+                coord = $('.dataTables_scrollBody').scrollTop();
+                var val = parseInt($(this).val());
+                var data = $(this).data();
+                changeStatus(val, !data.sts, data.index);
+            });
+
+
+            $('body').on('click', '.btnChangePass', function () {
+                var val = parseInt($(this).val());
+                var pass = $(this).parent().parent().find('td').eq(8).find('input[type=text]').val();
+                if (!pass) {
+                    alert('Password is empty');
+                    return;
+                }
+                changePass(val, pass);
+            });
+
+        });
+
+    </script>
+}

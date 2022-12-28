@@ -1,0 +1,201 @@
+﻿@model  MRaabta.Models.RiderPerformanceReportModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Notification Handler";
+}
+@section styles{
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/datatable.css" rel="stylesheet" />
+
+    <style>
+        /* Center the loader */
+        .outer_box {
+            background: gray none repeat scroll 0 0;
+            height: 100%;
+            opacity: 0.9;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+        }
+
+        @@-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @@keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        div.dataTables_wrapper div.dataTables_filter input {
+            margin-left: 0.5em;
+            display: inline-block;
+            width: auto;
+            background-color: white;
+            color: black;
+            border-color: black;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid black;
+            border-radius: 3px;
+            padding: 5px;
+            background-color: transparent;
+            padding: 4px;
+            background-color: white;
+            border-color: black;
+        }
+
+        label {
+            color: black;
+        }
+    </style>
+}
+<div class="app-content">
+
+    <div style="background:rgba(255,255,255,.5);padding:10px;border-radius:5px">
+
+        <h2 style="text-align:center">My M&amp;P Nofication Handler</h2>
+
+        <div class="row mb-1">
+            <div class="col-3">
+                <b>Customers</b>
+                @if (ViewBag.ErrorMessage == null || ViewBag.ErrorMessage == "")
+                {
+
+                    <select id="ddl_Customer" class="mdb-select form-control dropdown-primary md-form" multiple searchable="Search here..">
+                        <option value=""></option>
+                    </select>
+                }
+            </div>
+
+            <div class="col-3">
+                <b>Notification Title</b>
+                <input id="Title_notification" class="form-control" placeholder="Title of notification" maxlength="100"/>
+            </div>
+            <div class="col-3">
+                <b>Message</b>
+                <textarea id="Body_Notification" class="form-control" placeholder="Message to send" maxlength="250"></textarea>
+            </div>
+            <div class="col-1 text-left">
+                <button type="submit" class="btn btn-blue" style="margin-top: 20px !important" id="btnSearch">Send</button>
+            </div>
+            <div>
+                <h5 style="color:red">@ViewBag.ErrorMessage</h5>
+            </div>
+        </div>
+
+
+        <div id="loaders" runat="server" class="outer_box" style="display: none;">
+            <div id="loader" runat="server" class="loader"></div>
+        </div>
+
+    </div>
+</div>
+
+@section scripts{
+    <script src="~/Scripts/datatable.js"></script>
+    <script>
+    var customers = [];
+
+    function showLoader() {
+        $("#btnSearch").attr("disabled", true);
+        $('#loaders').show();
+    }
+    function hideLoader() {
+        setTimeout(function () {
+            $('#loaders').hide();
+            $("#btnSearch").attr("disabled", false);
+        }, 100);
+    }
+
+    $('#btnSearch').click(function () {
+        var CustomerSelected = $('#ddl_Customer').val();
+
+        if (CustomerSelected == '') {
+            alert('Please select rider'); return
+        }
+
+        if (CustomerSelected.includes('0')) {
+            CustomerSelected = customers;
+        }
+        var body = $('#Body_Notification').val();
+        var title = $('#Title_notification').val();
+        if (body==""||title=="") {
+            alert('Please provide all details'); return;
+        }
+
+        $.ajax({
+            url: "@Url.Action("SendNotifications","MyMnPNotificationHandler")",
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ "Customers": CustomerSelected,"body":body,"title":title  }),
+
+            success: function (response) {
+                 alert(response.Message);
+            },
+            error: function (xhr, status, errorThrown) {
+                alert(xhr.status);
+                alert(xhr.responseText);
+            }
+        });
+    });
+
+     $(function () {
+         $(document).on({
+             ajaxStart: function () { showLoader() },
+             ajaxStop: function () { hideLoader(); },
+         });
+         $('select').select2();
+
+         $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetCustomers","MyMnPNotificationHandler")',
+               contentType: "application/json; charset=utf-8",
+             success: (rs) => {
+                 debugger;
+                    if (rs.Status) {
+                        var html = ``;
+                        var data = rs.Data;
+                        customers = data.map((x) => x.Value);
+                        for (let x of data) {
+                            html += `<option value="${x.Value}">${x.Value}-${x.Text}</option>`;
+                        }
+                        $('#ddl_Customer').html(html);
+                    }
+                    else {
+                        alert(rs.Message);
+                    }
+                }
+            });
+    });
+
+    </script>
+}

@@ -1,0 +1,858 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+
+    .material-switch>input[type="checkbox"] {
+        display: none;
+    }
+
+    .material-switch>label {
+        cursor: pointer;
+        height: 0px;
+        position: relative;
+        width: 40px;
+    }
+
+    .material-switch>label::before {
+        background: rgb(0, 0, 0);
+        box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+        content: '';
+        height: 16px;
+        margin-top: -8px;
+        position: absolute;
+        opacity: 0.3;
+        transition: all 0.4s ease-in-out;
+        width: 40px;
+    }
+
+    .material-switch>label::after {
+        background: rgb(255, 255, 255);
+        border-radius: 16px;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+        content: '';
+        height: 24px;
+        left: -4px;
+        margin-top: -8px;
+        position: absolute;
+        top: -4px;
+        transition: all 0.3s ease-in-out;
+        width: 24px;
+    }
+
+    .material-switch>input[type="checkbox"]:checked+label::before {
+        background: inherit;
+        opacity: 0.5;
+    }
+
+    .material-switch>input[type="checkbox"]:checked+label::after {
+        background: orangered;
+        left: 20px;
+    }
+
+    .confirmOverlayInput {
+        width: 100%;
+        height: 60px;
+        border: none !important;
+        border-bottom: 5px solid white !important;
+        background: none;
+        color: rgba(255, 255, 255, .8);
+        text-align: center;
+        font-size: 35px;
+    }
+
+    .confirmOverlayInput:active,
+    .confirmOverlayInput:focus {
+        outline: none;
+    }
+
+    .confirmOverlayButton {
+        background: none;
+        min-width: 200px;
+        height: 80px;
+        border: 5px solid white;
+        font-size: 35px;
+        color: rgba(255, 255, 255, .8)
+    }
+
+    .confirmOverlayButton:active {
+        outline: none;
+        background: rgba(255, 255, 255, .8);
+        color: rgba(0, 0, 0, .8)
+    }
+
+    .confirmOverlayButton:focus {
+        outline: none;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script src="~/Scripts/dexie.js"></script>
+<script>
+    const runsheeTypes =  @Html.Raw(Json.Encode(ViewBag.RunsheeTypes));
+    const routes =  @Html.Raw(Json.Encode(ViewBag.Routes));
+    const cnlength =  @Html.Raw(Json.Encode(ViewBag.CNLengths));
+    const vehicleTypes =  @Html.Raw(Json.Encode(ViewBag.VehicleTypes));
+    const vehicles =  @Html.Raw(Json.Encode(ViewBag.Vehicles));
+    const isChief = '@ViewBag.IsChief'.toLowerCase() === 'true' ? true : false;
+    const min = '@DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd")';
+    const max = '@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")';
+    const now = '@DateTime.Now.ToString("yyyy-MM-dd")';
+    const fetchCNUrl = '@Url.Action("GetCNInfo","Runsheet")';
+    const saveUrl = '@Url.Action("Save","Runsheet")';
+    const printUrl = '@Url.Action("Print","Runsheet")';
+    const searchUrl = '@Url.Action("Search","Runsheet")';
+    const generatePinUrl = '@Url.Action("GeneratePin","Runsheet")';
+    const updateRiderPassUrl = '@Url.Action("UpdateRiderPass","Runsheet")';
+</script>
+<script type="text/babel">
+
+    const Context = React.createContext(null);
+
+    const Grid = () => {
+
+        const [scanned, setScanned] = React.useState(false);
+        const [focused, setFocused] = React.useState(true);
+
+        const {
+            loading,
+            setLoading,
+            grid,
+            setGrid,
+            data,
+            authenticated
+        } = React.useContext(Context);
+
+        const cnRef = React.useRef(null);
+
+        const fetchCNInfo = async (cn) => {
+            try {
+                const url = `${fetchCNUrl}?cn=${cn}`;
+                var response = await fetch(url);
+                setScanned(false);
+                setFocused(!focused);
+                if (response.status === 200) {
+                    var rs = await response.json();
+                    if (rs.type == 0) {
+                        let z = [...grid];
+                        z.unshift({
+                            CN: rs.CN,
+                            OriginId: rs.OriginId,
+                            Origin: rs.Origin,
+                            DestinationId: rs.DestinationId,
+                            Destination: rs.Destination,
+                            Weight: rs.Weight,
+                            Pieces: rs.Pieces,
+                            ConsignmentTypeId: rs.ConsignmentTypeId,
+                            ConsignmentType: rs.ConsignmentType,
+                            ReachedDestination: rs.ReachedDestination,
+                            Sort: grid.length + 1
+                        });
+                        setGrid(z);
+                    } else {
+                        alert(rs.msg);
+                    }
+                } else {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (err) {
+                console.log('Fetch Error :-S', err);
+                setScanned(false);
+                setFocused(!focused);
+            }
+        }
+
+        const validateCN = (val) => {
+
+            if (val[0] == 5 && val.length != 15) {
+                alert('Invalid length of COD Consignment');
+                return false;
+            }
+
+            const prefix = cnlength.filter(x => x.Prefix == val.substring(0, x.PrefixLength))[0];
+
+            if (prefix) {
+                if (prefix.Length == val.length) {
+                    return true;
+                } else {
+                    alert('Prefix length not found');
+                    return false;
+                }
+            } else {
+                alert('Prefix not found');
+                return false;
+            }
+        }
+
+        React.useEffect(() => {
+            cnRef.current.value = '';
+            cnRef.current.focus();
+        }, [focused])
+
+        const onConsignmentBlur = async (e) => {
+            const val = e.target.value;
+            if (val) {
+                setScanned(true);
+
+                if (!data.RouteCode) {
+                    alert('Select Route');
+                    setScanned(false);
+                    setFocused(!focused);
+                    return;
+                }
+
+                if (!grid.some(x => x.CN == val)) {
+                    const isvalid = validateCN(val);
+                    if (isvalid) {
+                        await fetchCNInfo(val);
+                    } else {
+                        setScanned(false);
+                        setFocused(!focused);
+                    }
+                } else {
+                    alert('Consignment number already exists');
+                    setScanned(false);
+                    setFocused(!focused);
+                }
+            }
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                cnRef.current.blur();
+            }
+        }
+
+        const process = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9]/g, "");
+            e.target.value = numbers;
+        }
+
+
+        const removeRow = (index) => {
+            let d = [...grid];
+            d.splice(index, 1);
+            setGrid(d);
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row mt-2">
+                    <div className="col-6">
+                        <div className="form-inline">
+                            <input type="text" className="form-control" ref={cnRef} onInput={process} placeholder="Consignment Number" readOnly={scanned} onKeyPress={keypressHandler} onBlur={onConsignmentBlur} />
+                        </div>
+                    </div>
+                    <div className="col-6" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <b>Scanned Consignments : {grid.length}</b>
+                    </div>
+                </div>
+                <div className="row mt-2">
+                    <div className="col-12">
+                        <div className="table-responsive">
+                            <table className="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Consignment Number</th>
+                                        <th>Origin</th>
+                                        <th>Destination</th>
+                                        <th>Consignment Type</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {
+                                        grid.map((x, index) =>
+                                            <tr key={index}>
+                                                <td>{index + 1}</td>
+                                                <td>{x.CN}</td>
+                                                <td>{x.Origin}</td>
+                                                <td>{x.Destination}</td>
+                                                <td>{x.ConsignmentType}</td>
+                                                <td>
+                                                    <button type="button" className="btn btn-sm btn-danger" onClick={(x) => removeRow(index)}>Remove</button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    // const NewPassDialog = () => {
+
+    //     const {
+    //         showDialog,
+    //         setShowDialog,
+    //         authenticated,
+    //         setAuthenticated,
+    //         riderPassAndPhone,
+    //         setRiderPassAndPhone,
+    //         showNewPassDialog,
+    //         setShowNewPassDialog
+    //     } = React.useContext(Context);
+
+    //     const [data, setData] = React.useState({
+    //         newpass: '',
+    //         confirmpass: ''
+    //     });
+
+    //     const updateData = (key, val) => setData({ ...data, [key]: val });
+
+    //     const updatePass = async () => {
+    //         try {
+    //             if (data.newpass === data.confirmpass) {
+
+    //                 const response = await fetch(updateRiderPassUrl, {
+    //                     method: 'post',
+    //                     headers: {
+    //                         'Accept': 'application/json',
+    //                         'Content-Type': 'application/json'
+    //                     },
+    //                     body: JSON.stringify({ ridercode: riderPassAndPhone.riderCode, pass: data.newpass })
+    //                 });
+
+    //                 if (response.status === 200) {
+    //                     const obj = await response.json();
+    //                     alert(obj.msg);
+    //                     if (obj.sts == 0) {
+    //                         setAuthenticated(true);
+    //                         setShowDialog(false);
+    //                     }
+    //                 } else {
+    //                     console.log('Looks like there was a problem. Status Code: ' + response.status);
+    //                 }
+
+    //             } else {
+    //                 alert('Password not matched');
+    //             }
+    //         } catch (err) {
+    //             console.log(err);
+    //         }
+    //     }
+
+    //     return (
+    //         <React.Fragment>
+    //             <div style={{ width: '100%' }}>
+    //                 <input type="password" className="confirmOverlayInput" placeholder="Enter New Password" maxLength="1000" value={data.newpass} onChange={(e) => updateData('newpass', e.target.value)} />
+    //                 <input type="password" style={{ marginTop: 50 }} className="confirmOverlayInput" placeholder="Confirm New Password" maxLength="1000" value={data.confirmpass} onChange={(e) => updateData('confirmpass', e.target.value)} />
+    //             </div>
+    //             <div>
+    //                 <button type="button" className="confirmOverlayButton" onClick={updatePass}>Save</button>
+    //             </div>
+    //         </React.Fragment>
+    //     )
+    // }
+
+    // const PassAndPin = () => {
+
+    //     const {
+    //         showDialog,
+    //         setShowDialog,
+    //         authenticated,
+    //         setAuthenticated,
+    //         riderPassAndPhone,
+    //         setRiderPassAndPhone,
+    //         showNewPassDialog,
+    //         setShowNewPassDialog
+    //     } = React.useContext(Context);
+
+    //     const { loading, setLoading } = React.useContext(Context);
+    //     const [isPassmode, setIsPassmode] = React.useState(true);
+    //     const [passOrPin, setPassOrPin] = React.useState('');
+    //     const [generatedPin, setGeneratedPin] = React.useState('');
+
+
+    //     const generatePin = (ridercode, phoneno) => {
+    //         setLoading(true);
+    //         const url = `${generatePinUrl}?ridercode=${ridercode}&phoneno=${phoneno}`
+    //         fetch(url).then(
+    //             function (response) {
+    //                 setLoading(false);
+    //                 if (response.status !== 200) {
+    //                     console.log('Looks like there was a problem. Status Code: ' + response.status);
+    //                     return;
+    //                 }
+
+    //                 response.json().then(function (rs) {
+    //                     if (rs.sts == 0) {
+    //                         setIsPassmode(false);
+    //                         setGeneratedPin(rs.pin);
+    //                     } else {
+    //                         alert(rs.msg);
+    //                     }
+    //                 });
+    //             }
+    //         ).catch(function (err) {
+    //             console.log('Fetch Error :-S', err);
+    //             setLoading(false);
+    //         });
+    //     }
+
+    //     const onGeneratePin = (e) => {
+    //         e.preventDefault();
+    //         generatePin(riderPassAndPhone.riderCode, riderPassAndPhone.phoneNo);
+    //     }
+
+    //     const onAuth = () => {
+    //         if (passOrPin) {
+    //             const pp = passOrPin.toLowerCase();
+    //             const authenticated = ((isPassmode && pp == (riderPassAndPhone.pass ? riderPassAndPhone.pass.toLowerCase() : '')) || (!isPassmode && pp == generatedPin));
+    //             if (authenticated) {
+    //                 if (isPassmode) {
+    //                     setAuthenticated(true);
+    //                     setShowDialog(false);
+    //                 } else {
+    //                     setShowNewPassDialog(true);
+    //                 }
+    //             } else {
+    //                 alert(`Invalid ${isPassmode ? 'Password' : 'OTP'}`);
+    //                 setPassOrPin('');
+    //             }
+    //         } else {
+    //             alert(`Enter ${isPassmode ? 'Password' : '6 digit OTP'}`);
+    //         }
+    //     }
+
+    //     const onCancel = () => {
+    //         setShowDialog(false);
+    //     }
+
+
+    //     return (
+    //         <React.Fragment>
+    //             <div style={{ width: '100%' }}>
+    //                 <input type="password" className="confirmOverlayInput" placeholder={isPassmode ? 'Enter Password' : 'Enter 6 Digit OTP'} maxLength={isPassmode ? 1000 : 6} value={passOrPin} onChange={(e) => setPassOrPin(e.target.value)} />
+    //                 {
+    //                     isPassmode ? <p className="mt-2 text-center"><a href="#" style={{ color: 'rgba(255,255,255,.7)' }} onClick={onGeneratePin}><b>Forgot Password</b></a></p> : ''
+    //                 }
+    //             </div>
+    //             <div>
+    //                 <button type="button" className="confirmOverlayButton" onClick={onAuth}>Authenticate</button>
+    //                 <button type="button" className="ml-2 confirmOverlayButton" onClick={() => {
+    //                     onCancel();
+    //                 }}>Cancel</button>
+    //             </div>
+    //         </React.Fragment>
+    //     )
+    // }
+
+    // const AuthenticationDialog = () => {
+
+    //     const {
+    //         showDialog,
+    //         setShowDialog,
+    //         authenticated,
+    //         setAuthenticated,
+    //         riderPassAndPhone,
+    //         setRiderPassAndPhone,
+    //         showNewPassDialog,
+    //         setShowNewPassDialog
+    //     } = React.useContext(Context);
+
+
+
+    //     const dialogOverlay = {
+    //         position: 'fixed',
+    //         top: '0',
+    //         left: '0',
+    //         zIndex: '10000',
+    //         width: '100%',
+    //         height: '100vh',
+    //         background: 'rgba(0,0,0,.8)',
+    //         display: 'flex',
+    //         flexDirection: 'column',
+    //         justifyContent: 'space-evenly',
+    //         alignItems: 'center',
+    //         color: 'white',
+    //         backdropFilter: 'blur(5px)'
+    //     }
+
+    //     return (
+    //         <div style={dialogOverlay}>
+    //             { !showNewPassDialog ? <PassAndPin /> : <NewPassDialog />}
+    //         </div>
+    //     )
+    // }
+
+    const MainForm = () => {
+
+        const routeRef = React.useRef(null);
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            grid,
+            setGrid,
+            showDialog,
+            setShowDialog,
+            authenticated,
+            setAuthenticated,
+            riderPassAndPhone,
+            setRiderPassAndPhone
+        } = React.useContext(Context);
+
+        const [isChiefRoute, setIsChiefRoute] = React.useState(false);
+
+        const updateData = (key, val) => {
+            let x = { ...data };
+            x[key] = val;
+            setData(x);
+        }
+
+        React.useEffect(() => {
+            if (data.RouteCode != '') {
+                const rs = routes.filter(x => x.RouteCode.toLowerCase() == data.RouteCode.toLowerCase());
+                if (rs.length > 0) {
+                    const route = rs[0];
+                    var x = {
+                        ...data,
+                        RiderCode: route.RiderCode,
+                        Rider: route.Rider,
+                        Landmark: route.LandMark ? route.LandMark : ''
+                    };
+                    setData(x);
+                    setIsChiefRoute(route.IsChief);
+                    //setRiderPassAndPhone({ riderCode: route.RiderCode, pass: route.Password, phoneNo: route.PhoneNo });
+                    //setShowDialog(true);
+                }
+            } else {
+                var x = {
+                    ...data,
+                    RiderCode: '',
+                    Rider: '',
+                    Landmark: '',
+                    IsChiefCourier: false
+                };
+                setData(x);
+                setIsChiefRoute(false);
+                //setRiderPassAndPhone({ riderCode: '', pass: '', phoneNo: '' });
+            }
+
+            //setAuthenticated(false);
+        }, [data.RouteCode]);
+
+        React.useEffect(() => {
+            if (data.VehicleId && data.VehicleId != 103) {
+                const regNo = data.VehicleId > 0 ? vehicles.filter(x => x.Value == data.VehicleId)[0].Text : 0;
+                updateData('VehicleNo', regNo);
+            } else {
+                updateData('VehicleNo', '');
+            }
+        }, [data.VehicleId]);
+
+        const reset = () => {
+            const d = {
+                Date: now,
+                Type: '12',
+                RouteCode: '',
+                RiderCode: '',
+                Rider: '',
+                Landmark: '',
+                VehicleType: '',
+                VehicleId: '0',
+                VehicleNo: '',
+                MeterStart: '',
+                MeterEnd: '',
+                IsChief: false
+            };
+            setData(d);
+            setIsChiefRoute(false);
+            setGrid([]);
+            //setAuthenticated(false);
+            routeRef.current.value = '';
+        }
+
+        const save = () => {
+            setLoading(true);
+            fetch(saveUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ model: { ...data, Details: grid } })
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        alert(rs.msg);
+                        if (rs.sts == 0) {
+                            reset();
+                            window.open(`${printUrl}?id=${rs.EncryptedId}`, '_blank');
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+        const onSave = () => {
+            if (!data.RouteCode) {
+                alert('Select Route');
+                return;
+            }
+            if (grid.length == 0) {
+                alert('No Consignments Found');
+                return;
+            }
+            save();
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                routeRef.current.blur();
+            }
+        };
+
+        const onRouteBlur = (e) => {
+            const val = e.target.value.toLowerCase();
+            updateData('RouteCode', val);
+        };
+
+        return (
+            <React.Fragment>
+                {
+                    showDialog ?
+                        <AuthenticationDialog />
+                        : ''
+                }
+                <div className="row">
+                    <div className="col-lg col-sm-12">
+                        <label>Date</label>
+                        <input type="date" className="form-control" value={data.Date} min={min} max={max} onKeyDown={(e) => e.preventDefault()} onChange={(x) => updateData('Date', x.target.value)} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Type</label>
+                        <select className="form-control" value={data.Type} onChange={(x) => updateData('Type', x.target.value)}>
+                            {
+                                runsheeTypes.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Route Code</label>
+                        <input type="text" className="form-control" ref={routeRef} onKeyPress={keypressHandler} onBlur={onRouteBlur} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Route</label>
+                        <select className="form-control" value={data.RouteCode} onChange={(x) => updateData('RouteCode', x.target.value)}>
+                            <option value="">Select Route</option>
+                            {
+                                routes.map((x, index) => <option key={index} value={x.RouteCode.toLowerCase()}>{x.RouteCode} | {x.Route}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Rider</label>
+                        <input type="text" className="form-control" readOnly value={(data.RiderCode + ' | ' + data.Rider)} />
+                    </div>
+                </div>
+                <div className="row mt-2">
+                    <div className="col-lg col-sm-12">
+                        <label>Landmark</label>
+                        <textarea className="form-control" readOnly value={data.Landmark}></textarea>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Vehicle Type</label>
+                        <select className="form-control" value={data.VehicleType} onChange={(x) => updateData('VehicleType', x.target.value)}>
+                            <option value="">Select Vehicle Type</option>
+                            {
+                                vehicleTypes.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Vehicle</label>
+                        <select className="form-control" value={data.VehicleId} onChange={(x) => updateData('VehicleId', x.target.value)}>
+                            <option value="0">Select Vehicle</option>
+                            {
+                                vehicles.map((x, index) => <option key={index} value={x.Value}>{x.Text}</option>)
+                            }
+                        </select>
+                    </div>
+                    {
+                        data.VehicleId == 103 ?
+                            <div className="col-lg col-sm-12">
+                                <label>Vehicle Reg No</label>
+                                <input type="text" className="form-control" value={data.VehicleNo} onChange={(x) => updateData('VehicleNo', x.target.value)} />
+                            </div> : ''
+                    }
+                    <div className="col-lg col-sm-12">
+                        <label>Meter Start</label>
+                        <input type="text" className="form-control" value={data.MeterStart} onChange={(x) => updateData('MeterStart', x.target.value)} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Meter End</label>
+                        <input type="text" className="form-control" value={data.MeterEnd} onChange={(x) => updateData('MeterEnd', x.target.value)} />
+                    </div>
+                </div>
+                <div className="row mt-3">
+                    <div className="col">
+                        {
+                            isChief || isChiefRoute ? <div className="material-switch pull-right mt-2">
+                                <h5 className="pull-left mr-3">Chief :</h5>
+                                <input id="dsd" disabled={grid.length > 0} type="checkbox" checked={data.IsChief} onChange={(e) => updateData('IsChief', e.target.checked)} />
+                                <label htmlFor="dsd" className="label-primary"></label>
+                            </div> : ''
+                        }
+
+                    </div>
+                    <div className="col-1 text-right">
+                        <button type="button" className="btn btn-secondary" onClick={onSave}>Save</button>
+                    </div>
+                </div>
+                <Grid />
+            </React.Fragment>
+        )
+    }
+
+    const App = () => {
+
+        const {
+            loading,
+            setLoading
+        } = React.useContext(Context);
+
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(10px)'
+            }
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>Runsheet</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+                                <a href={searchUrl} className="btn btn-sm btn-secondary" target="_blank">Search Runsheets</a>
+                            </div>
+                        </div>
+                        <MainForm />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+        const d = {
+            Date: now,
+            Type: '12',
+            RouteCode: '',
+            RiderCode: '',
+            Rider: '',
+            Landmark: '',
+            VehicleType: '',
+            VehicleId: '0',
+            VehicleNo: '',
+            MeterStart: '',
+            MeterEnd: '',
+            IsChief: false
+        };
+
+        const [loading, setLoading] = React.useState(false);
+        const [data, setData] = React.useState(d);
+        const [grid, setGrid] = React.useState([]);
+
+        //const [showDialog, setShowDialog] = React.useState(false);
+        //const [authenticated, setAuthenticated] = React.useState(false);
+        //const [riderPassAndPhone, setRiderPassAndPhone] = React.useState({ riderCode: '', pass: '', phoneNo: '' });
+        //const [showNewPassDialog, setShowNewPassDialog] = React.useState(false);
+
+        return (
+            <Context.Provider value={{
+                loading,
+                setLoading,
+                data,
+                setData,
+                grid,
+                setGrid
+                // showDialog,
+                // setShowDialog,
+                // authenticated,
+                // setAuthenticated,
+                // riderPassAndPhone,
+                // setRiderPassAndPhone,
+                // showNewPassDialog,
+                // setShowNewPassDialog
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

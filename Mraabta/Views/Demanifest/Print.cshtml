@@ -1,0 +1,222 @@
+﻿@model MRaabta.Models.ManifestDataModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        * {
+            font-family: Calibri;
+        }
+
+        .page-header,
+        .page-header-space {
+            height: 120px;
+        }
+
+        .page-footer,
+        .page-footer-space {
+            padding-top: 10px;
+            height: 30px;
+        }
+
+        .page-footer {
+            background: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            border-top: 1px solid black;
+            /* for demo */
+            font-size: 12px
+        }
+
+        .page-header {
+            background: white;
+            position: fixed;
+            top: 0mm;
+            width: 100%;
+            border-bottom: 2px solid black;
+            /* for demo */
+        }
+
+        .page {
+            width: 100% !important;
+            page-break-after: always;
+        }
+
+            .page table {
+                text-align: left;
+                border: 2px solid black;
+                font-size: 13px;
+                border-collapse: collapse;
+            }
+
+                .page table td,
+                .page table th {
+                    border: 1px solid black;
+                }
+
+        @@page {
+            margin: 20px;
+        }
+
+        @@media print {
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
+            }
+
+            button {
+                display: none;
+            }
+
+            body {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body onload="window.print()">
+    <div class="page-header" style="text-align: center">
+        <div style="display:flex;flex-direction:row; justify-content:space-between;align-items:center;border-bottom:2px solid black">
+            <div>
+                <img src="@Url.Content("~/images/mnpLogo.png")" alt="Alternate Text" height="50" />
+            </div>
+            <div>
+                <h4>
+                    Demanifest
+                </h4>
+            </div>
+            <div style="margin-right:10px">
+
+                <b>Print Date:</b> @DateTime.Now.ToString("dd-MMM-yyyy") <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@DateTime.Now.ToString("hh:mm:tt")
+            </div>
+        </div>
+        <div>
+            <table style="width:100%;text-align:left; font-size:13px">
+                <tr>
+                    <th>Manifest No</th>
+                    <td>@Model.ManifestNo</td>
+                    <th>Origin</th>
+                    <td>@Model.Origin</td>
+                    <th>Destination</th>
+                    <td>@Model.Destination</td>
+                </tr>
+                <tr>
+                    <th>Weight</th>
+                    <td>@Model.ManifestDetail.Sum(x => double.Parse(x.Weight)) KG</td>
+                    <th>Total Pieces</th>
+                    <td>@Model.ManifestDetail.Sum(x => int.Parse(x.Pcs))</td>
+                    <th>Date</th>
+                    <td>@Model.DemanifestDate</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    @*<div class="page-footer">
+
+            <div style="display:flex; flex-direction:column;width:100%">
+                <div style="display:flex;flex-direction:row;justify-content:center;align-items:center">
+                    <h4>Received From</h4>
+                    <div style="min-width:30%; border-bottom:3px solid black;text-align:center;margin-left:10px">
+                    </div>
+                    <h4 style="margin-left:20px">Received By</h4>
+                    <div style="min-width:30%; border-bottom:3px solid black;text-align:center;margin-left:10px">
+                    </div>
+                </div>
+            </div>
+        </div>*@
+
+    <table style="width:100%">
+
+        <thead>
+            <tr>
+                <td>
+                    <!--place holder for the fixed-position header-->
+                    <div class="page-header-space"></div>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <!--*** CONTENT GOES HERE ***-->
+                    <div class="page">
+                        <table style="width:100%">
+                            <tr>
+                                <td colspan="9" style="text-align:center;font-weight:900;font-size:15px">
+                                    Details
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>S.No</th>
+                                <th>CN</th>
+                                <th>Status</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Weight</th>
+                                <th>Pcs</th>
+                                <th>Remarks</th>
+                            </tr>
+                            @{
+                                int i = 1;
+                                foreach (var item in Model.ManifestDetail)
+                                {
+                                    <tr>
+                                        <td style="width:5%">@i</td>
+                                        <td style="width:15%">@item.CN</td>
+                                        <td style="width:15%">
+                                            @{
+                                                if (item.Status == 5)
+                                                {
+                                                    @Html.Raw("Received")
+                                                }
+                                                else if (item.Status == 6)
+                                                {
+                                                    @Html.Raw("Short Received")
+                                                }
+                                                else if (item.Status == 7)
+                                                {
+                                                    @Html.Raw("Excess Received")
+                                                }
+                                            }
+                                        </td>
+                                        <td style="width:15%">@item.Origin</td>
+                                        <td style="width:15%">@item.Destination</td>
+                                        <td style="width:5%">@item.Weight KG</td>
+                                        <td style="width:5%">@item.Pcs</td>
+                                        <td>@item.Remarks</td>
+                                    </tr>
+                                    i++;
+                                }
+                            }
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+
+        <!--<tfoot>
+            <tr>
+                <td>-->
+        <!--place holder for the fixed-position footer-->
+        <!--<div class="page-footer-space"></div>
+                </td>
+            </tr>
+        </tfoot>-->
+
+    </table>
+
+</body>
+
+</html>

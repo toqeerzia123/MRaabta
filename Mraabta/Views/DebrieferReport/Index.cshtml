@@ -1,0 +1,685 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+
+@section scripts{
+    <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script src="~/node_modules/progressbar.js/dist/progressbar.js"></script>
+    <script type="text/javascript">
+        var getRiders = (StartDate, EndDate) => {
+        debugger;
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("ViewRiders","DebrieferReport")',
+                     data: {
+                         StartDate: StartDate,
+                         EndDate: EndDate
+                         },
+                    dataType: 'json',
+                    success: (rs) => {
+                        var html = ``;
+                        for (let x of rs) {
+                            html += `<option value="${x.Value}">${x.Value}-${x.Text}</option>`;
+                        }
+                        $('#ddl_rider_name').html(html);
+                    }
+                });
+        };
+
+    $(function () {
+        var dataexists = '@ViewBag.err';
+        if (dataexists != "") {
+            swal({
+                title: "Warning",
+                text: "You have been logged out",
+                type: "error"
+            }, function () {
+                     window.location = "../Login";
+
+            });
+
+        }
+        $(document).on({
+                ajaxStart: function () { $("#wait").show() },
+                ajaxStop: function () { $("#wait").hide(); },
+           });
+        var StartDate, EndDate;
+        $('#StartDate').change(function () {
+            debugger;
+            StartDate = $(this).val();
+            if (StartDate != null && EndDate != null) {
+                getRiders(StartDate, EndDate);
+            }
+
+        });
+        $('#EndDate').change(function () {
+            debugger;
+            EndDate = $(this).val();
+            //alert(eDate);
+            if (StartDate != null && EndDate != null) {
+                getRiders(StartDate, EndDate);
+            }
+            else if (StartDate == "" || EndDate == "") {
+
+            }
+        });
+        $("#btn_search").click(function (e) {
+            debugger;
+
+            e.preventDefault();
+        var riderCode = $("#ddl_rider_name").val();
+        var StartDate = $("#StartDate").val();
+        var EndDate = $("#EndDate").val();
+            if (!StartDate) {
+                swal('Select Start Date');
+                return;
+            }
+            if (!EndDate) {
+                swal('Select End Date');
+                return;
+            }
+            if (!riderCode) {
+                swal('Select Rider');
+
+
+                return;
+            }
+            else {
+                debriefercount(riderCode, StartDate, EndDate);
+
+            }
+
+
+            var nanToZero = (val, round = true) => {
+                if (isNaN(val)) {
+                    return 0;
+                } else {
+                    return round ? Math.round(val) : val;
+                }
+            };
+
+            function debriefercount(riderCode, StartDate, EndDate) {
+                     $.ajax({
+                    type: 'post',
+                    url: '../DebrieferReport/GetDebrieferCount',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify({ riderCode: riderCode, StartDate: StartDate, EndDate: EndDate }),
+                    success: function (rs) {
+                        if (rs.dataPoints.length == 0) {
+
+                        }
+                        else {
+                            debugger;
+                        //var Delivered = rs.dataPoints[0].delivered;
+                        //var Undelivered = rs.dataPoints[0].undelivered
+                        //var TCNDownloaded = rs.dataPoints[0].TCNDownloaded;
+                        //var Performed = rs.dataPoints[0].delivered + rs.dataPoints[0].undelivered;
+                        //var UnPerformed = TCNDownloaded - Performed;
+                        //var del_percentage = (Delivered * 100) / Performed;
+                        //var del_per_points = (Delivered) / Performed;
+                        //var undel_per = (Undelivered * 100) / Performed;
+                        //var undel_per_points = (Undelivered) / Performed;
+                        //var performed_points = (Performed) / TCNDownloaded;
+                        //var unper_points = (UnPerformed) / TCNDownloaded;
+                            //var DownloadedRunsheet = rs.dataPoints[0].DownloadedRunsheet;
+                            var TCNDownloaded = rs.dataPoints[0].TCNDownloaded;
+                            var VerifiedCount = rs.dataPoints[0].VerifiedCount;
+                            var CommentsCount = rs.dataPoints[0].CommentsCount;
+                            var Attempted = rs.dataPoints[0].Attempted;
+                            var UnAttempted = rs.dataPoints[0].UnAttempted;
+                           // alert(UnAttempted);
+                            var TotalDelivered = rs.dataPoints[0].TotalDelivered;
+                            var TotalDeliveredRts = rs.dataPoints[0].TotalDeliveredRts;
+                            var TotalUndelivered = rs.dataPoints[0].TotalUndelivered;
+                            var total_delivered = nanToZero((TotalDelivered / TCNDownloaded) * 100); // (TotalDelivered) / TCNDownloaded;
+                            var total_deliveredan = nanToZero((TotalDelivered / TCNDownloaded), false); // (TotalDelivered) / TCNDownloaded;
+                            var total_deliveredRts = nanToZero((TotalDeliveredRts / TCNDownloaded) * 100); // (TotalDelivered) / TCNDownloaded;
+                            var total_deliveredRtsan = nanToZero((TotalDeliveredRts / TCNDownloaded), false); // (TotalDelivered) / TCNDownloaded;
+                            var total_undelivered = nanToZero((TotalUndelivered / TCNDownloaded) * 100); // (TotalDelivered) / TCNDownloaded;
+                            var total_undeliveredan = nanToZero((TotalUndelivered / TCNDownloaded), false); // (TotalDelivered) / TCNDownloaded;
+                            var total_attempted = nanToZero((Attempted / TCNDownloaded) * 100); // (TotalDelivered) / TCNDownloaded;
+                            var total_attemptedan = nanToZero((Attempted / TCNDownloaded), false); // (TotalDelivered) / TCNDownloaded;
+                            var MostOccuringReason = rs.dataPoints[0].MostOccuringReason;
+                            //var MostOccuringTime = rs.dataPoints[0].MostOccuringTime;
+                            var total_unattempted = nanToZero((UnAttempted / TCNDownloaded) * 100); // (TotalDelivered) / TCNDownloaded;
+                            var total_unattemptedan = nanToZero((UnAttempted / TCNDownloaded), false); // (TotalDelivered) / TCNDownloaded;
+
+                        //alert(del_percentage);
+                        if (TotalDelivered == null) {
+
+                            }
+                        if (TotalUndelivered == null) {
+
+                        }
+                        if (TotalDelivered == null && TotalUndelivered == null) {
+
+                        }
+                        else {
+                        //Progress JS
+                            //Delivered
+                        $('#container').empty();
+                        $('#container4').empty();
+                        $('#container1').empty();
+                        $('#container2').empty();
+                        $('#container3').empty();
+                        $('#container').html("<span id='pro_chart_del'></span>");
+                        $('#container4').html("<span id='pro_chart_delRts'></span>");
+                        $('#container1').html("<span id='pro_chart_undel'></span>");
+                        $('#container2').html("<span id='pro_chart_per'></span>");
+                        $('#container3').html("<span id='pro_chart_unper'></span>");
+                            $('#main_heading').html('<h3 style="text-align: center; border:1px solid black; margin:1px;" class="mt-2">Debriefer Activity</h3>')
+                           // $('#more_info').html("<span class='col-md-12'><span class='col-md-6'><input type='radio' style='margin-top:10px; -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;' checked></input><b style='margin-left: 5px;'>    Total CN Downloaded:  </b> " + TCNDownloaded + "  </span><span class='col-md-6'><input type='radio' style='margin-left:5px; -webkit-appearance: none; -moz-appearance: none; appearance: none;* create custom radiobutton appearance */display: inline-block;width: 16px;height: 16px;padding: 2px;/* background-color only for content */background-clip: content-box;border: 2px solid black;background-color: #43a047; border-radius:100%;' checked></input><b style='margin-left: 5px;'>    Total Downloaded Runsheet:</b> " + VerifiedCount + "</span></span>")
+                       // $('#more_info')
+
+
+                         var bar = new ProgressBar.Circle(container, {
+                             color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                             },
+                              svgStyle: {
+                                display: 'block',
+
+                                // Important: make sure that your container has same
+                                // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                width: '85%'
+                             },
+
+                          from: { color: '#00897b', width: 12 },
+                          to: { color: '#00897b', width: 12 },
+                          // Set default step function for all animate calls
+                             step: function (state, circle) {
+
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                                 var value = total_delivered;
+                                 if (value === 0) {
+                                     $('#pro_chart_del').html("<h6 style='text-align: center;width:10em;'>Delivered <span style='color:#00897b;'>" + TotalDelivered + "</span></h6>")
+                                     circle.setText('0 %');
+                            } else {
+                                     $('#pro_chart_del').html("<h6 style='text-align: center;width:10em;'>Delivered <span style='color:#00897b;'>" + TotalDelivered + "</span></h6>")
+                              circle.setText(value + '%');
+                            }
+
+                          }
+                        });
+
+
+                        bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                        bar.text.style.fontSize = '2rem';
+                            bar.animate(total_deliveredan);  // Number from 0.0 to 1.0
+
+
+
+                            //By Fahad
+                            //deliveredRts
+
+                            var bar4 = new ProgressBar.Circle(container4, {
+                                color: '#aaa',
+                                // This has to be the same size as the maximum width to
+                                // prevent clipping
+                                strokeWidth: 12,
+                                trailWidth: 1,
+                                easing: 'easeInOut',
+                                duration: 1400,
+                                text: {
+                                    autoStyleContainer: false,
+                                    style: {
+                                        // Text color.
+                                        // Default: same as stroke color (options.color)
+                                        color: '#37474f',
+                                        position: 'absolute',
+                                        left: '45%',
+                                        top: '45%',
+                                        padding: 0,
+                                        margin: 0,
+                                        // You can specify styles which will be browser prefixed
+                                        transform: {
+                                            prefix: true,
+                                            value: 'translate(-50%, -50%)'
+                                        }
+                                    },
+                                },
+                                svgStyle: {
+                                    display: 'block',
+
+                                    // Important: make sure that your container has same
+                                    // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                    width: '85%'
+                                },
+                                style: {
+                                    // Text color.
+                                    // Default: same as stroke color (options.color)
+                                    color: '#f00',
+                                    position: 'absolute',
+                                    left: '45%',
+                                    top: '45%',
+                                    padding: 0,
+                                    margin: 0,
+                                    // You can specify styles which will be browser prefixed
+                                    transform: {
+                                        prefix: true,
+                                        value: 'translate(-50%, -50%)'
+                                    }
+                                },
+                                from: { color: '#c62828', width: 12 },
+                                to: { color: '#c62828', width: 12 },
+                                // Set default step function for all animate calls
+                                step: function (state, circle) {
+                                    circle.path.setAttribute('stroke', state.color);
+                                    circle.path.setAttribute('stroke-width', state.width);
+
+                                    var value = total_deliveredRts;
+                                    if (value === 0) {
+                                        $('#pro_chart_delRts').html("<h6 style='text-align: center;width:10em;'>Delivered-RTS <span style='color:#00897b;'>" + TotalDeliveredRts + "</span></h6>")
+                                        circle.setText('0 %');
+                                    } else {
+                                        $('#pro_chart_delRts').html("<h6 style='text-align: center;width:10em;'>Delivered-RTS <span style='color:#c62828;'>" + TotalDeliveredRts + "</span></h6>")
+                                        circle.setText(value + '%');
+                                    }
+
+                                }
+                            });
+
+
+                            bar4.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                            bar4.text.style.fontSize = '2rem';
+                            bar4.animate(total_deliveredRtsan);  // Number from 0.0 to 1.0
+                            //End By Fahad
+
+
+
+
+                        //Undelivered
+
+                        var bar1 = new ProgressBar.Circle(container1, {
+                          color: '#aaa',
+                          // This has to be the same size as the maximum width to
+                          // prevent clipping
+                          strokeWidth: 12,
+                          trailWidth: 1,
+                          easing: 'easeInOut',
+                          duration: 1400,
+                          text: {
+                              autoStyleContainer: false,
+                             style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#37474f',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                            },
+                            svgStyle: {
+                            display: 'block',
+
+                            // Important: make sure that your container has same
+                            // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                            width: '85%'
+                            },
+                            style: {
+                            // Text color.
+                            // Default: same as stroke color (options.color)
+                            color: '#f00',
+                            position: 'absolute',
+                            left: '45%',
+                            top: '45%',
+                            padding: 0,
+                            margin: 0,
+                            // You can specify styles which will be browser prefixed
+                            transform: {
+                                prefix: true,
+                                value: 'translate(-50%, -50%)'
+                            }
+                        },
+                          from: { color: '#c62828', width: 12 },
+                          to: { color: '#c62828', width: 12 },
+                          // Set default step function for all animate calls
+                          step: function(state, circle) {
+                            circle.path.setAttribute('stroke', state.color);
+                            circle.path.setAttribute('stroke-width', state.width);
+
+                              var value = total_undelivered;
+                            if (value === 0) {
+                                $('#pro_chart_undel').html("<h6 style='text-align: center;width:10em;'>Un-Delivered <span style='color:#00897b;'>" + TotalUndelivered + "</span></h6>")
+                                circle.setText('0 %');
+                            } else {
+                                $('#pro_chart_undel').html("<h6 style='text-align: center;width:10em;'>Un-Delivered <span style='color:#c62828;'>" + TotalUndelivered + "</span></h6>")
+                              circle.setText(value + '%');
+                            }
+
+                          }
+                        });
+
+
+                        bar1.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                            bar1.text.style.fontSize = '2rem';
+                        bar1.animate(total_undeliveredan);  // Number from 0.0 to 1.0
+
+                        //Attempted total_attempted
+
+
+                                var bar2 = new ProgressBar.Circle(container2, {
+                                    color: '#aaa',
+                                    // This has to be the same size as the maximum width to
+                                    // prevent clipping
+                                    strokeWidth: 12,
+                                    trailWidth: 1,
+                                    easing: 'easeInOut',
+                                    duration: 1400,
+                                    text: {
+                                        autoStyleContainer: false,
+                                        style: {
+                                            // Text color.
+                                            // Default: same as stroke color (options.color)
+                                            color: '#37474f',
+                                            position: 'absolute',
+                                            left: '45%',
+                                            top: '45%',
+                                            padding: 0,
+                                            margin: 0,
+                                            // You can specify styles which will be browser prefixed
+                                            transform: {
+                                                prefix: true,
+                                                value: 'translate(-50%, -50%)'
+                                            }
+                                        },
+                                    },
+                                    svgStyle: {
+                                        display: 'block',
+
+                                        // Important: make sure that your container has same
+                                        // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                        width: '85%'
+                                    },
+                                    style: {
+                                        // Text color.
+                                        // Default: same as stroke color (options.color)
+                                        color: '#f00',
+                                        position: 'absolute',
+                                        left: '45%',
+                                        top: '45%',
+                                        padding: 0,
+                                        margin: 0,
+                                        // You can specify styles which will be browser prefixed
+                                        transform: {
+                                            prefix: true,
+                                            value: 'translate(-50%, -50%)'
+                                        }
+                                    },
+                                    from: { color: '#e65100', width: 12 },
+                                    to: { color: '#e65100', width: 12 },
+                                    // Set default step function for all animate calls
+                                    step: function (state, circle) {
+                                        circle.path.setAttribute('stroke', state.color);
+                                        circle.path.setAttribute('stroke-width', state.width);
+
+                                        var value = total_attempted;
+                                        if (value === 0) {
+                                            $('#pro_chart_per').html("<h6 style='text-align: center;width:10em;'>Attempted <span style='color:#00897b;'>" + Attempted + "</span></h6>")
+                                            circle.setText('0 %');
+                                        } else {
+                                            $('#pro_chart_per').html("<h6 style='text-align: center;width:10em;'>Attempted <span style='color:#e65100'>" + Attempted + "</span></h6>")
+                                            circle.setText(value + '%');
+                                        }
+
+                                    }
+                                });
+
+
+                                bar2.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                                bar2.text.style.fontSize = '2rem';
+
+                            bar2.animate(total_attemptedan);  // Number from 0.0 to 1.0
+
+                        //UnAttempted
+
+                                    var bar3 = new ProgressBar.Circle(container3, {
+                                    color: '#aaa',
+                                    // This has to be the same size as the maximum width to
+                                    // prevent clipping
+                                    strokeWidth: 12,
+                                    trailWidth: 1,
+                                    easing: 'easeInOut',
+                                    duration: 1400,
+                                    text: {
+                                        autoStyleContainer: false,
+                                        style: {
+                                            // Text color.
+                                            // Default: same as stroke color (options.color)
+                                            color: '#37474f',
+                                            position: 'absolute',
+                                            left: '45%',
+                                            top: '45%',
+                                            padding: 0,
+                                            margin: 0,
+                                            // You can specify styles which will be browser prefixed
+                                            transform: {
+                                                prefix: true,
+                                                value: 'translate(-50%, -50%)'
+                                            }
+                                        },
+                                        //bar3.text.style.left = '45%';
+                                        //bar3.text.style.top = '45%';
+
+                                    },
+                                    svgStyle: {
+                                        display: 'block',
+
+                                        // Important: make sure that your container has same
+                                        // aspect ratio as the SVG canvas. See SVG canvas sizes above.
+                                        width: '85%'
+                                    },
+                                    style: {
+                                        // Text color.
+                                        // Default: same as stroke color (options.color)
+                                        color: '#f00',
+                                        position: 'absolute',
+                                        left: '45%',
+                                        top: '45%',
+                                        padding: 0,
+                                        margin: 0,
+                                        // You can specify styles which will be browser prefixed
+                                        transform: {
+                                            prefix: true,
+                                            value: 'translate(-50%, -50%)'
+                                        }
+                                    },
+                                    from: { color: '#0277bd', width: 12 },
+                                    to: { color: '#0277bd', width: 12 },
+                                    // Set default step function for all animate calls
+                                    step: function (state, circle) {
+                                        circle.path.setAttribute('stroke', state.color);
+                                        circle.path.setAttribute('stroke-width', state.width);
+
+                                        var value = total_unattempted;
+                                        if (value === 0) {
+                                            $('#pro_chart_unper').html("<h6 style='text-align: center;width:10em;'>Un-Attempted <span style='color:#00897b;'>" + UnAttempted + "</span></h6>")
+                                            circle.setText('0 %');
+                                        } else {
+
+                                            $('#pro_chart_unper').html("<h6 style='text-align: center; width:10em;'>Un-Attempted <span style='color:#0277bd'>" + UnAttempted + "</span></h6>")
+                                            circle.setText(value + '%');
+                                        }
+
+                                    }
+                                });
+
+
+                                bar3.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+                                bar3.text.style.fontSize = '2rem';
+
+
+                            bar3.animate(total_unattemptedan);  // Number from 0.0 to 1.0
+
+
+                                // second_heading
+                            $('#second_heading').html("<h3 style='text-align:center; border: 1px solid black;margin: 1px;'>Consignment Statistic</h3>");
+                            if (MostOccuringReason == null) {
+                                    $("#progress_charts").html("<div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/Box.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:11px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total CN Downloaded</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + TCNDownloaded + "</p></div></div></div><div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/document.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:11px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total Verified</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + VerifiedCount + "</p></div></div></div><div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/comments.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:11px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total Comments</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + CommentsCount + "</p></div></div></div><div class='col-md-3'><div class='card mt-2'><div class='card-body' style='border: 1px solid black;'><div class='card-title'><img src='../images/question-mark.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:11px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Most Occuring Reason</span></div><hr/><p class='card-text' style='font-size: 18px;text-align: center;font-weight: bold;'>No Occuring Reason Found</p></div></div></div>");
+
+                            }
+                            else {
+                                    $("#progress_charts").html("<div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/Box.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:11px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total CN Downloaded</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + TCNDownloaded + "</p></div></div></div><div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/document.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:11px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total Verified</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + VerifiedCount + "</p></div></div></div><div class='col-md-3'><div class='card mt-2' style='border: 1px solid black;'><div class='card-body'><div class='card-title'><img src='../images/comments.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:11px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Total Comments</span></div><hr/><p class='card-text' style='font-size: 36px;text-align: center;font-weight: bold;'>" + CommentsCount + "</p></div></div></div><div class='col-md-3'><div class='card mt-2'><div class='card-body' style='border: 1px solid black;'><div class='card-title'><img src='../images/question-mark.png' style='height: auto;width:25%;  margin-top:4px;' class='card-img-top' alt='...'><span style='font-size:11px; margin-left:5px;font-weight:bold;font-family:Raleway, Helvetica, sans-serif;'>Most Occuring Reason</span></div><hr/><p class='card-text' style='font-size: 18px;text-align: center;font-weight: bold;'>" + MostOccuringReason + "</p></div></div></div>");
+
+                            }
+
+
+                            }
+
+                        }
+
+                    }
+                });
+            }
+        });
+
+        });
+
+    </script>
+}
+
+@section styles{
+    <style>
+        .select2-container .select2-selection--single {
+            height: 37px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 37px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            height: 37px !important;
+            line-height: 37px !important;
+        }
+    </style>
+}
+
+<div>
+    <h2 style="text-align:center">De Briefer Report</h2>
+    <div class="row mt-4">
+        <div class="col-3">
+            <label>From Date</label>
+
+            @if (ViewBag.Date == null)
+            {
+                @Html.TextBox("date", DateTime.Now.ToString(), new { @class = "form-control", @id = "StartDate", @name = "Date", @type = "date" })
+            }
+            else
+            {
+                DateTime date = Convert.ToDateTime(ViewBag.Date);
+                @Html.TextBox("date", date, new { @class = "form-control", @id = "Date", @name = "StartDate", @type = "date" })
+            }
+
+        </div>
+        <div class="col-3">
+            <label>To Date</label>
+
+            @if (ViewBag.Date == null)
+            {
+                @Html.TextBox("date", DateTime.Now.ToString(), new { @class = "form-control", @id = "EndDate", @name = "Date", @type = "date" })
+            }
+            else
+            {
+                DateTime date = Convert.ToDateTime(ViewBag.Date);
+                @Html.TextBox("date", date, new { @class = "form-control", @id = "Date", @name = "EndDate", @type = "date" })
+            }
+
+        </div>
+        <div class="col-3">
+            <label>Rider Name</label>
+            @if (ViewBag.err == null || ViewBag.err == "")
+            {
+                <select id="ddl_rider_name" class="form-control">
+                    <option selected value=''>Choose Rider</option>
+                </select>
+            }
+        </div>
+        <div class="col-3 mt-4">
+            <button type="button" class="btn btn-light" style="border:1px solid black;margin-top:5px;height:36px" id="btn_search">Search</button>
+        </div>
+    </div>
+</div>
+<br>
+
+@* Report *@
+
+
+@* Progress Bar *@
+<link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600,800,900" rel="stylesheet" type="text/css">
+<span id="main_heading"></span>
+@*<span id="sub_sub_para"></span>*@
+<div style="display:flex;flex-direction:row;justify-content:space-evenly;align-items:center">
+    <div style="margin-top:5px;">
+        <div id="container" style="position:relative">
+            <span id="pro_chart_del"></span>
+        </div>
+    </div>
+    <div style="margin-top:5px;">
+        <div id="container4" style="position:relative">
+            <span id="pro_chart_delRts"></span>
+        </div>
+    </div>
+    <div style="margin-top:5px;">
+        <div id="container1" style="position:relative">
+            <span id="pro_chart_undel"></span>
+        </div>
+    </div>
+    <div style="margin-top:5px;">
+        <div id="container3" style="position:relative">
+            <span id="pro_chart_per"></span>
+        </div>
+    </div>
+    <div style="margin-top:5px;">
+        <div id="container2" style="position:relative">
+            <span id="pro_chart_unper"></span>
+        </div>
+    </div>
+
+</div>
+<div id="wait" style="display:none;width:69px;height:89px;border:1px solid black;position:absolute;top:50%;left:50%;padding:2px;">
+    <img src="~/images/loader.gif" width="64" height="64" /><br>Loading..
+</div>
+@*<span id="second_heading"></span>*@
+<div id="progress_charts" class="col-md-12 row">
+
+</div>
+<br />
+<div id="more_info">
+
+</div>

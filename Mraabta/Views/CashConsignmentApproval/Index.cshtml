@@ -1,0 +1,235 @@
+﻿
+@{
+    ViewBag.Title = "Cash Consignment Approval";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style>
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #formrow {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .rowitem {
+            width: calc(88% / 6) !important;
+            padding: 10px !important;
+        }
+
+        .rowitembtn {
+            /*display: flex;
+            flex-direction: row;
+            width: 12% !important;*/
+            padding-top: 35px !important;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .page-content {
+            /*          padding-left:10px !important;*/
+        }
+
+        #tbl_pickUp {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            #tbl_pickUp td, #tbl_pickUp th {
+                border: 1px solid #ddd;
+                text-align: center;
+                padding: 8px;
+            }
+
+            #tbl_pickUp tr:hover {
+                background-color: #ddd;
+            }
+
+            #tbl_pickUp th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: center;
+                background-color: #ddd;
+                color: black;
+            }
+
+        .cnlink {
+            text-decoration: underline;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            /*color: lightblue !important;*/
+        }
+
+        /* a:active {
+                text-decoration: underline;
+            }*/
+
+        .active {
+            background-color: #EA5B0C !important;
+        }
+
+        .active {
+            background-color: #fd7e14 !important;
+        }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loader">
+    </div>
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">@ViewBag.Title</h2>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="rowitem">
+                <label>CN</label>
+                <input type="text" id="CN" name="CN" class="form-control" />
+            </div>
+            <div class="rowitem">
+                <label>Rider Code</label>
+                <label type="text" id="RiderCode" name="RiderCode" class="form-control" />
+            </div>
+            <div class="rowitem">
+                <label>Zone</label>
+                <label type="text" id="Zone" name="Zone" class="form-control" />
+            </div>
+            <div class="rowitem">
+                <label>Branch</label>
+                <label type="text" id="Branch" name="Branch" class="form-control" />
+            </div>
+            <div class="rowitem">
+                <label>Express Center Code</label>
+                <label type="text" id="ExpressCenterCode" name="ExpressCenterCode" class="form-control" />
+            </div>
+            <div class="rowitem">
+                <label>Sale Date</label>
+                <input type="date" id="SaleDate" name="SaleDate" class="form-control" />
+                <input type="hidden" id="hiddenSaleDate" />
+            </div>
+
+            <div class="rowitembtn">
+                <button type="button" id="sbtbtn" class="btn btn-primary float-right" style="background-color: #EA5B0C;display:none;">Submit</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="renderpartial" class="slow"></div>
+
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+        $(document).on("keydown", "input", function (e) {
+            if (e.which == 9) {
+              $.ajax({
+                type: "POST",
+                url: '@Url.Action("GetDetail", "CashConsignmentApproval")',
+                data: JSON.stringify({
+                    CN: $("#CN").val()
+                    }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                    success: function (response) {
+                        if (response != "") {
+                            var date = new Date(parseInt(response.SaleDate.substr(6)));
+                            var month = ("0" + (date.getMonth() + 1)).slice(-2);
+                            $('#SaleDate').val(date.getFullYear() + '-' + month + '-' + ("0" + date.getDate()).slice(-2));
+                            $('#hiddenSaleDate').val(date.getFullYear() + '-' + month + '-' + ("0" + date.getDate()).slice(-2));
+                            $('#ExpressCenterCode').text(response.ExpressCenterCode);
+                            $('#Zone').text(response.Zone);
+                            $('#Branch').text(response.Branch);
+                            $('#RiderCode').text(response.RiderCode);
+                            document.getElementById('sbtbtn').style.display = 'block';
+                        }
+                        else
+                        {
+                            $("#CN").val("");
+                            document.getElementById('sbtbtn').style.display = 'none';
+                            alert("No Record found against the CN");
+                        }
+                },
+                  failure: function (response) {
+                     alert("failure");
+                },
+                  error: function (response) {
+                    alert("error");
+                }
+            });
+            }
+        });
+        $("#sbtbtn").click(function () {
+            var input = document.getElementById('SaleDate').value;
+                var d = new Date(input);
+                if (!!d.valueOf()) {
+                    year = d.getFullYear();
+                    month = d.getMonth()+1;
+                    day = d.getDate();
+                }
+            if ($("#SaleDate").val() == $('#hiddenSaleDate').val()) {
+                alert("No changes are made");
+                }
+               else {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("UpdateDetail", "CashConsignmentApproval")',
+                    data: JSON.stringify({
+                        CN: $("#CN").val(),
+                        SaleDate: $("#SaleDate").val()
+                    }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "html",
+                    success: function (response) {
+                       // console.log(response);
+                        if (response == '"Update Successful"' || response == '"Unsuccessful"') {
+                            $('#hiddenSaleDate').val($("#SaleDate").val());
+                            var htmlappend = '<BR><BR><div class="alert alert-success alert-dismissable"><span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span><strong>' + response + '</strong> </div>';
+                            $('#renderpartial').html(htmlappend);
+                            $("#renderpartial").show("slow").delay(3000).hide("slow");
+                        }
+                        else {
+                            alert(response);
+                        }
+                         $("#CN").val("");
+                        $("#SaleDate").val("");
+                        $('#ExpressCenterCode').text("");
+                        $('#Branch').text("");
+                        $('#Zone').text("");
+                        $('#RiderCode').text("");
+
+                        $("#hiddenSaleDate").val("");
+                        document.getElementById('sbtbtn').style.display = 'none';
+                    },
+                    failure: function (response) {
+                        alert("failure");
+                    },
+                    error: function (response) {
+                        alert("error");
+                    }
+                });
+            }
+            });
+    </script>
+}

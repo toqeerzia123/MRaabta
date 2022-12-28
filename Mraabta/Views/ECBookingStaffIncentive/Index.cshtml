@@ -1,0 +1,205 @@
+﻿
+@{
+    ViewBag.Title = "EC Booking Staff Incentive";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+    <style>
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #formrow {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .rowitem {
+            width: calc(88% / 4) !important;
+            padding: 10px !important;
+        }
+
+        .rowitembtn {
+            /*display: flex;
+            flex-direction: row;
+            width: 12% !important;*/
+            padding: 15px !important;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .page-content {
+            /*          padding-left:10px !important;*/
+        }
+
+        #tbl_pickUp {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            #tbl_pickUp td, #tbl_pickUp th {
+                border: 1px solid #ddd;
+                text-align: center;
+                padding: 8px;
+            }
+
+            #tbl_pickUp tr:hover {
+                background-color: #ddd;
+            }
+
+            #tbl_pickUp th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: center;
+                background-color: #ddd;
+                color: black;
+            }
+
+        .cnlink {
+            text-decoration: underline;
+        }
+
+            a:hover {
+                text-decoration: underline;
+                /*color: lightblue !important;*/
+            }
+
+           /* a:active {
+                text-decoration: underline;
+            }*/
+
+        .active {
+            background-color: #EA5B0C !important;
+        }
+
+        .active {
+            background-color: #fd7e14 !important;
+        }
+    </style>
+}
+
+<div class="app-content">
+    <div id="loader">
+    </div>
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+
+        <div style="display: grid ; grid-template-columns: 25% auto 25% ">
+            <div></div>
+            <div style="justify-self:center;align-self:center">
+                <h2 style="justify-self:center;align-self:center">@ViewBag.Title</h2>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="rowitem" >
+                <label>Select Month</label>
+                <select name="Month" id="Month" class="form-control">
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+                </div>
+            <div class="rowitem">
+                <label>Select Year</label>
+                <select name="Year" id="Year" class="form-control">
+                    <option value="@DateTime.Now.Year" selected>@DateTime.Now.Year</option>
+                    <option value="@(@DateTime.Now.Year-1)">@(@DateTime.Now.Year-1)</option>
+                </select>
+            </div>
+            <br />
+            <div class="rowitembtn">
+                <br />
+                <button type="button" id="sbtbtn" class="btn btn-primary float-right" style="background-color: #EA5B0C;">Search</button>
+            </div>
+        </div>
+
+
+        <div id="renderpartial"></div>
+
+    </div>
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            var month = new Date().getMonth() + 1;
+            if (month<10 ) {
+                month = "0" + month;
+            }
+            $("#Month").val(month);
+            GetReport();
+
+            $("#sbtbtn").click(function () {
+               GetReport();
+            });
+
+            function GetReport() {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("GetReport", "ECBookingStaffIncentive")',
+                        data: JSON.stringify({
+                            Month: $("#Month").val(),
+                            Year: $("#Year").val(),
+                        }),
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "html",
+                        success: function (response) {
+                            $('#renderpartial').html(response);
+                            $('body table.table_data').each(function () {
+                                var currentPage = 0;
+                                var numPerPage = 100;
+                                var $table = $(this);
+                                $table.bind('repaginate', function () {
+                                    $table.find('tbody tr').hide().slice(currentPage * numPerPage, (currentPage + 1) * numPerPage).show();
+                                });
+                                $table.trigger('repaginate');
+                                var numRows = $table.find('tbody tr').length;
+                                var numPages = Math.ceil(numRows / numPerPage);
+                                var $pager = $('<div class="pager"></div>');
+                                for (var page = 0; page < numPages; page++) {
+                                    $('<span class="btn btn-primary page-number" style="background-color: #EA5B0C;"></span>').text(page + 1).bind('click', {
+                                        newPage: page
+                                    }, function (event) {
+                                        currentPage = event.data['newPage'];
+                                        $table.trigger('repaginate');
+                                        $(this).addClass('active').siblings().removeClass('active');
+                                    }).appendTo($pager).addClass('clickable');
+                                }
+
+                                $pager.insertAfter($table).find('span.page-number:first').addClass('active');
+                            });
+                        },
+                        failure: function (response) {
+                            alert("failure");
+                        },
+                        error: function (response) {
+                            alert("error");
+                        }
+                    });
+                }
+    });
+    </script>
+}

@@ -1,0 +1,502 @@
+﻿@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles{
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    .table,
+    .table input,
+    .table select {
+        font-size: 12px;
+    }
+</style>
+}
+
+<div id="root">
+</div>
+
+@section scripts{
+<script>
+    const branch = '@ViewBag.Branch';
+    const reasons =  @Html.Raw(Json.Encode(ViewBag.Reasons));
+    const relations =  @Html.Raw(Json.Encode(ViewBag.Relations));
+    const rsDataUrl = '@Url.Action("GetRunsheet","Pod")';
+    const saveUrl = '@Url.Action("Save","Pod")';
+</script>
+<script type="text/babel">
+
+    const process = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processDecimal = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9.]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlpha = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z]/g, "");
+        e.target.value = numbers;
+    }
+
+    const processAlphaWithSpace = (e) => {
+        let value = e.target.value;
+        let numbers = value.replace(/[^0-9a-zA-Z ]/g, "");
+        e.target.value = numbers;
+    }
+
+    const Context = React.createContext(null);
+
+    const d = {
+        RS: '',
+        Route: '',
+        RiderCode: '',
+        Rider: '',
+        RSDate: '',
+        Vehicle: '',
+        VehicleType: '',
+        MeterStart: '',
+        MeterEnd: ''
+    }
+
+    const DetailGrid = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const updateGrid = async (index, key, val) => {
+            let x = [...detailGrid];
+            x[index][key] = val;
+            x[index]['Update'] = true;
+            setDetailGrid(x);
+        }
+
+        const applyAll = () => {
+            const d = [...detailGrid];
+
+            const firstIndex = d.findIndex(f => f.CN = d.filter(a => !a.ReadOnly)[0].CN);
+
+            if (d[firstIndex].Reason == '0') {
+                alert('Select Reason First');
+                return;
+            }
+
+            let z = [];
+            for (let i = firstIndex + 1; i < d.length; i++) {
+                const x = d[i];
+
+                if (x.IsBypass) {
+                    z = reasons;
+                } else {
+                    if (branch == x.OriginId && (x.OriginId != x.DestinationId)) {
+                        z = reasons.filter(c => ['59', '64'].includes(c.Value));
+                    }
+                    else if (branch == x.OriginId && (x.OriginId == x.DestinationId)) {
+                        z = reasons.filter(c => c.Value != '58');
+                    }
+                    else if (branch != x.OriginId) {
+                        z = reasons.filter(c => c.Value != '59');
+                    } else {
+                        z = [];
+                    }
+                }
+
+                if (z.map(f => f.Value).includes(d[firstIndex].Reason) && !x.ReadOnly) {
+                    d[i].Time = d[firstIndex].Time;
+                    d[i].ReceivedBy = d[firstIndex].ReceivedBy;
+                    d[i].Reason = d[firstIndex].Reason;
+                    d[i].ReceiverCNIC = d[firstIndex].ReceiverCNIC;
+                    d[i].ReceiverRelation = d[firstIndex].ReceiverRelation;
+                    d[i].Comments = d[firstIndex].Comments;
+                    d[i].Update = d[firstIndex].Update;
+                }
+            }
+
+            setDetailGrid(d);
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-12 text-right">
+                        <button type="button" className="btn btn-sm btn-secondary" onClick={applyAll}>Apply To All</button>
+                    </div>
+                </div>
+                <div className="table-responsive mt-2 w-100">
+                    <table className="table table-bordered">
+                        <thead>
+                            <tr>                                
+                                <th>S.No</th>
+                                <th>CN</th>
+                                <th>Consignee</th>
+                                <th>Origin</th>
+                                <th>Time</th>
+                                <th>Received By</th>
+                                <th>Reason</th>
+                                <th>Receiver CNIC</th>
+                                <th>Receiver Relation</th>
+                                <th>Given To Rider</th>
+                                <th>Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                detailGrid.map((x, index) =>
+                                    <tr key={index}>
+                                        <td>{index + 1}</td>
+                                        <td>{x.CN}</td>
+                                        <td>{x.Consignee}</td>
+                                        <td>{x.Origin}</td>
+                                        <td>
+                                            <input className="form-control" readOnly={x.ReadOnly} type="time" value={x.Time} onChange={(e) => updateGrid(index, 'Time', e.target.value)} />
+                                        </td>
+                                        <td>
+                                            <input className="form-control" readOnly={x.ReadOnly} type="text" value={x.ReceivedBy} onInput={processAlphaWithSpace} onChange={(e) => updateGrid(index, 'ReceivedBy', e.target.value)} />
+                                        </td>
+                                        <td>
+                                            <select className="form-control" disabled={x.ReadOnly} value={x.Reason} onChange={(e) => updateGrid(index, 'Reason', e.target.value)}>
+                                                <option value="0">Select Reason</option>
+                                                {
+                                                    (function () {
+                                                        if (x.IsBypass) {
+                                                            return reasons;
+                                                        } else {
+                                                            if (branch == x.OriginId && (x.OriginId != x.DestinationId)) {
+                                                                return reasons.filter(c => ['59', '64'].includes(c.Value));
+                                                            }
+                                                            else if (branch == x.OriginId && (x.OriginId == x.DestinationId)) {
+                                                                return reasons.filter(c => c.Value != '58');
+                                                            }
+                                                            else if (branch != x.OriginId) {
+                                                                return reasons.filter(c => c.Value != '59');
+                                                            } else {
+                                                                return [];
+                                                            }
+                                                        }
+                                                    }()).map((z, index2) => <option key={index2} value={z.Value}>{z.Text}</option>)
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input className="form-control" readOnly={x.ReadOnly} type="text" value={x.ReceiverCNIC} maxLength="13" onInput={process} onChange={(e) => updateGrid(index, 'ReceiverCNIC', e.target.value)} />
+                                        </td>
+                                        <td>
+                                            <select className="form-control" disabled={x.ReadOnly} value={x.ReceiverRelation} onChange={(e) => updateGrid(index, 'ReceiverRelation', e.target.value)}>
+                                                <option value="0">Select Relation</option>
+                                                {
+                                                    relations.map((z, index2) => <option key={index2} value={z.Value}>{z.Text}</option>)
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>{x.GivenToRider}</td>
+                                        <td>
+                                            <input className="form-control" readOnly={x.ReadOnly} type="text" value={x.Comments} onInput={processAlphaWithSpace} onChange={(e) => updateGrid(index, 'Comments', e.target.value)} />
+                                        </td>
+                                    </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    const MainForm = () => {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const rsRef = React.useRef(null);
+
+        const updateData = (key, val) => setData({ ...data, [key]: val });
+
+        const fetchRS = async (no) => {
+            setLoading(true);
+            const url = `${rsDataUrl}?no=${no}`;
+            try {
+                const response = await fetch(url);
+                setLoading(false);
+                if (response.status === 200) {
+                    const json = await response.json();
+                    if (json.sts == 0) {
+                        const { CNs, ...rest } = json.data;
+                        setData(rest);
+                        setDetailGrid(CNs);
+                    } else {
+                        alert(json.msg);
+                        setData(d);
+                        setDetailGrid([]);
+                        rsRef.current.value = '';
+                        rsRef.current.focus();
+                    }
+                } else {
+                    alert('Looks like there was a problem. Status Code: ' + response.status);
+                    setData(d);
+                    setDetailGrid([]);
+                    rsRef.current.value = '';
+                    rsRef.current.focus();
+                }
+            } catch (error) {
+                setLoading(false);
+                setData(d);
+                setDetailGrid([]);
+                rsRef.current.value = '';
+                rsRef.current.focus();
+                console.log('Fetch Error :-S', error);
+            }
+        }
+
+        const keypressHandler = e => {
+            if (e.key === "Enter") {
+                rsRef.current.blur();
+            }
+        };
+
+        const onRSBlur = async (e) => {
+            const val = e.target.value;
+            if (val)
+                fetchRS(val);
+        }
+
+        const validate = () => {
+
+            if (!data.RS) {
+                alert('Enter Runsheet No');
+                return false;
+            }
+
+            if (detailGrid.filter(z => z.Update).length == 0) {
+                alert('No changes found');
+                return false;
+            }
+
+            if (detailGrid.filter(x => !x.ReadOnly && x.Reason != '0').length > 0) {
+                if (detailGrid.filter(x =>
+                    x.Update
+                    && !x.ReadOnly
+                    && ['59', '123'].includes(x.Reason)
+                    && (x.Time == '' || x.ReceivedBy == '')
+                ).length > 0) {
+                    alert('Time, Received By is Required on RTS or DV');
+                    return false;
+                }
+            } else {
+                alert('Reason Required for POD');
+                return false;
+            }
+
+            return true;
+        }
+
+        const save = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(saveUrl, {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: { ...data, CNs: detailGrid } })
+                });
+                setLoading(false);
+                if (response.status === 200) {
+                    const json = await response.json();
+                    if (json.sts == 0) {
+                        alert(json.msg);
+                        setData(d);
+                        setDetailGrid([]);
+                    } else {
+                        alert(json.msg);
+                    }
+                } else {
+                    alert('Looks like there was a problem. Status Code: ' + response.status);
+                }
+            } catch (error) {
+                setLoading(false);
+                console.log('Fetch Error :-S', error);
+            }
+        }
+
+        const onSave = () => {
+            if (validate()) {
+                save();
+            }
+        }
+
+        return (
+            <React.Fragment>
+                <div className="row">
+                    <div className="col-lg col-sm-12">
+                        <label>Runsheet No</label>
+                        <input className="form-control" onInput={process} ref={rsRef} onKeyPress={keypressHandler} onBlur={onRSBlur} value={data.RS} onChange={(x) => updateData('RS', x.target.value)} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Route</label>
+                        <input className="form-control" readOnly={true} value={data.Route} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Rider</label>
+                        <input className="form-control" readOnly={true} value={data.RiderCode + ' ' + data.Rider} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Date</label>
+                        <input className="form-control" readOnly={true} value={(function () {
+                            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December"
+                            ];
+                            const date = new Date(data.RSDate);
+                            return data.RSDate ? `${date.getDate()}-${monthNames[date.getMonth()]}-${date.getFullYear()}` : '';
+                        }())} />
+                    </div>
+                </div>
+                <div className="row mt-3">
+                    <div className="col-lg col-sm-12">
+                        <label>Vehicle Type</label>
+                        <input className="form-control" readOnly={true} value={data.VehicleType} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Vehicle</label>
+                        <input className="form-control" readOnly={true} value={data.Vehicle} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Meter Start</label>
+                        <input className="form-control" value={data.MeterStart} onInput={process} onChange={(x) => updateData('MeterStart', x.target.value)} />
+                    </div>
+                    <div className="col-lg col-sm-12">
+                        <label>Meter End</label>
+                        <input className="form-control" value={data.MeterEnd} onInput={process} onChange={(x) => updateData('MeterEnd', x.target.value)} />
+                    </div>
+                </div>
+                <div className="row mt-3">
+                    <div className="col-lg col-sm-12 text-right">
+                        <button type="button" className="btn btn btn-secondary" onClick={onSave}>Save</button>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    function App() {
+
+        const {
+            loading,
+            setLoading,
+            data,
+            setData,
+            detailGrid,
+            setDetailGrid
+        } = React.useContext(Context);
+
+        const styles = {
+            whiteBgStyle: {
+                background: 'rgba(255,255,255,.5)', padding: '15px', borderRadius: '5px'
+            },
+            justifyAlignSelfCenter: {
+                justifySelf: "center", alignSelf: "center"
+            },
+            justifyAlignSelfEnd: {
+                justifySelf: "end", alignSelf: "center"
+            },
+            overlay: {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                zIndex: '100000',
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(0,0,0,.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                backdropFilter: 'blur(10px)'
+            }
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {
+                    loading ?
+                        <div style={styles.overlay}>
+                            <h2>Please Wait</h2>
+                        </div> : ''
+                }
+                <div className="app-content">
+                    <div style={styles.whiteBgStyle}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '25% auto 25%' }}>
+                            <div></div>
+                            <div style={styles.justifyAlignSelfCenter}>
+                                <h2 style={styles.justifyAlignSelfCenter}>POD</h2>
+                            </div>
+                            <div style={styles.justifyAlignSelfEnd}>
+
+                            </div>
+                        </div>
+                        <MainForm />
+                        <br />
+                        {
+                            detailGrid.length > 0 ? <DetailGrid /> : ''
+                        }
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const Store = ({ children }) => {
+
+        const [loading, setLoading] = React.useState(false);
+        const [data, setData] = React.useState(d);
+        const [detailGrid, setDetailGrid] = React.useState([]);
+        return (
+            <Context.Provider value={{
+                loading,
+                setLoading,
+                data,
+                setData,
+                detailGrid,
+                setDetailGrid
+            }}>
+                {children}
+            </Context.Provider>
+        )
+    }
+
+    ReactDOM.render(
+        <Store>
+            <App />
+        </Store>,
+        document.querySelector('#root')
+    );
+</script>
+}

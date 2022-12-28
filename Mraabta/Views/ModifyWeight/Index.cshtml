@@ -1,0 +1,256 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+@section styles{
+    <style>
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .confirmOverlayInput {
+            width: 100%;
+            height: 60px;
+            border: none !important;
+            border-bottom: 5px solid white !important;
+            background: none;
+            color: rgba(255, 255, 255, .8);
+            text-align: center;
+            font-size: 35px;
+        }
+
+            .confirmOverlayInput:active,
+            .confirmOverlayInput:focus {
+                outline: none;
+            }
+
+        .confirmOverlayButton {
+            background: none;
+            width: 200px;
+            height: 80px;
+            border: 5px solid white;
+            font-size: 35px;
+            color: rgba(255, 255, 255, .8)
+        }
+
+            .confirmOverlayButton:active {
+                outline: none;
+                background: rgba(255, 255, 255, .8);
+                color: rgba(0, 0, 0, .8)
+            }
+
+            .confirmOverlayButton:focus {
+                outline: none;
+            }
+    </style>
+}
+
+<main class="app-content">
+    <div style="background:rgba(255,255,255,.5);padding:15px;border-radius:5px">
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center">
+                    <h3><b>Weight Discrepancy</b></h3>
+                </div>
+                <div id="root">
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+@section scripts{
+    <script>
+        const currentDate = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        const getWeightUrl = '@Url.Action("GetWeightDetail", "ModifyWeight")';
+        const weightUrl = '@Url.Action("Details", "ModifyWeight")';
+    </script>
+
+    <script type="text/babel">
+            const WeightDetails = (props) =>
+            {
+                return  <table className="table table-responsive table-bordered">
+                        <thead>
+                            <tr>
+                                <th>S No.</th>
+                                <th>Consignment #</th>
+                                <th>Booking Date</th>
+                                <th>Origin Zone</th>
+                                <th>Origin Branch</th>
+                                <th>Destination Zone</th>
+                                <th>Destination Branch</th>
+                                <th>ServiceType Name</th>
+                                <th>Client Name</th>
+                                <th>Account No</th>
+                                <th>CN PIECES</th>
+                                <th>OPS PIECES</th>
+                                <th>CN WEIGHT</th>
+                                <th>OPS WEIGHT</th>
+                                <th>WEIGHT DIFF</th>
+                                <th>OPS</th>
+                                <th>OPS NUMBER</th>
+                                <th>OPS LOCATION</th>
+                                <th>COD STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                props.data.map((x, index) =>
+                                <tr key={index} style={x.ColorStatus == 'Green' ? {backgroundColor: '#C9CC3F'} : x.ColorStatus == 'Yellow' ? {backgroundColor: '#FADA5E'} : {backgroundColor: 'transparent'}}>
+                                        <td>{++index}</td>
+                                        <td><a target="_blank"  href={weightUrl + '?CN=' + x.consignmentNumber} style={{ color: 'blue', textDecoration: 'underline' }}>{x.consignmentNumber}</a></td>
+                                        <td>{x.BOOKINGDATE}</td>
+                                        <td>{x.orignZone}</td>
+                                        <td>{x.orignBranch}</td>
+                                        <td>{x.destinationZone}</td>
+                                        <td>{x.destinationBranch}</td>
+                                        <td>{x.serviceTypeName}</td>
+                                        <td>{x.clientname}</td>
+                                        <td>{x.accountNo}</td>
+                                        <td>{x.CNpieces}</td>
+                                        <td>{x.Ops_Pieces}</td>
+                                        <td>{x.CNWeight}</td>
+                                        <td>{x.Ops_weight}</td>
+                                        <td>{x.Weight_diff}</td>
+                                        <td>{x.ops}</td>
+                                        <td>{x.Ops_Number}</td>
+                                        <td>{x.LOCATION}</td>
+                                        <td>{x.CODStatus}</td>
+                                  </tr>
+                                )
+                            }
+                        </tbody>
+                    </table>
+            }
+
+            const App = () => {
+              const [formData, setFormData] = React.useState({
+                From : currentDate,
+                Weight : 0 ,
+                StaffCode : '',
+                });
+
+            const [weightDetail, setWeightDetail] = React.useState();
+            const [loading, setLoading] = React.useState(false);
+
+            const getWeightReport = () => {
+            setLoading(true);
+            fetch(getWeightUrl, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            }).then(
+                function (response) {
+                    setLoading(false);
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' + response.status);
+                        return;
+                    }
+                    response.json().then(function (rs) {
+                        if (rs.sts == 1) {
+                            setWeightDetail(rs.data);
+                        }
+                        else {
+                            alert('No data found');
+                            setWeightDetail(null);
+                        }
+                    });
+                }
+            ).catch(function (err) {
+                setLoading(false);
+                console.log('Fetch Error :-S', err);
+            });
+        }
+
+         const keypressHandler = e => {
+            if (e.key === "Enter") {
+                scanRef.current.blur();
+            }
+        }
+
+            const process = (e) => {
+                let value = e.target.value;
+                let numbers = value.replace(/[^0-9]/g, "");
+                e.target.value = numbers;
+            }
+
+            const processDecimal = (e) => {
+            let value = e.target.value;
+            let numbers = value.replace(/[^0-9.]/g, "");
+            e.target.value = numbers;
+            }
+
+            const changeFormData = (key, val) => {
+                let x = { ...formData, [key]: val };
+                setFormData(x);
+            }
+
+            const overlayStyle = {
+                width: '100vw',
+                height: '100vh',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                zIndex: 10000,
+                background: 'rgba(0,0,0,.8)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'rgba(255,255,255,.8)'
+            }
+
+        return (
+            <div style={{ position: 'relative'}}>
+                {
+                    loading ? <div style={overlayStyle}>
+                        <h2>Please Wait...</h2>
+                    </div> : ''
+                }
+
+                <React.Fragment>
+                    <div className="row">
+                        <div className="col-md-3 col-sm-12">
+                            <label>Date</label>
+                            <input type="date" className="form-control" value={formData.From}  onChange={(x) => changeFormData('From', x.target.value)} />
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>Weight</label>
+                            <input type="text" className="form-control" value={formData.Weight} onInput={processDecimal} onKeyPress={keypressHandler} onChange={(x) => changeFormData('Weight', x.target.value)} />
+                        </div>
+                        <div className="col-md-3 col-sm-12">
+                            <label>Staff Code</label>
+                            <input type="text" className="form-control" value={formData.StaffCode} onInput={process} onKeyPress={keypressHandler} placeholder={"Staff Code"} onChange={(x) => changeFormData('StaffCode', x.target.value)} />
+                        </div>
+                        <div className="col-md-2 col-sm-12">
+                            <button type="button" className="btn btn-primary" style={{ marginTop: 25, background: '#f46425', border: '#a53200', float:'right' }} onClick={getWeightReport}>Search</button>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+                    {
+                        weightDetail ? <WeightDetails data={weightDetail} /> : ''
+                    }
+                </React.Fragment>
+            </div>
+        )
+    }
+
+    ReactDOM.render(<App />,
+        document.querySelector('#root')
+    )
+    </script>
+}

@@ -1,0 +1,53 @@
+﻿@model MRaabta.Models.BagPrintModel
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html>
+<head>
+    <title>Bag Tag Print</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: Calibri;
+        }
+
+        .col {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 120px;
+            border: 1px solid black;
+            flex-direction: column
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col"><h3><b>Bag No:&nbsp;&nbsp;@Model.BagNo</b></h3></div>
+            <div class="col"><span style="font-family:IDAutomationHC39M;font-size:20px">*@Model.Id*</span></div>
+            <div class="col"><h3><b>@Model.Origin to @Model.Destination-@Model.Type</b></h3></div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <h4>Product</h4>
+                <h2><b>@Model.Product</b></h2>
+            </div>
+            <div class="col">
+                <h4>Service</h4>
+                <h2><b>@Model.Service</b></h2>
+            </div>
+            <div class="col">
+                <h4>Weight</h4>
+                <h2><b>@Model.TotalWeight KG</b></h2>
+            </div>
+            <div class="col">
+                <h4>Seal No</h4>
+                <h2><b>@Model.SealNo</b></h2>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
